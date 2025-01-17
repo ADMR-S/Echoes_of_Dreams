@@ -1,6 +1,7 @@
 # Echoes_of_Dreams
 
 to run :
---- bash
+```
+ bash
  npm run dev
----
+```
