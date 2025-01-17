@@ -23,6 +23,8 @@ export const babylonInit = async (): Promise<void> => {
   // Generate the BABYLON 3D engine
   const engine = await createEngine(canvas);
 
+  console.log(engine)
+
   // Create the scene
   const scene = await createSceneModule.createScene(engine, canvas);
 
@@ -31,6 +33,10 @@ export const babylonInit = async (): Promise<void> => {
 
   // Register a render loop to repeatedly render the scene
   startRenderLoop(engine, canvas);
+
+  engine.runRenderLoop(() => {
+        scene.render();
+    });
 
   // Watch for browser/canvas resize events
   window.addEventListener("resize", function () {

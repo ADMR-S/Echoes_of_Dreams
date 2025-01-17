@@ -18,7 +18,7 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
-//import HavokPhysics from "@babylonjs/havok";
+import HavokPhysics from "@babylonjs/havok";
 
 
 export class XRSceneWithHavok implements CreateSceneClass {
@@ -26,7 +26,7 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
     
     createScene = async (engine: AbstractEngine): Promise<Scene> => {
-    const scene: Scene = new Scene(engine!);
+    const scene: Scene = new Scene(engine);
 
     const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
     light.intensity = 0.7;
@@ -42,9 +42,9 @@ export class XRSceneWithHavok implements CreateSceneClass {
   
     //Good way of initializing Havok
     // initialize plugin
-    //const havokInstance = await HavokPhysics();
+    const havokInstance = await HavokPhysics();
     // pass the engine to the plugin
-    const hk = new HavokPlugin(true, this.preTasks[0]);
+    const hk = new HavokPlugin(true, havokInstance);
     // enable physics in the scene with a gravity
     scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
