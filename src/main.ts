@@ -1,24 +1,87 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import { Scene } from "@babylonjs/core/scene";
+import { Engine } from "@babylonjs/core/Engines/engine";
+import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
+import { getSceneModule } from "./createScene";
+import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+// ----- AUDIO INIT ------
+const audioContext: AudioContext = new AudioContext();
+// ----- END OF AUDIO INIT ------
+
+
+let scene: Scene | null = null; //Utile ?
+let sceneToRender: Scene | null = null; //Utile ?
+
+
+export const babylonInit = async (): Promise<void> => {
+  const createSceneModule = getSceneModule();
+  // Execute the pretasks, if defined
+  await Promise.all(createSceneModule.preTasks || []);
+  // Get the canvas element
+  const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+  // Generate the BABYLON 3D engine
+  const engine = await createEngine(canvas);
+
+  // Create the scene
+  const scene = await createSceneModule.createScene(engine, canvas);
+
+  // JUST FOR TESTING. Not needed for anything else
+  (window as any).scene = scene;
+
+  // Register a render loop to repeatedly render the scene
+  startRenderLoop(engine, canvas);
+
+  // Watch for browser/canvas resize events
+  window.addEventListener("resize", function () {
+      engine.resize();
+  });
+};
+
+window.onload = () => {
+  babylonInit().then(() => {
+    sceneToRender = scene;
+  });
+}
+
+
+const startRenderLoop = (engine: AbstractEngine, canvas: HTMLCanvasElement) => { //canvas inutile ?
+  engine.runRenderLoop(() => {
+      if (sceneToRender && sceneToRender.activeCamera) {
+          sceneToRender.render();
+      }
+  });
+}
+
+const createEngine = async (canvas : HTMLCanvasElement): Promise<AbstractEngine> => {
+  const engineType =
+  location.search.split("engine=")[1]?.split("&")[0] || "webgl";
+  let engine: AbstractEngine;
+  //On peut sûrement se contenter du defaultEngine, toute la partie webgpu vient du code original, à voir
+  if (engineType === "webgpu") {
+      const webGPUSupported = await WebGPUEngine.IsSupportedAsync;
+      if (webGPUSupported) {
+          // You can decide which WebGPU extensions to load when creating the engine. I am loading all of them
+          await import("@babylonjs/core/Engines/WebGPU/Extensions/");
+          const webgpu = engine = new WebGPUEngine(canvas, {
+              adaptToDeviceRatio: true,
+              antialias: true,
+          });
+          await webgpu.initAsync();
+          engine = webgpu;
+      } else {
+          engine = createDefaultEngine(canvas);
+      }
+  } else {
+      engine = createDefaultEngine(canvas);
+  }
+  return engine;
+};
+
+const createDefaultEngine = function (canvas : HTMLCanvasElement) { 
+  return new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); 
+};
+
+window.onclick = () => {
+    audioContext.resume();
+};
