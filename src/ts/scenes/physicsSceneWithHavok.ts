@@ -11,7 +11,7 @@ import "@babylonjs/core/Physics/physicsEngineComponent";
 // If you don't need the standard material you will still need to import it since the scene requires it.
 import "@babylonjs/core/Materials/standardMaterial";
 import { CreateSceneClass } from "../createScene";
-import { havokModule } from "../../externals/havok";
+import { havokModule } from "../externals/havok";
 import { PhysicsShapeBox, PhysicsShapeSphere } from "@babylonjs/core/Physics/v2/physicsShape";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
