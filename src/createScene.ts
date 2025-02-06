@@ -5,6 +5,7 @@ import type { Scene } from "@babylonjs/core/scene";
 import { PhysicsSceneWithHavok } from "./scenes/physicsSceneWithHavok";
 import xrSceneWithHavok, { XRSceneWithHavok } from "./scenes/xrSceneWithHavok";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
+import {testscene} from "./scenes/testscene.ts";
 
 export interface CreateSceneClass {
     createScene: (engine: AbstractEngine, canvas: HTMLCanvasElement) => Promise<Scene>;
@@ -16,5 +17,5 @@ export interface CreateSceneModule {
 }
 
 export const getSceneModule = (): CreateSceneClass => {
-    return new XRSceneWithHavok();
+    return new testscene();
 }
