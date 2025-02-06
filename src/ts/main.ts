@@ -25,6 +25,8 @@ export const babylonInit = async (): Promise<void> => {
 
   console.log(engine)
 
+
+
   // Create the scene
   const scene = await createSceneModule.createScene(engine, canvas, audioContext);
 

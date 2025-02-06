@@ -1,8 +1,10 @@
 import * as BABYLON from "@babylonjs/core";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
-import grassTextureUrl from "./asset/AZURE Nature/Textures/Nature/AN_Bark_1_Normal.png";
+import grassTextureUrl from "../asset/AZURE Nature/Textures/Nature/AN_Bark_1_Normal.png";
+import { Object3D } from "./Object3D";
 
-export class Object3D {
+//TODO : Implementer Object3D
+export class Object3DImmutable{
   mesh: BABYLON.Mesh;
   material: BABYLON.Material;
 

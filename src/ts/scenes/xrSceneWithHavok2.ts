@@ -9,7 +9,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Materials/standardMaterial";
 import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { havokModule } from "../externals/havok";
+import { havokModule } from "../../externals/havok";
 import { CreateSceneClass } from "../createScene";
 
 
