@@ -1,4 +1,6 @@
 import * as BABYLON from "@babylonjs/core";
+import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import grassTextureUrl from "./asset/AZURE Nature/Textures/Nature/AN_Bark_1_Normal.png";
 
 export class Object3D {
   mesh: BABYLON.Mesh;
@@ -34,20 +36,20 @@ export class Object3D {
     this.mesh.actionManager.registerAction(
       new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPickTrigger, () => {
         console.log(`Objet ${this.mesh.name} cliqué !`);
-        this.mesh.scaling.scaleInPlace(1.1); // Augmente la taille de l'objet au clic
+        this.mesh.scaling.scaleInPlace(1.1); 
       })
     );
 
     this.mesh.actionManager.registerAction(
       new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOverTrigger, () => {
         this.mesh.material = new BABYLON.StandardMaterial("hoverMat", scene);
-        (this.mesh.material as BABYLON.StandardMaterial).diffuseColor = new BABYLON.Color3(0, 1, 0); // Vert
+        (this.mesh.material as BABYLON.StandardMaterial).diffuseTexture = new Texture(grassTextureUrl, scene); 
       })
     );
 
     this.mesh.actionManager.registerAction(
       new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnPointerOutTrigger, () => {
-        this.mesh.material = this.material; // Remettre le matériau d'origine
+        this.mesh.material = this.material; 
       })
     );
   }
