@@ -10,6 +10,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { havokModule } from "../externals/havok.ts";
+import HavokPhysics from "@babylonjs/havok";
 import { CreateSceneClass } from "../createScene.ts";
 
 
@@ -18,10 +19,11 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
-import HavokPhysics from "@babylonjs/havok";
 import {XRSceneWithHavok2} from "./xrSceneWithHavok2.ts";
 
 import XRDrumKit from "../xrDrumKit.ts"
+
+import XRHandler from "../XRHandler.ts"
 
 
 export class XRSceneWithHavok implements CreateSceneClass {
@@ -43,11 +45,15 @@ export class XRSceneWithHavok implements CreateSceneClass {
         console.log("BASE EXPERIENCE")
         console.log(xr.baseExperience)
 
-        //Good way of initializing Havok
+        new XRHandler(scene, xr);
+
+          //Good way of initializing Havok
         // initialize plugin
         const havokInstance = await HavokPhysics();
         // pass the engine to the plugin
         const hk = new HavokPlugin(true, havokInstance);
+
+
         // enable physics in the scene with a gravity
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
@@ -78,15 +84,12 @@ export class XRSceneWithHavok implements CreateSceneClass {
           if (collisionEvent.type === "COLLISION_STARTED") {
                 var collidedBody = null;
                 if(collisionEvent.collider != groundAggregate.body){
-                    console.log("OUI")
                     collidedBody = collisionEvent.collider;
                 }
                 else{
-                    console.log("NON")
                     collidedBody = collisionEvent.collidedAgainst;
                 }
                 const position = collidedBody.transformNode.position;
-                console.log("Position du sol : " + ground.position.y);
                 collidedBody.transformNode.position = new Vector3(position.x, ground.position.y + 5, position.z); // Adjust the y-coordinate to be just above the ground
                 collidedBody.setLinearVelocity(Vector3.Zero());
                 collidedBody.setAngularVelocity(Vector3.Zero());
@@ -103,9 +106,11 @@ export class XRSceneWithHavok implements CreateSceneClass {
             const isWithinX = camera.position.x > 9 && camera.position.x < 11;
             const isWithinZ = camera.position.z > 9 && camera.position.z < 11;
 
+            /*
             console.log(camera.position.x)
             console.log(camera.position.z)
             console.log(isWithinX, isWithinZ)
+            */
 
             if (!sceneAlreadySwitched && isWithinX && isWithinZ) {
                 sceneAlreadySwitched = true;
@@ -165,7 +170,8 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 
 // Add movement with left joystick
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
-    xr.input.onControllerAddedObservable.add((controller: any) => {        console.log("Ajout d'un controller")
+    xr.input.onControllerAddedObservable.add((controller: any) => {        
+        console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
             controller.onMotionControllerInitObservable.add((motionController: any) => {
                 const xrInput = motionController.getComponent("xr-standard-thumbstick");
@@ -206,14 +212,8 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 controllerMesh.isPickable = false;
 
                 // Attach WebXRControllerPhysics to the controller
-                console.log("CONTROLLER")
-                console.log(controller)
-                const controllerPhysics = xr.baseExperience.featuresManager.enableFeature(WebXRControllerPhysics.Name, 'latest')
-                controller.physics = controllerPhysics
-                console.log("ICI")
-                console.log(controllerPhysics)
-                console.log(controllerPhysics.getImpostorForController(controller))
-
+                //const controllerPhysics = xr.baseExperience.featuresManager.enableFeature(WebXRControllerPhysics.Name, 'latest')
+                //controller.physics = controllerPhysics
             });
         });
     });
