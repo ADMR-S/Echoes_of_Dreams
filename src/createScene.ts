@@ -7,7 +7,7 @@ import xrSceneWithHavok, { XRSceneWithHavok } from "./scenes/xrSceneWithHavok";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 
 export interface CreateSceneClass {
-    createScene: (engine: AbstractEngine, canvas: HTMLCanvasElement) => Promise<Scene>;
+    createScene: (engine: AbstractEngine, canvas: HTMLCanvasElement, audiocontext : AudioContext) => Promise<Scene>;
     preTasks?: Promise<unknown>[];
 }
 

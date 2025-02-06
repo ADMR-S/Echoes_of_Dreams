@@ -20,12 +20,14 @@ import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepTy
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
 
+import XRDrumKit from "../xrDrumKit"
+
 
 export class XRSceneWithHavok implements CreateSceneClass {
     preTasks = [havokModule];
 
     
-    createScene = async (engine: AbstractEngine): Promise<Scene> => {
+    createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
     const scene: Scene = new Scene(engine);
 
     const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
@@ -56,7 +58,7 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
     const eventMask = started | continued | finished;
       
-    // const drum = new XRDrum(audioContext, scene, eventMask, xr, hk);
+    const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
 
     //addScaleRoutineToSphere(sphereObservable);
 
