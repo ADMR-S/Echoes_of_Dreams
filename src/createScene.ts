@@ -9,6 +9,8 @@ import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 export interface CreateSceneClass {
     createScene: (engine: AbstractEngine, canvas: HTMLCanvasElement, audiocontext : AudioContext) => Promise<Scene>;
     preTasks?: Promise<unknown>[];
+
+
 }
 
 export interface CreateSceneModule {
@@ -18,3 +20,4 @@ export interface CreateSceneModule {
 export const getSceneModule = (): CreateSceneClass => {
     return new XRSceneWithHavok();
 }
+
