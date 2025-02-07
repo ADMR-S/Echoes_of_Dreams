@@ -22,14 +22,12 @@ import {
     PhysicsAggregate,
     PhysicsShapeType,
     PhysicsPrestepType,
-    WebXRControllerPhysics, Ray, StandardMaterial, Color3,
-    StandardMaterial
+    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
 import {XRSceneWithHavok2} from "./xrSceneWithHavok2.ts";
 
-import XRDrumKit from "../xrDrumKit"
 import {WebXRInputSource} from "@babylonjs/core/XR/webXRInputSource";
 
 
@@ -56,9 +54,15 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             platformAggregate.body.setMotionType(PhysicsMotionType.A);
         }*/
 
+        const handlebar = MeshBuilder.CreateBox("handlebar", { height: 0.8, width: 0.1, depth: 0.1 }, scene);
+        const neutralLocalPos = new Vector3(0, 1, 0.9);
+        handlebar.parent = platform;
+        handlebar.position = neutralLocalPos.clone();
+        handlebar.isPickable = true;
 
-
-
+        const dragBehavior = new PointerDragBehavior({ dragPlaneNormal: new Vector3(0, 1, 0) });
+        dragBehavior.moveAttached = false; // Désactive le déplacement automatique
+        handlebar.addBehavior(dragBehavior);
 
 
 
@@ -144,14 +148,75 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
         });
 
         const forwardSpeed = 1;   // déplacement en z
+        let lateralSpeed = 0;   // sensibilité sur x
+        let verticalSpeed = 0;  // sensibilité sur y
+        let isDragging = false;
+        let deltax = 0;
+        let deltaz = 0;
 
         scene.onBeforeRenderObservable.add(() => {
             const deltaTime = engine.getDeltaTime() / 1000; // en secondes
 
             const forwardMovement = forwardSpeed * deltaTime;
+            const lateralMovement = lateralSpeed * deltaTime;
+            const verticalMovement = verticalSpeed * deltaTime;
+            console.log("lateralSpeed", lateralSpeed);
+            console.log("verticalSpeed", verticalSpeed);
+            console.log("lateralMovement", lateralMovement);
+            console.log("verticalMovement", verticalMovement);
+            if (isDragging){
+                lateralSpeed += deltax*0.01;
+                verticalSpeed += deltaz*0.01;
+
+                if (deltax > 0) {
+                    console.log("Guidon tiré vers la droite");
+
+                } else if (deltax < 0) {
+                    console.log("Guidon tiré vers la gauche");
+                }
+                if (deltaz > 0) {
+                    console.log("Guidon tiré vers l'avant");
+                } else if (deltaz < 0) {
+                    console.log("Guidon tiré vers soi");
+                }
+
+                if (verticalSpeed> 0.5)
+                    verticalSpeed = 0.5;
+                if (verticalSpeed < -0.5)
+                    verticalSpeed = -0.5;
+                if (lateralSpeed > 0.5)
+                    lateralSpeed = 0.5;
+                if (lateralSpeed < -0.5)
+                    lateralSpeed = -0.5;
+
+            }
+            else {
+                console.log("Guidon relâché");
+                if (lateralSpeed > 0) {
+                    lateralSpeed -= 0.01;
+                }
+                else if (lateralSpeed < 0) {
+                    lateralSpeed += 0.01;
+                }
+                if (verticalSpeed > 0) {
+                    verticalSpeed -= 0.01;
+                }
+                else if (verticalSpeed < 0) {
+                    verticalSpeed += 0.01;
+                }
+            }
+
+
+
+
             obstacles.forEach(obstacle => {
                 obstacle.position.z -= forwardMovement;
             })
+
+            platform.position.y += verticalMovement;
+            platform.position.x += lateralMovement;
+
+
 
             obstacles.forEach(obstacle => {
                 if (platform.intersectsMesh(obstacle, false)) {
@@ -184,6 +249,65 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
         hk.onCollisionEndedObservable.add((ev) => {
             console.log(ev.type);
         })
+
+
+        let currentTiltX = 0;
+        let currentTiltZ = 0;
+        let initialPosition = handlebar.position.clone();
+
+        dragBehavior.onDragStartObservable.add((_event) => {
+            isDragging = true;
+            console.log("Guidon saisi");
+            initialPosition = handlebar.position.clone();
+        });
+
+        dragBehavior.onDragObservable.add((event) => {
+            const sensitivity = 0.05;
+            currentTiltX += event.delta.z * sensitivity;
+            currentTiltZ += event.delta.x * sensitivity;
+
+            const maxTilt = Math.PI / 3;
+            currentTiltX = Math.max(-maxTilt, Math.min(maxTilt, currentTiltX));
+            currentTiltZ = Math.max(-maxTilt, Math.min(maxTilt, currentTiltZ));
+
+            handlebar.rotation.x = currentTiltX;
+            handlebar.rotation.z = currentTiltZ;
+
+            handlebar.position.copyFrom(initialPosition);
+
+            deltax = event.delta.x;
+            deltaz = event.delta.z;
+/*
+            if (event.delta.x > 0) {
+                console.log("Guidon tiré vers la droite");
+            } else if (event.delta.x < 0) {
+                console.log("Guidon tiré vers la gauche");
+            }
+            if (event.delta.z > 0) {
+                console.log("Guidon tiré vers l'avant");
+            } else if (event.delta.z < 0) {
+                console.log("Guidon tiré vers soi");
+            }*/
+        });
+
+        dragBehavior.onDragEndObservable.add((_event) => {
+            isDragging = false;
+            console.log("Guidon relâché" , lateralSpeed, verticalSpeed);
+
+        });
+
+        scene.onBeforeRenderObservable.add(() => {
+            if (!isDragging) {
+                const dt = engine.getDeltaTime() / 1000;
+                const returnSpeed = 1;
+
+                currentTiltX = Scalar.Lerp(currentTiltX, 0, dt * returnSpeed);
+                currentTiltZ = Scalar.Lerp(currentTiltZ, 0, dt * returnSpeed);
+
+                handlebar.rotation.x = currentTiltX;
+                handlebar.rotation.z = currentTiltZ;
+            }
+        });
 
 
         return scene;
