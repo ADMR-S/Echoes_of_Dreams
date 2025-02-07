@@ -90,8 +90,8 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
 
             const x = Math.random() * 10;
             const y = Math.random() * 10;
-            positionz = 1 + Math.random() * 2 +positionz;
-            obstacle.position = new Vector3(x, y, positionz);
+            positionz = 1 + Math.random() * 3 +positionz;
+            obstacle.position = new Vector3(x-5, y-5, positionz);
 
             const shapeType = isCube ? PhysicsShapeType.BOX : PhysicsShapeType.SPHERE;
             new PhysicsAggregate(obstacle, shapeType, { mass: 0, restitution: 0 }, scene);
@@ -147,7 +147,7 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             }
         });
 
-        const forwardSpeed = 1;   // déplacement en z
+        let forwardSpeed = 1.5;   // déplacement en z
         let lateralSpeed = 0;   // sensibilité sur x
         let verticalSpeed = 0;  // sensibilité sur y
         let isDragging = false;
@@ -160,26 +160,28 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             const forwardMovement = forwardSpeed * deltaTime;
             const lateralMovement = lateralSpeed * deltaTime;
             const verticalMovement = verticalSpeed * deltaTime;
-            console.log("lateralSpeed", lateralSpeed);
-            console.log("verticalSpeed", verticalSpeed);
-            console.log("lateralMovement", lateralMovement);
-            console.log("verticalMovement", verticalMovement);
+            forwardSpeed += 0.002;
+
+         //   console.log("lateralSpeed", lateralSpeed);
+         //   console.log("verticalSpeed", verticalSpeed);
+          //  console.log("lateralMovement", lateralMovement);
+          //  console.log("verticalMovement", verticalMovement);
             if (isDragging){
 
                 if (deltax > 0) {
-                    console.log("Guidon tiré vers la droite");
-                    lateralSpeed += deltax*0.01;
+                 //   console.log("Guidon tiré vers la droite");
+                    lateralSpeed += deltax*0.1;
 
                 } else if (deltax < 0) {
-                    lateralSpeed += deltax*0.01;
-                    console.log("Guidon tiré vers la gauche");
+                    lateralSpeed += deltax*0.1;
+                   // console.log("Guidon tiré vers la gauche");
                 }
                 if (deltaz > 0) {
                     verticalSpeed += deltaz*0.01;
-                    console.log("Guidon tiré vers l'avant");
+                 //   console.log("Guidon tiré vers l'avant");
                 } else if (deltaz < 0) {
-                    verticalSpeed += deltaz*0.1;
-                    console.log("Guidon tiré vers soi");
+                    verticalSpeed += deltaz*0.3;
+                //    console.log("Guidon tiré vers soi");
                 }
 
                 if (verticalSpeed> 0.5)
@@ -193,7 +195,6 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
 
             }
             else {
-                console.log("Guidon relâché");
                 if (lateralSpeed > 0) {
                     lateralSpeed -= 0.01;
                 }
@@ -222,16 +223,26 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             if (platform.position.y<-1.8)
                 platform.position.y = -1.8;
 
+            if (platform.position.x>4)
+                platform.position.x = 4;
+            if (platform.position.x<-4)
+                platform.position.x = -4;
+            if (platform.position.y>3)
+                platform.position.y = 3;
 
-            obstacles.forEach(obstacle => {
-                if (platform.intersectsMesh(obstacle, false)) {
-                    console.log("Collision détectée !");
-                }
-            });
+
+
+
+
 
             // Nettoyage des obstacles dépassés
             for (let i = obstacles.length - 1; i >= 0; i--) {
                 if (obstacles[i].position.z < platform.position.z - 10) {
+                    obstacles[i].dispose();
+                    obstacles.splice(i, 1);
+                }
+                else if (platform.intersectsMesh(obstacles[i], false)) {
+                    console.log("Collision détectée !");
                     obstacles[i].dispose();
                     obstacles.splice(i, 1);
                 }
