@@ -50,11 +50,14 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
         const physicsEngine = scene.getPhysicsEngine();
 
-        const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 2 }, scene);
+        const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
         //const platformAggregate = new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 1, restitution: 0.1 }, scene);
        /* if (platformAggregate.body.setMotionType) {
             platformAggregate.body.setMotionType(PhysicsMotionType.A);
         }*/
+
+
+
 
 
 
@@ -88,7 +91,6 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
 
             const shapeType = isCube ? PhysicsShapeType.BOX : PhysicsShapeType.SPHERE;
             new PhysicsAggregate(obstacle, shapeType, { mass: 0, restitution: 0 }, scene);
-
             obstacles.push(obstacle);
         }
 
@@ -141,14 +143,29 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             }
         });
 
-        const forwardSpeed = 0;   // déplacement en z
+        const forwardSpeed = 1;   // déplacement en z
 
         scene.onBeforeRenderObservable.add(() => {
             const deltaTime = engine.getDeltaTime() / 1000; // en secondes
 
             const forwardMovement = forwardSpeed * deltaTime;
-            platform.position.z += forwardMovement;
-           // console.log(platform.position.z);
+            obstacles.forEach(obstacle => {
+                obstacle.position.z -= forwardMovement;
+            })
+
+            obstacles.forEach(obstacle => {
+                if (platform.intersectsMesh(obstacle, false)) {
+                    console.log("Collision détectée !");
+                }
+            });
+
+            // Nettoyage des obstacles dépassés
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                if (obstacles[i].position.z < platform.position.z - 10) {
+                    obstacles[i].dispose();
+                    obstacles.splice(i, 1);
+                }
+            }
         });
 
 
@@ -168,6 +185,7 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             console.log(ev.type);
         })
 
+
         return scene;
     };
 }
@@ -181,13 +199,13 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     aggregateProjectile.body.setMotionType(PhysicsMotionType.DYNAMIC);
     let startPos: Vector3;
     if (controller.grip) {
-        console.log("controler");
-        startPos = controller.grip.position.clone();
+        startPos = controller.grip.getAbsolutePosition().clone();
     } else if (controller.pointer) {
-        startPos = controller.pointer.position.clone();
+        startPos = controller.pointer.getAbsolutePosition().clone();
     } else {
         startPos = scene.activeCamera!.position.clone();
     }
+    projectile.position = startPos;
     console.log("startPos");
     console.log(startPos);
     projectile.position = new Vector3(startPos.x, startPos.y, startPos.z);
