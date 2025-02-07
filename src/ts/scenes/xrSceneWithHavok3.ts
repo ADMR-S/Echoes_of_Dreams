@@ -165,18 +165,20 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             console.log("lateralMovement", lateralMovement);
             console.log("verticalMovement", verticalMovement);
             if (isDragging){
-                lateralSpeed += deltax*0.01;
-                verticalSpeed += deltaz*0.01;
 
                 if (deltax > 0) {
                     console.log("Guidon tiré vers la droite");
+                    lateralSpeed += deltax*0.01;
 
                 } else if (deltax < 0) {
+                    lateralSpeed += deltax*0.01;
                     console.log("Guidon tiré vers la gauche");
                 }
                 if (deltaz > 0) {
+                    verticalSpeed += deltaz*0.01;
                     console.log("Guidon tiré vers l'avant");
                 } else if (deltaz < 0) {
+                    verticalSpeed += deltaz*0.1;
                     console.log("Guidon tiré vers soi");
                 }
 
@@ -216,6 +218,9 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             platform.position.y += verticalMovement;
             platform.position.x += lateralMovement;
 
+            //temp
+            if (platform.position.y<-1.8)
+                platform.position.y = -1.8;
 
 
             obstacles.forEach(obstacle => {
