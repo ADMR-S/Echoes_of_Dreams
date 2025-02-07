@@ -50,12 +50,11 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
         const physicsEngine = scene.getPhysicsEngine();
 
-        const platform = MeshBuilder.CreateGround("ground", { width: 5, height: 5 }, scene);
-        const platformAggregate = new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 1, restitution: 0.1 }, scene);
-        platformAggregate.body.setCollisionCallbackEnabled(true);
-        if (platformAggregate.body.setMotionType) {
-            platformAggregate.body.setMotionType(PhysicsMotionType.ANIMATED);
-        }
+        const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 2 }, scene);
+        //const platformAggregate = new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 1, restitution: 0.1 }, scene);
+       /* if (platformAggregate.body.setMotionType) {
+            platformAggregate.body.setMotionType(PhysicsMotionType.A);
+        }*/
 
 
 
@@ -66,6 +65,32 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
         tunnelMat.backFaceCulling = false;
         tunnel.material = tunnelMat;
         tunnel.position.z = 500;
+        const obstacles: Mesh[] = [];
+
+        let positionz = -10;
+        while (positionz < 1000) {
+            const isCube = Math.random() < 0.5;
+            let obstacle: Mesh;
+            const size = 1;
+            if (isCube) {
+                obstacle = MeshBuilder.CreateBox("obstacle", { size: size }, scene);
+            } else {
+                obstacle = MeshBuilder.CreateSphere("obstacle", { diameter: size }, scene);
+            }
+            const obstacleMat = new StandardMaterial("obstacleMat", scene);
+            obstacleMat.diffuseColor = new Color3(0, 1, 0);
+            obstacle.material = obstacleMat;
+
+            const x = Math.random() * 10;
+            const y = Math.random() * 10;
+            positionz = 1 + Math.random() * 2 +positionz;
+            obstacle.position = new Vector3(x, y, positionz);
+
+            const shapeType = isCube ? PhysicsShapeType.BOX : PhysicsShapeType.SPHERE;
+            new PhysicsAggregate(obstacle, shapeType, { mass: 0, restitution: 0 }, scene);
+
+            obstacles.push(obstacle);
+        }
 
         const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
         target.position = new Vector3(0, 1, 5);
@@ -78,6 +103,10 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             },
             optionalFeatures: true
         });
+
+        var camera=  xr.baseExperience.camera;
+
+        camera.parent = platform;
 
         //timer when shooting
         let timer = 0;
@@ -112,6 +141,17 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             }
         });
 
+        const forwardSpeed = 0;   // déplacement en z
+
+        scene.onBeforeRenderObservable.add(() => {
+            const deltaTime = engine.getDeltaTime() / 1000; // en secondes
+
+            const forwardMovement = forwardSpeed * deltaTime;
+            platform.position.z += forwardMovement;
+           // console.log(platform.position.z);
+        });
+
+
         engine.runRenderLoop(() => {
             scene.render();
         });
@@ -134,11 +174,11 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
 
 export default new XRSceneWithHavok3();
 
-function shootProjectile(controller: WebXRInputSource, scene: Scene, target: Mesh) {
+function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     const projectile = MeshBuilder.CreateSphere("projectile", { diameter: 0.2 }, scene);
 
-    const aggregateProjectile = new PhysicsAggregate(projectile, PhysicsShapeType.SPHERE, { mass: 5 }, scene);
-
+    const aggregateProjectile = new PhysicsAggregate(projectile, PhysicsShapeType.SPHERE, { mass: 10 }, scene);
+    aggregateProjectile.body.setMotionType(PhysicsMotionType.DYNAMIC);
     let startPos: Vector3;
     if (controller.grip) {
         console.log("controler");
@@ -164,7 +204,7 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene, target: Mes
 
     tmpRay.direction.normalize()
     let direc = tmpRay.direction.normalize()
-    const impulseMagnitude = 150;
+    const impulseMagnitude = 100;
     aggregateProjectile.body.applyImpulse(
         direc.scale(impulseMagnitude),
         projectile.absolutePosition
