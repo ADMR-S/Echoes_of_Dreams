@@ -20,7 +20,7 @@ export class Object3DPickable implements Object3D{
       this.mesh.material = material;
     }
   
-    private createMesh(scene: Scene, name: string, type: string, size: number): Mesh {
+    createMesh(scene: Scene, name: string, type: string, size: number): Mesh {
       switch (type) {
         case "sphere":
           return MeshBuilder.CreateSphere(name, { diameter: size }, scene);

@@ -51,7 +51,10 @@ export class XRHandler{
                         xButtonComponent.onButtonStateChangedObservable.add((button) => {
                             if (button.pressed) {
                                 console.log("X Button pressed");
-                                this.selectObject(controller);
+                                const pickResult = this.xr.pointerSelection.getMeshUnderPointer(controller.uniqueId);
+                                if (pickResult) {
+                                    this.player.selectObject(pickResult, this.xr, this.scene);
+                                }
                             }
                         });
                     }
@@ -60,23 +63,6 @@ export class XRHandler{
         });
     }
 
-    selectObject(controller : WebXRInputSource) {
-        const pickResult = this.xr.pointerSelection.getMeshUnderPointer(controller.uniqueId);
-        console.log("ON SELECTIONNE : ");
-        console.log(pickResult);
-        if (pickResult) {
-            const selectedObject = pickResult;
-            selectedObject.parent = this.xr.baseExperience.camera;
-            this.player.selectedObject = selectedObject;
-            this.animateObject(selectedObject);
-        }
-    }
 
-    animateObject(object : AbstractMesh) {
-        this.scene.onBeforeRenderObservable.add(() => {
-            object.rotation.x += 0.01;
-            object.rotation.y += 0.01;
-        });
-    }
 }
 export default XRHandler;
