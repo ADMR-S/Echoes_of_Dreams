@@ -24,13 +24,14 @@ import {XRSceneWithHavok2} from "./xrSceneWithHavok2.ts";
 import XRDrumKit from "../xrDrumKit.ts"
 
 import XRHandler from "../XRHandler.ts"
+import {Player} from "../Player.ts"
 
 
 export class XRSceneWithHavok implements CreateSceneClass {
     preTasks = [havokModule];
 
     
-    createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
+    createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext, player : Player): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
         const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
@@ -45,7 +46,7 @@ export class XRSceneWithHavok implements CreateSceneClass {
         console.log("BASE EXPERIENCE")
         console.log(xr.baseExperience)
 
-        new XRHandler(scene, xr);
+        new XRHandler(scene, xr, player);
 
           //Good way of initializing Havok
         // initialize plugin

@@ -3,6 +3,7 @@ import { Engine } from "@babylonjs/core/Engines/engine";
 import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
 import { getSceneModule } from "./createScene";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
+import { Player } from "./Player";
 
 
 // ----- AUDIO INIT ------
@@ -26,9 +27,10 @@ export const babylonInit = async (): Promise<void> => {
   console.log(engine)
 
 
+  const player = new Player();
 
   // Create the scene
-  const scene = await createSceneModule.createScene(engine, canvas, audioContext);
+  const scene = await createSceneModule.createScene(engine, canvas, audioContext, player);
 
   // JUST FOR TESTING. Not needed for anything else
   (window as any).scene = scene;

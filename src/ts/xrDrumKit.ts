@@ -247,7 +247,6 @@ class XRDrumKit {
                 */
                 const relativeVelocity = currentVelocity.subtract(otherVelocity);
                 const speed = Math.abs(relativeVelocity.length());
-                console.log('Speed:', speed);
                 const intensity = Math.min(Math.max(speed * 10, 0), 127); // Scale speed to MIDI velocity range (0-127)
 
                 if (currentVelocity.y > 0) {
