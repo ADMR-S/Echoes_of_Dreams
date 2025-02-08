@@ -21,7 +21,7 @@ export class Player{
         this.selectedObject = object;
     }
 
-    animateObject(object : TransformNode, scene : Scene){
+    animateObject(object : TransformNode, scene : Scene){ //A déplacer, mais pickMesh renvoie un Mesh et pas un Object3DPickable (faire un get par id dans la scene ?)
         scene.onBeforeRenderObservable.add(() => {
             object.rotation.x += 0.01;
             object.rotation.y += 0.01;
