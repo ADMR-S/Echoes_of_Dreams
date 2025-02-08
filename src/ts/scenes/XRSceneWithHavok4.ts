@@ -2,6 +2,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
@@ -21,7 +22,7 @@ import {
     PhysicsAggregate,
     PhysicsShapeType,
     PhysicsPrestepType,
-    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar
+    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, TransformNode
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
@@ -67,18 +68,12 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
 
         let positionz = -10;
         while (positionz < 1000) {
-            var asteroid = MeshBuilder.CreateSphere("asteroid", {diameter: 2}, scene);
-            var texture = new Texture("https://www.babylonjs.com/assets/rock.jpg", scene);
-            var material = new StandardMaterial("material", scene);
-            material.diffuseTexture = texture;
-            asteroid.material = material;
             const x = Math.random() * 10;
             const y = Math.random() * 10;
             positionz = 1 + Math.random() * 3 + positionz;
-            asteroid.position = new Vector3(x - 5, y - 5, positionz);
+            const position = new Vector3(x - 5, y - 5, positionz);
 
-            new PhysicsAggregate(asteroid, PhysicsShapeType.SPHERE, { mass: 0, restitution: 0 }, scene);
-            obstacles.push(asteroid);
+            loadAsteroid(scene, position, obstacles);
         }
 
         const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
@@ -112,7 +107,7 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
                                     return;
                                 } else {
                                     timer = Date.now();
-                                    shootProjectile(controller, scene, target);
+                                    shootProjectile(controller, scene);
                                 }
                             }
                         });
@@ -265,6 +260,38 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
 }
 
 export default new XRSceneWithHavok4();
+
+async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) {
+    try {
+        const meshes = await SceneLoader.ImportMeshAsync(
+            "", 
+            "./src/asset/AZURE Nature/", 
+            "asteroid_1.glb", 
+            scene
+        );
+        const asteroidNode = scene.getNodeByName("asteroid_1");
+        if (asteroidNode) {
+            console.log("Asteroid trouvé", asteroidNode);
+
+            // Tu peux maintenant travailler avec le nœud, par exemple, le positionner
+            (asteroidNode as Mesh).position = position;
+
+            // Si tu veux ajouter un comportement physique au modèle
+            new PhysicsAggregate(asteroidNode as TransformNode, PhysicsShapeType.MESH, { mass: 0, restitution: 0 }, scene);
+            obstacles.push(asteroidNode as Mesh);
+        } else {
+            console.error("Nœud 'asteroid_1' non trouvé dans la scène !");
+        }
+        meshes.meshes.forEach(mesh => {
+            mesh.position = position; 
+            new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 0, restitution: 0 }, scene);
+            obstacles.push(mesh as Mesh);
+        });
+    } catch (error) {
+        // Gestion des erreurs
+        console.error("Erreur lors du chargement du modèle:", error);
+    }
+}
 
 function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     const projectile = MeshBuilder.CreateSphere("projectile", { diameter: 0.2 }, scene);

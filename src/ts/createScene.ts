@@ -20,6 +20,10 @@ export interface CreateSceneModule {
 }
 
 export const getSceneModule = (): CreateSceneClass => {
+<<<<<<< HEAD
+    return new XRSceneWithHavok4();
+=======
     return new XRSceneWithHavok5();
+>>>>>>> 04463cb5e5eadf61371f750355b3a6abab5edbeb
 }
 
