@@ -30,7 +30,7 @@ import { XRSceneWithHavok2 } from "./xrSceneWithHavok2.ts";
 
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 
-export class XRSceneWithHavok4 implements CreateSceneClass {
+export class XRSceneWithHavok5 implements CreateSceneClass {
     preTasks = [havokModule];
 
     createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext): Promise<Scene> => {
@@ -259,13 +259,13 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
     };
 }
 
-export default new XRSceneWithHavok4();
+export default new XRSceneWithHavok5();
 
 async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) {
     try {
         const meshes = await SceneLoader.ImportMeshAsync(
             "", 
-            "./asset/AZURE Nature/", 
+            "./src/asset/AZURE Nature/", 
             "asteroid_1.glb", 
             scene
         );
