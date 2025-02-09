@@ -6,8 +6,7 @@ import { XRSceneWithHavok } from "./scenes/xrSceneWithHavok";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import { Player } from "./Player";
 import { XRSceneWithHavok3 } from "./scenes/xrSceneWithHavok3";
-import {XRSceneWithHavok5} from "./scenes/SceneTestAlai2";
-import {XRSceneWithHavok4} from "./scenes/SceneTestAlai1";
+import {XRSceneWithHavok5} from "./scenes/XrSceneWithHavok5";
 
 export interface CreateSceneClass {
     createScene: (engine: AbstractEngine, canvas: HTMLCanvasElement, audiocontext : AudioContext, player : Player) => Promise<Scene>;
@@ -21,5 +20,9 @@ export interface CreateSceneModule {
 }
 
 export const getSceneModule = (): CreateSceneClass => {
+<<<<<<< HEAD
+    return new XRSceneWithHavok4();
+=======
     return new XRSceneWithHavok5();
+>>>>>>> 04463cb5e5eadf61371f750355b3a6abab5edbeb
 }

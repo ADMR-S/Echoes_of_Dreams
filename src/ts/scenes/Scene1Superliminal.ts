@@ -21,15 +21,19 @@ import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepTy
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
+import XRDrumKit from "../xrDrumKit.ts"
+
 import XRHandler from "../XRHandler.ts"
-<<<<<<< Updated upstream
 import {Player} from "../Player.ts"
-=======
-import { SceneLoader } from "@babylonjs/core";
->>>>>>> Stashed changes
+
+import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import "@babylonjs/core/Helpers/sceneHelpers";
 
 
-export class XRSceneWithHavok implements CreateSceneClass {
+export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
 
     
@@ -66,13 +70,20 @@ export class XRSceneWithHavok implements CreateSceneClass {
         const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
         const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
 
-<<<<<<< HEAD
     const eventMask = started | continued | finished;
       
-    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
-=======
-    const eventMask = started | continued | finished;	    
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0
+    const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+
+    // Skybox
+	var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+	var skyboxMaterial = new StandardMaterial("skyBox", scene);
+	skyboxMaterial.backFaceCulling = false;
+	skyboxMaterial.reflectionTexture = new CubeTexture("./src/asset/texture/skybox3", scene);
+	skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+	skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+	skyboxMaterial.specularColor = new Color3(0, 0, 0);
+	skybox.material = skyboxMaterial;			
+	    
 
         //addScaleRoutineToSphere(sphereObservable);
 
@@ -129,42 +140,23 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
             }
         })
-        //loadGunModel(scene);
 
         return scene;
     };
 }
 
-export default new XRSceneWithHavok();
-
-function resetSceneObjects(scene: Scene) {
-    scene.meshes.forEach(mesh => {
-        if (mesh.name !== "ground") { 
-            mesh.dispose();
-        }
-    });
-
-    //const newSphere = MeshBuilder.CreateSphere("newSphere", { diameter: 2 }, scene);
-    //newSphere.position = new Vector3(0, 1, 0);
-}
-
+export default new Scene1Superliminal();
 
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
-    const newSceneInstance = new XRSceneWithHavok();
+    const newSceneInstance = new XRSceneWithHavok2();
     newSceneInstance.createScene(engine).then(newScene => {
         engine.runRenderLoop(() => {
             newScene.render();
         });
     });
 }
-
-function switchScene2(engine: AbstractEngine, scene: Scene) {
-    resetSceneObjects(scene);
-}
-
-
 
 
 function addKeyboardControls(xr: any, moveSpeed: number) {

@@ -22,16 +22,16 @@ import {
     PhysicsAggregate,
     PhysicsShapeType,
     PhysicsPrestepType,
-    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar
+    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, WebXRDefaultExperience
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
-//import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import {WebXRInputSource} from "@babylonjs/core/XR/webXRInputSource";
+import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
 
 
-export class XRSceneWithHavok3 implements CreateSceneClass {
+export class SceneNiveau3 implements CreateSceneClass {
     preTasks = [havokModule];
 
     
@@ -138,6 +138,12 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
         let part2StartTime: number | null = null;
         let part2Started = false;
         const meteores: Mesh[] = [];
+        const swords: Mesh[] = [];
+        let partie = 1;
+        let part3StartTime: number | null = null;
+        let part3Started = false;
+        let timerpart2 = 180000;
+        let timerpart3 = 180000;
 
         //partie 2
         xr.input.onControllerAddedObservable.add((controller) => {
@@ -149,7 +155,7 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
                         console.log("test");
 
                         triggerComponent.onButtonStateChangedObservable.add((component) => {
-                            if (component.pressed && obstacles.length == 0) {
+                            if (component.pressed && partie == 2) {
                                 console.log("test");
                                 if (Date.now() - timer < interval) {
                                     return;
@@ -174,90 +180,96 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
             const deltaTime = dtMs / 1000;        // deltaTime en secondes
 
             //partie 1
-            if (obstacles.length > 0) {
-                const forwardMovement = forwardSpeed * deltaTime;
-                const lateralMovement = lateralSpeed * deltaTime;
-                const verticalMovement = verticalSpeed * deltaTime;
-                forwardSpeed += 0.002;
+            if (partie == 1) {
+                if (obstacles.length > 0) {
+                    const forwardMovement = forwardSpeed * deltaTime;
+                    const lateralMovement = lateralSpeed * deltaTime;
+                    const verticalMovement = verticalSpeed * deltaTime;
+                    forwardSpeed += 0.002;
 
-                //   console.log("lateralSpeed", lateralSpeed);
-                //   console.log("verticalSpeed", verticalSpeed);
-                //  console.log("lateralMovement", lateralMovement);
-                //  console.log("verticalMovement", verticalMovement);
-                if (isDragging) {
+                    //   console.log("lateralSpeed", lateralSpeed);
+                    //   console.log("verticalSpeed", verticalSpeed);
+                    //  console.log("lateralMovement", lateralMovement);
+                    //  console.log("verticalMovement", verticalMovement);
+                    if (isDragging) {
 
-                    if (deltax > 0) {
-                        //   console.log("Guidon tiré vers la droite");
-                        lateralSpeed += deltax * 0.1;
+                        if (deltax > 0) {
+                            //   console.log("Guidon tiré vers la droite");
+                            lateralSpeed += deltax * 0.1;
 
-                    } else if (deltax < 0) {
-                        lateralSpeed += deltax * 0.1;
-                        // console.log("Guidon tiré vers la gauche");
+                        } else if (deltax < 0) {
+                            lateralSpeed += deltax * 0.1;
+                            // console.log("Guidon tiré vers la gauche");
+                        }
+                        if (deltaz > 0) {
+                            verticalSpeed += deltaz * 0.01;
+                            //   console.log("Guidon tiré vers l'avant");
+                        } else if (deltaz < 0) {
+                            verticalSpeed += deltaz * 0.3;
+                            //    console.log("Guidon tiré vers soi");
+                        }
+
+                        if (verticalSpeed > 0.5)
+                            verticalSpeed = 0.5;
+                        if (verticalSpeed < -0.5)
+                            verticalSpeed = -0.5;
+                        if (lateralSpeed > 0.5)
+                            lateralSpeed = 0.5;
+                        if (lateralSpeed < -0.5)
+                            lateralSpeed = -0.5;
+
+                    } else {
+                        if (lateralSpeed > 0) {
+                            lateralSpeed -= 0.01;
+                        } else if (lateralSpeed < 0) {
+                            lateralSpeed += 0.01;
+                        }
+                        if (verticalSpeed > 0) {
+                            verticalSpeed -= 0.01;
+                        } else if (verticalSpeed < 0) {
+                            verticalSpeed += 0.01;
+                        }
                     }
-                    if (deltaz > 0) {
-                        verticalSpeed += deltaz * 0.01;
-                        //   console.log("Guidon tiré vers l'avant");
-                    } else if (deltaz < 0) {
-                        verticalSpeed += deltaz * 0.3;
-                        //    console.log("Guidon tiré vers soi");
-                    }
 
-                    if (verticalSpeed > 0.5)
-                        verticalSpeed = 0.5;
-                    if (verticalSpeed < -0.5)
-                        verticalSpeed = -0.5;
-                    if (lateralSpeed > 0.5)
-                        lateralSpeed = 0.5;
-                    if (lateralSpeed < -0.5)
-                        lateralSpeed = -0.5;
 
-                } else {
-                    if (lateralSpeed > 0) {
-                        lateralSpeed -= 0.01;
-                    } else if (lateralSpeed < 0) {
-                        lateralSpeed += 0.01;
-                    }
-                    if (verticalSpeed > 0) {
-                        verticalSpeed -= 0.01;
-                    } else if (verticalSpeed < 0) {
-                        verticalSpeed += 0.01;
+                    obstacles.forEach(obstacle => {
+                        obstacle.position.z -= forwardMovement;
+                    })
+
+                    platform.position.y += verticalMovement;
+                    platform.position.x += lateralMovement;
+
+                    //temp
+                    if (platform.position.y < -1.8)
+                        platform.position.y = -1.8;
+
+                    if (platform.position.x > 4)
+                        platform.position.x = 4;
+                    if (platform.position.x < -4)
+                        platform.position.x = -4;
+                    if (platform.position.y > 3)
+                        platform.position.y = 3;
+
+
+                    // Nettoyage des obstacles dépassés
+                    for (let i = obstacles.length - 1; i >= 0; i--) {
+                        if (obstacles[i].position.z < platform.position.z - 10) {
+                            obstacles[i].dispose();
+                            obstacles.splice(i, 1);
+                        } else if (platform.intersectsMesh(obstacles[i], false)) {
+                            console.log("Collision détectée !");
+                            obstacles[i].dispose();
+                            obstacles.splice(i, 1);
+                        }
                     }
                 }
-
-
-                obstacles.forEach(obstacle => {
-                    obstacle.position.z -= forwardMovement;
-                })
-
-                platform.position.y += verticalMovement;
-                platform.position.x += lateralMovement;
-
-                //temp
-                if (platform.position.y < -1.8)
-                    platform.position.y = -1.8;
-
-                if (platform.position.x > 4)
-                    platform.position.x = 4;
-                if (platform.position.x < -4)
-                    platform.position.x = -4;
-                if (platform.position.y > 3)
-                    platform.position.y = 3;
-
-
-                // Nettoyage des obstacles dépassés
-                for (let i = obstacles.length - 1; i >= 0; i--) {
-                    if (obstacles[i].position.z < platform.position.z - 10) {
-                        obstacles[i].dispose();
-                        obstacles.splice(i, 1);
-                    } else if (platform.intersectsMesh(obstacles[i], false)) {
-                        console.log("Collision détectée !");
-                        obstacles[i].dispose();
-                        obstacles.splice(i, 1);
-                    }
+                else {
+                    console.log("Partie 1 terminée");
+                    partie = 2;
                 }
             }
-            else { // Partie 2
-
+            // Partie 2
+            else if (partie == 2) {
                 if (!part2Started) {
                     part2Started = true;
                     part2StartTime = Date.now();
@@ -266,9 +278,9 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
                 }
 
                 const elapsed = Date.now() - (part2StartTime as number);
-                if (elapsed >= 180000) { // 3 minutes
+                if (elapsed >= timerpart2) { // 3 minutes
                     console.log("Fin du niveau");
-                    // TODO: fin du niveau
+                    partie = 3;
                     return;
                 }
 
@@ -322,6 +334,72 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
                     }
                 }
             }
+            else if (partie == 3) {
+                if (!part3Started) {
+                    part3Started = true;
+                    part3StartTime = Date.now();
+
+                    console.log("Partie 3 : les météores arrivent !");
+                    xr.input.controllers.forEach((controller) => {
+                        const sword = createSword(controller, scene);
+                        swords.push(sword);
+                    });
+                }
+
+                const elapsed = Date.now() - (part3StartTime as number);
+                if (elapsed >= timerpart3) { // 3 minutes
+                    console.log("Fin du niveau");
+                    //TODO: fin du niveau
+                    return;
+                }
+
+                const spawnInterval = 2000 - ((2000 - 500) * (elapsed / 180000));
+                meteorSpawnTimer += dtMs;
+                if (meteorSpawnTimer >= spawnInterval) {
+                    meteorSpawnTimer = 0;
+                    const meteor = spawnMeteor(scene, platform);
+                    meteores.push(meteor);
+                }
+
+                const meteorSpeed = 1.5;
+
+                for (let i = meteores.length - 1; i >= 0; i--) {
+                    const meteor = meteores[i];
+                    if (!meteor) { continue; }
+                    const direction = platform.position.subtract(meteor.position).normalize();
+                    meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
+
+                    if (meteor.intersectsMesh(cameraHitbox, false)) {
+                        console.log("Un météore a touché le joueur !");
+                        meteor.dispose();
+                        meteores.splice(i, 1);
+                        continue;
+                    }
+
+                    for (let s = 0; s < swords.length; s++) {
+                        const sword = swords[s];
+                        if (meteor.intersectsMesh(sword, false)) {
+                            meteor.metadata.hits = (meteor.metadata.hits || 0) + 3;
+                            console.log(`Météore touché par épée : ${meteor.metadata.hits} fois`);
+
+                            const meteorMat = (meteor.material as StandardMaterial);
+                            if (meteor.metadata.hits === 1) {
+                                meteorMat.diffuseColor = new Color3(1, 0.5, 0.5);
+                            } else if (meteor.metadata.hits === 2) {
+                                meteorMat.diffuseColor = new Color3(1, 0.3, 0.3);
+                            } else if (meteor.metadata.hits >= 3) {
+                                console.log("Météore explosé !");
+                                //TODO: explosion
+                                meteor.dispose();
+                                meteores.splice(i, 1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+
         });
 
 
@@ -400,7 +478,7 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
     };
 }
 
-export default new XRSceneWithHavok3();
+export default new SceneNiveau3();
 
 
 function spawnMeteor(scene: Scene, platform: Mesh): Mesh {
@@ -423,7 +501,19 @@ function spawnMeteor(scene: Scene, platform: Mesh): Mesh {
 
     return meteor;
 }
+function createSword(controller: WebXRInputSource, scene: Scene): Mesh {
+    const sword = MeshBuilder.CreateBox("sword", { height: 1.2, width: 0.1, depth: 0.1 }, scene);
+    sword.position = new Vector3(0, -0.3, 0.2);
+    const swordMat = new StandardMaterial("swordMat", scene);
+    swordMat.diffuseColor = new Color3(0.8, 0.8, 0.8);
+    sword.material = swordMat;
 
+    if (controller.grip) {
+        sword.parent = controller.grip;
+    }
+    sword.isPickable = false;
+    return sword;
+}
 
 function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles: Mesh[]) {
     const projectile = MeshBuilder.CreateSphere("projectile", { diameter: 0.2 }, scene);

@@ -2,6 +2,22 @@ import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import { Scene } from "@babylonjs/core/scene";
 import { Vector3, Quaternion } from "@babylonjs/core/Maths/math.vector";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok2.ts
+=======
+//import "@babylonjs/core/Physics/physicsEngineComponent";
+
+// If you don't need the standard material you will still need to import it since the scene requires it.
+//import "@babylonjs/core/Materials/standardMaterial";
+import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
+import { havokModule } from "../../externals/havok.ts";
+import { CreateSceneClass } from "../../createScene.ts";
+
+
+import "@babylonjs/core/Debug/debugLayer";
+import "@babylonjs/inspector";
+import "@babylonjs/loaders/glTF";
+>>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/a_supprimer/xrSceneWithHavok2.ts
 import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
