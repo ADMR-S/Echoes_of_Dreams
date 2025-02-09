@@ -6,8 +6,8 @@ import { XRSceneWithHavok } from "./scenes/xrSceneWithHavok";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import { Player } from "./Player";
 import { SceneNiveau3 } from "./scenes/sceneNiveau3.ts";
-import {XRSceneWithHavok5} from "./scenes/XRSceneWithHavok5";
-import {XRSceneWithHavok4} from "./scenes/XRSceneWithHavok4.ts";
+import {XRSceneWithHavok5} from "./scenes/SceneTestAlai2.ts";
+import {XRSceneWithHavok4} from "./scenes/SceneTestAlai1.ts";
 
 import Scene1Superliminal from "./scenes/Scene1Superliminal.ts";
 

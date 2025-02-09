@@ -10,8 +10,8 @@ import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 //import "@babylonjs/core/Materials/standardMaterial";
 import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { havokModule } from "../externals/havok";
-import { CreateSceneClass } from "../createScene";
+import { havokModule } from "../externals/havok.ts";
+import { CreateSceneClass } from "../createScene.ts";
 
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
@@ -30,7 +30,7 @@ import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 
-export class XRSceneWithHavok4 implements CreateSceneClass {
+export class XRSceneWithHavok5 implements CreateSceneClass {
     preTasks = [havokModule];
 
     createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext): Promise<Scene> => {
@@ -259,14 +259,14 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
     };
 }
 
-export default new XRSceneWithHavok4();
+export default new XRSceneWithHavok5();
 
 async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) {
     try {
         const meshes = await SceneLoader.ImportMeshAsync(
-            "", 
-            "./src/asset/AZURE Nature/", 
-            "asteroid_1.glb", 
+            "",
+            "./src/asset/AZURE Nature/",
+            "asteroid_1.glb",
             scene
         );
         const asteroidNode = scene.getNodeByName("asteroid_1");
@@ -283,7 +283,7 @@ async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) 
             console.error("Nœud 'asteroid_1' non trouvé dans la scène !");
         }
         meshes.meshes.forEach(mesh => {
-            mesh.position = position; 
+            mesh.position = position;
             new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 0, restitution: 0 }, scene);
             obstacles.push(mesh as Mesh);
         });
