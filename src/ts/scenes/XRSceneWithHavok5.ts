@@ -26,11 +26,7 @@ import {
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-//import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
-=======
 import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
 
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 
@@ -80,12 +76,10 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
             loadAsteroid(scene, position, obstacles);
         }
 
-       /* const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
+        const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
         target.position = new Vector3(0, 1, 5);
         var targetAggregate = new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 0 }, scene);
         targetAggregate.body.setCollisionCallbackEnabled(true);
-
-*/
 
         const xr = await scene.createDefaultXRExperienceAsync({
             uiOptions: {
@@ -94,36 +88,6 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
             optionalFeatures: true
         });
 
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-        var camera=  xr.baseExperience.camera;
-        camera.parent = platform;
-
-        const cameraHitbox = MeshBuilder.CreateSphere("cameraHitbox", { diameter: 1.1 }, scene);
-        cameraHitbox.parent = camera;
-
-        cameraHitbox.isVisible = false;
-
-        //timer when shooting
-        let timer = 0;
-        //interval
-        let interval = 300;
-        let forwardSpeed = 1.5;   // déplacement en z
-        let lateralSpeed = 0;   // sensibilité sur x
-        let verticalSpeed = 0;  // sensibilité sur y
-        let isDragging = false;
-        let deltax = 0;
-        let deltaz = 0;
-        let currentTiltX = 0;
-        let currentTiltZ = 0;
-        let initialPosition = handlebar.position.clone();
-        const projectiles: Mesh[] = [];
-        let meteorSpawnTimer = 0; // en ms
-        let part2StartTime: number | null = null;
-        let part2Started = false;
-        const meteores: Mesh[] = [];
-
-        //partie 2
-=======
         var camera = xr.baseExperience.camera;
         camera.parent = platform;
 
@@ -132,34 +96,18 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
         // Interval
         let interval = 500;
 
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
         xr.input.onControllerAddedObservable.add((controller) => {
             if (controller.inputSource.handedness === 'right') {
                 controller.onMotionControllerInitObservable.add((motionController) => {
                     const triggerComponent = motionController.getComponent("xr-standard-trigger");
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-                    console.log(triggerComponent);
-                    if (triggerComponent )  {
-                        console.log("test");
-
-                        triggerComponent.onButtonStateChangedObservable.add((component) => {
-                            if (component.pressed && obstacles.length == 0) {
-                                console.log("test");
-=======
                     if (triggerComponent) {
                         triggerComponent.onButtonStateChangedObservable.add((component) => {
                             if (component.pressed) {
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
                                 if (Date.now() - timer < interval) {
                                     return;
                                 } else {
                                     timer = Date.now();
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-                                    shootProjectile(controller, scene, projectiles);
-
-=======
                                     shootProjectile(controller, scene);
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
                                 }
                             }
                         });
@@ -168,96 +116,21 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
             }
         });
 
-
-
+        let forwardSpeed = 1.5;   // déplacement en z
+        let lateralSpeed = 0;   // sensibilité sur x
+        let verticalSpeed = 0;  // sensibilité sur y
+        let isDragging = false;
+        let deltax = 0;
+        let deltaz = 0;
 
         scene.onBeforeRenderObservable.add(() => {
-            const dtMs = engine.getDeltaTime();      // dtMs en millisecondes
-            const deltaTime = dtMs / 1000;        // deltaTime en secondes
+            const deltaTime = engine.getDeltaTime() / 1000; // en secondes
 
-            //partie 1
-            if (obstacles.length > 0) {
-                const forwardMovement = forwardSpeed * deltaTime;
-                const lateralMovement = lateralSpeed * deltaTime;
-                const verticalMovement = verticalSpeed * deltaTime;
-                forwardSpeed += 0.002;
+            const forwardMovement = forwardSpeed * deltaTime;
+            const lateralMovement = lateralSpeed * deltaTime;
+            const verticalMovement = verticalSpeed * deltaTime;
+            forwardSpeed += 0.002;
 
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-                //   console.log("lateralSpeed", lateralSpeed);
-                //   console.log("verticalSpeed", verticalSpeed);
-                //  console.log("lateralMovement", lateralMovement);
-                //  console.log("verticalMovement", verticalMovement);
-                if (isDragging) {
-
-                    if (deltax > 0) {
-                        //   console.log("Guidon tiré vers la droite");
-                        lateralSpeed += deltax * 0.1;
-
-                    } else if (deltax < 0) {
-                        lateralSpeed += deltax * 0.1;
-                        // console.log("Guidon tiré vers la gauche");
-                    }
-                    if (deltaz > 0) {
-                        verticalSpeed += deltaz * 0.01;
-                        //   console.log("Guidon tiré vers l'avant");
-                    } else if (deltaz < 0) {
-                        verticalSpeed += deltaz * 0.3;
-                        //    console.log("Guidon tiré vers soi");
-                    }
-
-                    if (verticalSpeed > 0.5)
-                        verticalSpeed = 0.5;
-                    if (verticalSpeed < -0.5)
-                        verticalSpeed = -0.5;
-                    if (lateralSpeed > 0.5)
-                        lateralSpeed = 0.5;
-                    if (lateralSpeed < -0.5)
-                        lateralSpeed = -0.5;
-
-                } else {
-                    if (lateralSpeed > 0) {
-                        lateralSpeed -= 0.01;
-                    } else if (lateralSpeed < 0) {
-                        lateralSpeed += 0.01;
-                    }
-                    if (verticalSpeed > 0) {
-                        verticalSpeed -= 0.01;
-                    } else if (verticalSpeed < 0) {
-                        verticalSpeed += 0.01;
-                    }
-                }
-
-
-                obstacles.forEach(obstacle => {
-                    obstacle.position.z -= forwardMovement;
-                })
-
-                platform.position.y += verticalMovement;
-                platform.position.x += lateralMovement;
-
-                //temp
-                if (platform.position.y < -1.8)
-                    platform.position.y = -1.8;
-
-                if (platform.position.x > 4)
-                    platform.position.x = 4;
-                if (platform.position.x < -4)
-                    platform.position.x = -4;
-                if (platform.position.y > 3)
-                    platform.position.y = 3;
-
-
-                // Nettoyage des obstacles dépassés
-                for (let i = obstacles.length - 1; i >= 0; i--) {
-                    if (obstacles[i].position.z < platform.position.z - 10) {
-                        obstacles[i].dispose();
-                        obstacles.splice(i, 1);
-                    } else if (platform.intersectsMesh(obstacles[i], false)) {
-                        console.log("Collision détectée !");
-                        obstacles[i].dispose();
-                        obstacles.splice(i, 1);
-                    }
-=======
             if (isDragging) {
                 if (deltax > 0) {
                     lateralSpeed += deltax * 0.1;
@@ -288,75 +161,9 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
                     verticalSpeed -= 0.01;
                 } else if (verticalSpeed < 0) {
                     verticalSpeed += 0.01;
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
                 }
             }
-            else { // Partie 2
 
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-                if (!part2Started) {
-                    part2Started = true;
-                    part2StartTime = Date.now();
-                    console.log("Partie 2 : les météores arrivent !");
-                    tunnel.dispose();
-                }
-
-                const elapsed = Date.now() - (part2StartTime as number);
-                if (elapsed >= 180000) { // 3 minutes
-                    console.log("Fin du niveau");
-                    // TODO: fin du niveau
-                    return;
-                }
-
-                const spawnInterval = 2000 - ((2000 - 500) * (elapsed / 180000));
-                meteorSpawnTimer += dtMs;
-                if (meteorSpawnTimer >= spawnInterval) {
-                    meteorSpawnTimer = 0;
-                    const meteor = spawnMeteor(scene, platform);
-                    meteores.push(meteor);
-                }
-
-                const meteorSpeed = 1.5;
-
-                // Mise à jour de chaque météore
-                for (let i = meteores.length - 1; i >= 0; i--) {
-                    const meteor = meteores[i];
-                    if (!meteor) { continue; }
-                    const direction = platform.position.subtract(meteor.position).normalize();
-                    meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
-
-                    if (meteor.intersectsMesh(cameraHitbox, false)) {
-                        console.log("Un météore a touché le joueur !");
-                        meteor.dispose();
-                        meteores.splice(i, 1);
-                        continue;
-                    }
-
-                    for (let j = projectiles.length - 1; j >= 0; j--) {
-                        const projectile = projectiles[j];
-                        if (!projectile) { continue; }
-                        if (meteor.intersectsMesh(projectile, false)) {
-                            projectile.dispose();
-                            projectiles.splice(j, 1);
-
-                            meteor.metadata.hits = (meteor.metadata.hits || 0) + 1;
-                            console.log(`Météore touché : ${meteor.metadata.hits} fois`);
-
-                            const meteorMat = (meteor.material as StandardMaterial);
-                            if (meteor.metadata.hits === 1) {
-                                meteorMat.diffuseColor = new Color3(1, 0.5, 0.5);
-                            } else if (meteor.metadata.hits === 2) {
-                                meteorMat.diffuseColor = new Color3(1, 0.3, 0.3);
-                            } else if (meteor.metadata.hits >= 3) {
-                                console.log("Météore explosé !");
-                                //TODO: explosion
-                                meteor.dispose();
-                                meteores.splice(i, 1);
-                                break;
-                            }
-                        }
-                    }
-=======
             obstacles.forEach(obstacle => {
                 obstacle.position.z -= forwardMovement;
             });
@@ -384,7 +191,6 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
                     console.log("Collision détectée !");
                     obstacles[i].dispose();
                     obstacles.splice(i, 1);
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
                 }
             }
         });
@@ -403,15 +209,11 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
 
         hk.onCollisionEndedObservable.add((ev) => {
             console.log(ev.type);
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-        })
-=======
         });
 
         let currentTiltX = 0;
         let currentTiltZ = 0;
         let initialPosition = handlebar.position.clone();
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
 
         dragBehavior.onDragStartObservable.add((_event) => {
             isDragging = true;
@@ -434,20 +236,6 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
 
             deltax = event.delta.x;
             deltaz = event.delta.z;
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-            /*
-            if (event.delta.x > 0) {
-                console.log("Guidon tiré vers la droite");
-            } else if (event.delta.x < 0) {
-                console.log("Guidon tiré vers la gauche");
-            }
-            if (event.delta.z > 0) {
-                console.log("Guidon tiré vers l'avant");
-            } else if (event.delta.z < 0) {
-                console.log("Guidon tiré vers soi");
-            }*/
-=======
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
         });
 
         dragBehavior.onDragEndObservable.add((_event) => {
@@ -505,36 +293,11 @@ async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) 
     }
 }
 
-
-function spawnMeteor(scene: Scene, platform: Mesh): Mesh {
-    const meteor = MeshBuilder.CreateSphere("obstacle", { diameter: 2 }, scene);
-    const meteorMat = new StandardMaterial("meteorMat", scene);
-    meteorMat.diffuseColor = new Color3(1, 1, 0);
-    meteor.material = meteorMat;
-
-    meteor.metadata = { hits: 0 };
-
-    const spawnDistance = 100;
-    const heightOffset = (Math.random() - 0.5) * 20;
-    const zOffset = (Math.random() - 0.5) * 40;
-
-    meteor.position = new Vector3(
-        platform.position.x - spawnDistance,
-        platform.position.y + heightOffset,
-        platform.position.z + zOffset
-    );
-
-    return meteor;
-}
-
-
-function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles: Mesh[]) {
+function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     const projectile = MeshBuilder.CreateSphere("projectile", { diameter: 0.2 }, scene);
 
     const aggregateProjectile = new PhysicsAggregate(projectile, PhysicsShapeType.SPHERE, { mass: 10 }, scene);
     aggregateProjectile.body.setMotionType(PhysicsMotionType.DYNAMIC);
-
-    // Position de départ du projectile
     let startPos: Vector3;
     if (controller.grip) {
         startPos = controller.grip.getAbsolutePosition().clone();
@@ -543,9 +306,6 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles
     } else {
         startPos = scene.activeCamera!.position.clone();
     }
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-    projectile.position = startPos.clone();
-=======
     projectile.position = startPos;
 
     const tmpRay = new Ray(
@@ -553,32 +313,18 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles
         new Vector3(),
         Infinity
     );
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
 
-    const tmpRay = new Ray(new Vector3(), new Vector3(), Infinity);
     controller.getWorldPointerRayToRef(tmpRay, true);
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-    tmpRay.direction.normalize();
-    const impulseMagnitude = 150;
-=======
 
     tmpRay.direction.normalize();
     const impulseMagnitude = 100;
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
     aggregateProjectile.body.applyImpulse(
         tmpRay.direction.scale(impulseMagnitude),
         projectile.absolutePosition
     );
-
-<<<<<<< HEAD:src/ts/scenes/xrSceneWithHavok3.ts
-    projectiles.push(projectile);
 }
 
-
-function switchScene(engine: AbstractEngine, scene : Scene) {
-=======
 function switchScene(engine: AbstractEngine, scene: Scene) {
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0:src/ts/scenes/XRSceneWithHavok5.ts
     scene.dispose();
 
     const newSceneInstance = new XRSceneWithHavok2();

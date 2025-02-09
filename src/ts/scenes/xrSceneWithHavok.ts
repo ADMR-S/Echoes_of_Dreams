@@ -22,11 +22,7 @@ import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import XRHandler from "../XRHandler.ts"
-<<<<<<< Updated upstream
 import {Player} from "../Player.ts"
-=======
-import { SceneLoader } from "@babylonjs/core";
->>>>>>> Stashed changes
 
 
 export class XRSceneWithHavok implements CreateSceneClass {
@@ -66,13 +62,7 @@ export class XRSceneWithHavok implements CreateSceneClass {
         const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
         const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
 
-<<<<<<< HEAD
-    const eventMask = started | continued | finished;
-      
-    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
-=======
     const eventMask = started | continued | finished;	    
->>>>>>> dd778d4b2f707b5db8c1ced5a9b8a3f36b32b9b0
 
         //addScaleRoutineToSphere(sphereObservable);
 
@@ -129,7 +119,6 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
             }
         })
-        //loadGunModel(scene);
 
         return scene;
     };
@@ -137,34 +126,16 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
 export default new XRSceneWithHavok();
 
-function resetSceneObjects(scene: Scene) {
-    scene.meshes.forEach(mesh => {
-        if (mesh.name !== "ground") { 
-            mesh.dispose();
-        }
-    });
-
-    //const newSphere = MeshBuilder.CreateSphere("newSphere", { diameter: 2 }, scene);
-    //newSphere.position = new Vector3(0, 1, 0);
-}
-
-
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
-    const newSceneInstance = new XRSceneWithHavok();
+    const newSceneInstance = new XRSceneWithHavok2();
     newSceneInstance.createScene(engine).then(newScene => {
         engine.runRenderLoop(() => {
             newScene.render();
         });
     });
 }
-
-function switchScene2(engine: AbstractEngine, scene: Scene) {
-    resetSceneObjects(scene);
-}
-
-
 
 
 function addKeyboardControls(xr: any, moveSpeed: number) {

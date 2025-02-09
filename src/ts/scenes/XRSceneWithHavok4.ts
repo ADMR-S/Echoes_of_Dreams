@@ -10,8 +10,8 @@ import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 //import "@babylonjs/core/Materials/standardMaterial";
 import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { havokModule } from "../externals/havok.ts";
-import { CreateSceneClass } from "../createScene.ts";
+import { havokModule } from "../externals/havok";
+import { CreateSceneClass } from "../createScene";
 
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
@@ -65,7 +65,6 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
         tunnel.position.z = 500;
 
         const obstacles: Mesh[] = [];
-        
 
         let positionz = -10;
         while (positionz < 1000) {
