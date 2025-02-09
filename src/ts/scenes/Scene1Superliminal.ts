@@ -19,13 +19,21 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
-import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
+import {XRSceneWithHavok2} from "./xrSceneWithHavok2.ts";
+
+import XRDrumKit from "../xrDrumKit.ts"
 
 import XRHandler from "../XRHandler.ts"
 import {Player} from "../Player.ts"
 
+import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import "@babylonjs/core/Helpers/sceneHelpers";
 
-export class XRSceneWithHavok implements CreateSceneClass {
+
+export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
 
     
@@ -62,7 +70,20 @@ export class XRSceneWithHavok implements CreateSceneClass {
         const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
         const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
 
-    const eventMask = started | continued | finished;	    
+    const eventMask = started | continued | finished;
+      
+    const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+
+    // Skybox
+	var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+	var skyboxMaterial = new StandardMaterial("skyBox", scene);
+	skyboxMaterial.backFaceCulling = false;
+	skyboxMaterial.reflectionTexture = new CubeTexture("./src/asset/texture/skybox3", scene);
+	skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+	skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+	skyboxMaterial.specularColor = new Color3(0, 0, 0);
+	skybox.material = skyboxMaterial;			
+	    
 
         //addScaleRoutineToSphere(sphereObservable);
 
@@ -124,7 +145,7 @@ export class XRSceneWithHavok implements CreateSceneClass {
     };
 }
 
-export default new XRSceneWithHavok();
+export default new Scene1Superliminal();
 
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
