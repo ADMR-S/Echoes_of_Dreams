@@ -12,6 +12,23 @@ npm install --save-dev @babylonjs/inspector
 npm install --save-dev @babylonjs/core 
 ``` 
 
+
+Pour changer de scène initiale, changer la scène créée dans createScene.ts. 
+Ex :
+```
+export const getSceneModule = (): CreateSceneClass => {
+    return new SceneNiveau3();
+}
+```
+Remplacé par 
+```
+export const getSceneModule = (): CreateSceneClass => {
+    return new Scene1Superliminal();
+}
+```
+
+
+
 -----------------------------------------
 
 DEMARCHE :
