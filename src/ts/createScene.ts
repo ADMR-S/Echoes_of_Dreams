@@ -5,7 +5,7 @@ import type { Scene } from "@babylonjs/core/scene";
 import { XRSceneWithHavok } from "./scenes/xrSceneWithHavok";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import { Player } from "./Player";
-import { XRSceneWithHavok3 } from "./scenes/xrSceneWithHavok3";
+import { SceneNiveau3 } from "./scenes/sceneNiveau3.ts";
 import {XRSceneWithHavok5} from "./scenes/XrSceneWithHavok5";
 import {XRSceneWithHavok4} from "./scenes/XRSceneWithHavok4.ts";
 

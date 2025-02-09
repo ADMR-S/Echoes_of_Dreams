@@ -19,7 +19,7 @@ import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
-import {XRSceneWithHavok2} from "./xrSceneWithHavok2.ts";
+import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import XRDrumKit from "../xrDrumKit.ts"
 

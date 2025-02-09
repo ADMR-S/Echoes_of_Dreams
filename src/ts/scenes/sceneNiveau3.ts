@@ -28,10 +28,10 @@ import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
 
 import {WebXRInputSource} from "@babylonjs/core/XR/webXRInputSource";
-import { XRSceneWithHavok2 } from "./xrSceneWithHavok2";
+import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
 
 
-export class XRSceneWithHavok3 implements CreateSceneClass {
+export class SceneNiveau3 implements CreateSceneClass {
     preTasks = [havokModule];
 
     
@@ -478,7 +478,7 @@ export class XRSceneWithHavok3 implements CreateSceneClass {
     };
 }
 
-export default new XRSceneWithHavok3();
+export default new SceneNiveau3();
 
 
 function spawnMeteor(scene: Scene, platform: Mesh): Mesh {

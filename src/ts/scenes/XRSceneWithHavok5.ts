@@ -26,7 +26,7 @@ import {
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
-import { XRSceneWithHavok2 } from "./xrSceneWithHavok2.ts";
+import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 
