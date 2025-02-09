@@ -24,7 +24,11 @@ import {XRSceneWithHavok2} from "./xrSceneWithHavok2.ts";
 import XRDrumKit from "../xrDrumKit.ts"
 
 import XRHandler from "../XRHandler.ts"
+<<<<<<< Updated upstream
 import {Player} from "../Player.ts"
+=======
+import { SceneLoader } from "@babylonjs/core";
+>>>>>>> Stashed changes
 
 
 export class XRSceneWithHavok implements CreateSceneClass {
@@ -66,7 +70,7 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
     const eventMask = started | continued | finished;
       
-    const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
 
         //addScaleRoutineToSphere(sphereObservable);
 
@@ -123,6 +127,7 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
             }
         })
+        //loadGunModel(scene);
 
         return scene;
     };
@@ -130,16 +135,34 @@ export class XRSceneWithHavok implements CreateSceneClass {
 
 export default new XRSceneWithHavok();
 
+function resetSceneObjects(scene: Scene) {
+    scene.meshes.forEach(mesh => {
+        if (mesh.name !== "ground") { 
+            mesh.dispose();
+        }
+    });
+
+    //const newSphere = MeshBuilder.CreateSphere("newSphere", { diameter: 2 }, scene);
+    //newSphere.position = new Vector3(0, 1, 0);
+}
+
+
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
-    const newSceneInstance = new XRSceneWithHavok2();
+    const newSceneInstance = new XRSceneWithHavok();
     newSceneInstance.createScene(engine).then(newScene => {
         engine.runRenderLoop(() => {
             newScene.render();
         });
     });
 }
+
+function switchScene2(engine: AbstractEngine, scene: Scene) {
+    resetSceneObjects(scene);
+}
+
+
 
 
 function addKeyboardControls(xr: any, moveSpeed: number) {
