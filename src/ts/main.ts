@@ -4,6 +4,8 @@ import { WebGPUEngine } from "@babylonjs/core/Engines/webgpuEngine";
 import { getSceneModule } from "./createScene";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import { Player } from "./Player";
+import { Utility } from "./Utility";
+
 
 
 // ----- AUDIO INIT ------
@@ -15,7 +17,7 @@ let scene: Scene | null = null; //Utile ?
 let sceneToRender: Scene | null = null; //Utile ?
 
 
-export const babylonInit = async (): Promise<void> => {
+export const babylonInit = async (): Promise<Scene> => {
   const createSceneModule = getSceneModule();
   // Execute the pretasks, if defined
   await Promise.all(createSceneModule.preTasks || []);
@@ -32,26 +34,27 @@ export const babylonInit = async (): Promise<void> => {
   // Create the scene
   const scene = await createSceneModule.createScene(engine, canvas, audioContext, player);
 
+  Utility.setupInspectorControl(scene);
   // JUST FOR TESTING. Not needed for anything else
   (window as any).scene = scene;
 
   // Register a render loop to repeatedly render the scene
   startRenderLoop(engine, canvas);
 
-  engine.runRenderLoop(() => {
-        scene.render();
-    });
-
   // Watch for browser/canvas resize events
   window.addEventListener("resize", function () {
       engine.resize();
   });
+
+  return scene;
 };
 
 window.onload = () => {
-  babylonInit().then(() => {
+  babylonInit().then((scene) => {
     sceneToRender = scene;
   });
+  
+
 }
 
 
