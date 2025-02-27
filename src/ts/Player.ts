@@ -1,13 +1,18 @@
 import { WebXRDefaultExperience, WebXRInputSource } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import { Quaternion } from "@babylonjs/core/Maths/math.vector";
+
+//Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 
 export class Player{
     
     selectedObject : AbstractMesh | null;
+    private animationObservable: any;
 
     constructor(){
         this.selectedObject = null;
+        this.animationObservable = null;
     }
 
     selectObject(object : AbstractMesh, xr : WebXRDefaultExperience, scene : Scene){
@@ -17,6 +22,10 @@ export class Player{
             console.log("On déselectionne : ");
             console.log(this.selectedObject);
             this.selectedObject.setParent(null);
+            if (this.animationObservable) {
+                scene.onBeforeRenderObservable.remove(this.animationObservable);
+                this.animationObservable = null;
+            }
             this.selectedObject = null;
             return;
         }
@@ -29,10 +38,12 @@ export class Player{
     }
 }
 
-    animateObject(object : AbstractMesh, scene : Scene){ //A déplacer, mais pickMesh renvoie un Mesh et pas un Object3DPickable (faire un get par id dans la scene ?)
-        scene.onBeforeRenderObservable.add(() => {
-            object.rotation.x += 0.01;
-            object.rotation.y += 0.01;
+    animateObject(object : AbstractMesh, scene : Scene){
+        this.animationObservable = scene.onBeforeRenderObservable.add(() => {
+            const deltaRotation = Quaternion.RotationYawPitchRoll(0.01, 0.01, 0);
+            object.rotationQuaternion = object.rotationQuaternion
+                ? object.rotationQuaternion.multiply(deltaRotation)
+                : deltaRotation;
         });
     }
 }
