@@ -1,5 +1,10 @@
 # Echoes_of_Dreams
 
+Jeu conçu et implémenté par :
+Adam MIR-SADJADI
+Noé FLORENCE
+Allah-Eddine CHERIGUI
+
 to run :
 ```bash
  npm run dev
