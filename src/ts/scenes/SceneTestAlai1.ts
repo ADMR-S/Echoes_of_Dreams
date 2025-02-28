@@ -29,6 +29,7 @@ import HavokPhysics from "@babylonjs/havok";
 import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
+import { Tools } from "@babylonjs/core/Misc/tools";
 
 export class XRSceneWithHavok4 implements CreateSceneClass {
     preTasks = [havokModule];
@@ -56,13 +57,30 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
         const dragBehavior = new PointerDragBehavior({ dragPlaneNormal: new Vector3(0, 1, 0) });
         dragBehavior.moveAttached = false; // Désactive le déplacement automatique
         handlebar.addBehavior(dragBehavior);
+        const path = [];
+        for (let i = 0; i < 50; i++) {
+            path.push(new Vector3(0, 0, i * 10)); // Ligne droite en Z
+        }
+        // Forme du tunnel (cercle)
+        const radius = 5;
+        const shape = [];
+        for (let i = 0; i < 360; i += 10) {
+            const rad = Tools.ToRadians(i);
+            shape.push(new Vector3(Math.cos(rad) * radius, Math.sin(rad) * radius, 0));
+        }
 
-        const tunnel = MeshBuilder.CreateBox("tunnel", { width: 10, height: 10, depth: 1000 }, scene);
+        // Créer le tunnel en extrudant la forme sur le chemin
+        const tunnel = MeshBuilder.ExtrudeShape("tunnel", { shape, path, closeShape: true, closePath: false }, scene);
+
+        // Matériau du tunnel
         const tunnelMat = new StandardMaterial("tunnelMat", scene);
-        tunnelMat.diffuseColor = new Color3(0.2, 0.2, 0.2);
-        tunnelMat.backFaceCulling = false;
+        tunnelMat.diffuseTexture = new Texture("src/asset/texture/tunnel_texture.jpg", scene); // Texture
         tunnel.material = tunnelMat;
-        tunnel.position.z = 500;
+
+        // Rendu
+        engine.runRenderLoop(() => scene.render());
+        window.addEventListener("resize", () => engine.resize());
+
 
         const obstacles: Mesh[] = [];
 
@@ -73,7 +91,7 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
             positionz = 1 + Math.random() * 3 + positionz;
             const position = new Vector3(x - 5, y - 5, positionz);
 
-            loadAsteroid(scene, position, obstacles);
+            //loadAsteroid(scene, position, obstacles);
         }
 
         const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
@@ -324,11 +342,11 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     );
 }
 
-function switchScene(engine: AbstractEngine, scene: Scene) {
+function switchScene(engine: AbstractEngine, scene: Scene, canvas: HTMLCanvasElement, audioContext: AudioContext) {
     scene.dispose();
 
-    const newSceneInstance = new XRSceneWithHavok2();
-    newSceneInstance.createScene(engine).then(newScene => {
+    const newSceneInstance = new XRSceneWithHavok4();
+    newSceneInstance.createScene(engine, canvas, audioContext).then(newScene => {
         engine.runRenderLoop(() => {
             newScene.render();
         });
