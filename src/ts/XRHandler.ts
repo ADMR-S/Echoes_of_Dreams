@@ -14,6 +14,7 @@ export class XRHandler{
     rightController: WebXRAbstractMotionController | null;
     scene: Scene;
     player : Player;
+    headset: WebXRInputSource | null;
 
     constructor(scene: Scene, xr : WebXRDefaultExperience, player : Player){
         this.scene = scene;
@@ -21,6 +22,7 @@ export class XRHandler{
         this.player = player;
         this.leftController = null;
         this.rightController = null;
+        this.headset = null; //TODO : Get headset
         this.getLeftAndRightControllers();
         this.setupObjectSelection();
     }
@@ -31,6 +33,8 @@ export class XRHandler{
                 const handedness = motionController.handedness;
                 if (handedness === 'left') {
                     this.leftController = motionController;
+                    console.log("left controller added");
+                    console.log(this.leftController);
 
                 } else if (handedness === 'right') {
                     this.rightController = motionController;
