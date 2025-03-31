@@ -17,6 +17,7 @@ import { CreateSceneClass } from "../createScene.ts";
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
+// @ts-ignore
 import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
@@ -36,7 +37,7 @@ import "@babylonjs/core/Helpers/sceneHelpers";
 export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
 
-    
+    // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext, player : Player): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
@@ -72,6 +73,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
     const eventMask = started | continued | finished;
       
+    // @ts-ignore
     const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
 
     // Skybox
@@ -208,6 +210,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
+            // @ts-ignore
             motionController.onModelLoadedObservable.add((mc: any) => {
 
                 console.log("Ajout d'un mesh au controller");

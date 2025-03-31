@@ -1,13 +1,16 @@
-import { WebXRDefaultExperience, WebXRInputSource } from "@babylonjs/core";
+import { WebXRDefaultExperience } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
+import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
 
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
 const DEFAULTCAMERAPITCHVALUE = 2; //The value of the camera's pitch when no object is selected
+// @ts-ignore
 const DEFAULT_DISPLACEMENT = new Vector3(0, 0, 0); // Default displacement if no hit or too far
 
 export class Player{
@@ -17,6 +20,8 @@ export class Player{
     private animationObservable: any;
     private resizeObservable: any;
     private displacementObservable: any;
+    private rayHelper: RayHelper | null = null;
+    private cameraRay : Ray | null = null;
 
     constructor(){
         this.selectedObject = null;
@@ -86,18 +91,43 @@ export class Player{
     }
 
     snapObjectToRayHit(xr: WebXRDefaultExperience, scene: Scene) {
-        this.displacementObservable = scene.onBeforeRenderObservable.add(() => {
-        const camera = xr.baseExperience.camera;
-        const ray = new Ray(camera.position, camera.getForwardRay().direction, 50);
-        const hit = scene.pickWithRay(ray, (mesh) => mesh !== this.selectedObject);
-        if(this.selectedObject !=null){     
-            if (hit && hit.pickedPoint) {
-                this.selectedObject.position = hit.pickedPoint;
-            } 
-            else {
-                this.selectedObject.position = camera.position.add(camera.getForwardRay().direction.scale(1));
+        this.displacementObservable = scene.onAfterRenderObservable.add(() => {
+            const camera = xr.baseExperience.camera;
+            if(this.cameraRay == null){
+                this.cameraRay = camera.getForwardRay();
+                this.visualizeRay(this.cameraRay, scene);
             }
+            else{
+                camera.getForwardRayToRef(this.cameraRay);
+            }
+
+            // Offset the ray slightly to ensure visibility
+            const offset = new Vector3(0.1, 0, 0);
+            this.cameraRay.origin.addInPlace(offset);
+
+            console.log("camera.target");
+            console.log(camera.target);
+            console.log("camera.position");
+            console.log(camera.position);
+
+
+            const hit = scene.pickWithRay(this.cameraRay, (mesh) => mesh !== this.selectedObject);
+            if(this.selectedObject !=null){     
+                if (hit && hit.pickedPoint) {
+                    this.selectedObject.position = hit.pickedPoint;
+                } 
+                else {
+                    this.selectedObject.position = camera.position.add(camera.getForwardRay().direction.scale(0.1));
+                }
+            }
+        });
+    }
+
+    visualizeRay(ray: Ray, scene: Scene) {
+        if (this.rayHelper) {
+            this.rayHelper.dispose();
         }
-    });
+        this.rayHelper = new RayHelper(ray);
+        this.rayHelper.show(scene, new Color3(0, 1, 0)); // Set ray color to green
     }
 }

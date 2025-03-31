@@ -1,6 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+// @ts-ignore
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 
@@ -33,6 +34,7 @@ import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 export class XRSceneWithHavok5 implements CreateSceneClass {
     preTasks = [havokModule];
 
+    // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
@@ -43,6 +45,7 @@ export class XRSceneWithHavok5 implements CreateSceneClass {
         const hk = new HavokPlugin(true, havokInstance);
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+        // @ts-ignore
         const physicsEngine = scene.getPhysicsEngine();
 
         const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
@@ -324,6 +327,7 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     );
 }
 
+// @ts-ignore
 function switchScene(engine: AbstractEngine, scene: Scene) {
     scene.dispose();
 
@@ -335,6 +339,7 @@ function switchScene(engine: AbstractEngine, scene: Scene) {
     });
 }
 
+// @ts-ignore
 function addKeyboardControls(xr: any, moveSpeed: number) {
     window.addEventListener("keydown", (event: KeyboardEvent) => {
         switch (event.key) {
@@ -361,6 +366,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 }
 
 // Add movement with left joystick
+// @ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     xr.input.onControllerAddedObservable.add((controller: any) => {
         console.log("Ajout d'un controller");
@@ -381,6 +387,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
+            // @ts-ignore
             motionController.onModelLoadedObservable.add((mc: any) => {
                 console.log("Ajout d'un mesh au controller");
 

@@ -1,10 +1,13 @@
 import { Scene } from "@babylonjs/core/scene";
 import {Color3, Axis} from "@babylonjs/core";
+// @ts-ignore
 import { Vector3, Quaternion, Matrix } from "@babylonjs/core/Maths/math.vector";
 import { MeshBuilder, TransformNode, StandardMaterial, SixDofDragBehavior, PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core";
 import { WebXRDefaultExperience } from "@babylonjs/core";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
+// @ts-ignore
 import { WebXRControllerPhysics } from "@babylonjs/core/XR/features/WebXRControllerPhysics";
+// @ts-ignore
 import { Observable } from "@babylonjs/core/Misc/observable";
 
 //TODO : 
@@ -247,6 +250,7 @@ class XRDrumKit {
                 */
                 const relativeVelocity = currentVelocity.subtract(otherVelocity);
                 const speed = Math.abs(relativeVelocity.length());
+                // @ts-ignore
                 const intensity = Math.min(Math.max(speed * 10, 0), 127); // Scale speed to MIDI velocity range (0-127)
 
                 if (currentVelocity.y > 0) {
@@ -357,9 +361,10 @@ class XRDrumKit {
         ball.material = new StandardMaterial("ballMaterial", this.scene);
 
         const stick2 = stick.clone("stick2");
+        // @ts-ignore
         const ball2 = ball.clone("ball2");
 
-        
+        // @ts-ignore
         const avgPosition = stick.position.add(ball.position).scale(0.5);
 
         //TRY TO USE MERGED MESHES INSTEAD OF CONVEX_HULL to not distinguish between ball or stick
@@ -449,6 +454,7 @@ class XRDrumKit {
 export default XRDrumKit;
 
 async function setupWamHost(audioContext: AudioContext): Promise<string> {
+    // @ts-ignore
     const { default: initializeWamHost } = await import("https://www.webaudiomodules.com/sdk/2.0.0-alpha.6/src/initializeWamHost.js");     
     const [hostGroupId] = await initializeWamHost(audioContext);
     return hostGroupId;

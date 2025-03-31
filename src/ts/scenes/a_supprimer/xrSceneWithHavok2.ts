@@ -139,6 +139,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
       controller.onMotionControllerInitObservable.add((motionController: any) => {
+        // @ts-ignore
           motionController.onModelLoadedObservable.add((mc: any) => {
                 
                 console.log("Ajout d'un mesh au controller");

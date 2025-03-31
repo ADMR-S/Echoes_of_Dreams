@@ -1,8 +1,11 @@
 import { Scene } from "@babylonjs/core/scene";
 import { WebXRDefaultExperience } from "@babylonjs/core/XR/webXRDefaultExperience";
 import { WebXRAbstractMotionController } from "@babylonjs/core/XR/motionController/webXRAbstractMotionController";
+// @ts-ignore
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+// @ts-ignore
 import { Object3DPickable } from "./object/Object3DPickable";
+// @ts-ignore
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Player } from "./Player";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";

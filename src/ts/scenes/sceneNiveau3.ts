@@ -22,8 +22,8 @@ import {
     PhysicsAggregate,
     PhysicsShapeType,
     PhysicsPrestepType,
-    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, WebXRDefaultExperience
-} from "@babylonjs/core";
+    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, // @ts-ignore
+    WebXRDefaultExperience} from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
 
@@ -35,6 +35,7 @@ export class SceneNiveau3 implements CreateSceneClass {
     preTasks = [havokModule];
 
     
+    // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
@@ -46,6 +47,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         const hk = new HavokPlugin(true, havokInstance);
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+        // @ts-ignore
         const physicsEngine = scene.getPhysicsEngine();
 
         const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
@@ -544,7 +546,7 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles
     projectiles.push(projectile);
 }
 
-
+// @ts-ignore
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
@@ -556,7 +558,7 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
     });
 }
 
-
+// @ts-ignore
 function addKeyboardControls(xr: any, moveSpeed: number) {
 
     window.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -585,6 +587,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 }
 
 // Add movement with left joystick
+// @ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     xr.input.onControllerAddedObservable.add((controller: any) => {        console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
@@ -605,6 +608,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
+            // @ts-ignore
             motionController.onModelLoadedObservable.add((mc: any) => {
 
                 console.log("Ajout d'un mesh au controller");

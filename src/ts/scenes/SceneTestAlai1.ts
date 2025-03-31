@@ -22,10 +22,11 @@ import {
     PhysicsAggregate,
     PhysicsShapeType,
     PhysicsPrestepType,
-    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, TransformNode
+    WebXRControllerPhysics, Ray, StandardMaterial, PointerDragBehavior, Scalar, TransformNode
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
+// @ts-ignore
 import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
@@ -34,6 +35,7 @@ import { Tools } from "@babylonjs/core/Misc/tools";
 export class XRSceneWithHavok4 implements CreateSceneClass {
     preTasks = [havokModule];
 
+    // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
@@ -44,6 +46,7 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
         const hk = new HavokPlugin(true, havokInstance);
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+        // @ts-ignore
         const physicsEngine = scene.getPhysicsEngine();
 
         const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
@@ -89,6 +92,7 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
             const x = Math.random() * 10;
             const y = Math.random() * 10;
             positionz = 1 + Math.random() * 3 + positionz;
+            // @ts-ignore
             const position = new Vector3(x - 5, y - 5, positionz);
 
             //loadAsteroid(scene, position, obstacles);
@@ -279,6 +283,7 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
 
 export default new XRSceneWithHavok4();
 
+// @ts-ignore
 async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) {
     try {
         const meshes = await SceneLoader.ImportMeshAsync(
@@ -342,6 +347,7 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     );
 }
 
+// @ts-ignore
 function switchScene(engine: AbstractEngine, scene: Scene, canvas: HTMLCanvasElement, audioContext: AudioContext) {
     scene.dispose();
 
@@ -353,6 +359,7 @@ function switchScene(engine: AbstractEngine, scene: Scene, canvas: HTMLCanvasEle
     });
 }
 
+// @ts-ignore
 function addKeyboardControls(xr: any, moveSpeed: number) {
     window.addEventListener("keydown", (event: KeyboardEvent) => {
         switch (event.key) {
@@ -379,6 +386,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 }
 
 // Add movement with left joystick
+// @ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     xr.input.onControllerAddedObservable.add((controller: any) => {
         console.log("Ajout d'un controller");
@@ -399,6 +407,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
+            // @ts-ignore
             motionController.onModelLoadedObservable.add((mc: any) => {
                 console.log("Ajout d'un mesh au controller");
 
