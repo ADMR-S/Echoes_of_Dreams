@@ -268,7 +268,7 @@ async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) 
     try {
         const meshes = await SceneLoader.ImportMeshAsync(
             "",
-            "./src/asset/AZURE Nature/",
+            "public/AZURE Nature/",
             "asteroid_1.glb",
             scene
         );
