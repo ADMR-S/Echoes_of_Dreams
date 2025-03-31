@@ -27,7 +27,7 @@ export interface CreateSceneModule {
 }
 
 export const getSceneModule = (): CreateSceneClass => {
-    return new SceneNiveau3();
+    return new Scene1Superliminal();
 
 }
 
