@@ -22,17 +22,20 @@ import {
     PhysicsAggregate,
     PhysicsShapeType,
     PhysicsPrestepType,
-    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, TransformNode
+    WebXRControllerPhysics, Ray, StandardMaterial, PointerDragBehavior, Scalar, TransformNode
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
+// @ts-ignore
 import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
 
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
+import { Tools } from "@babylonjs/core/Misc/tools";
 
 export class XRSceneWithHavok4 implements CreateSceneClass {
     preTasks = [havokModule];
 
+    // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
@@ -43,6 +46,7 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
         const hk = new HavokPlugin(true, havokInstance);
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+        // @ts-ignore
         const physicsEngine = scene.getPhysicsEngine();
 
         const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
@@ -56,13 +60,30 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
         const dragBehavior = new PointerDragBehavior({ dragPlaneNormal: new Vector3(0, 1, 0) });
         dragBehavior.moveAttached = false; // Désactive le déplacement automatique
         handlebar.addBehavior(dragBehavior);
+        const path = [];
+        for (let i = 0; i < 50; i++) {
+            path.push(new Vector3(0, 0, i * 10)); // Ligne droite en Z
+        }
+        // Forme du tunnel (cercle)
+        const radius = 5;
+        const shape = [];
+        for (let i = 0; i < 360; i += 10) {
+            const rad = Tools.ToRadians(i);
+            shape.push(new Vector3(Math.cos(rad) * radius, Math.sin(rad) * radius, 0));
+        }
 
-        const tunnel = MeshBuilder.CreateBox("tunnel", { width: 10, height: 10, depth: 1000 }, scene);
+        // Créer le tunnel en extrudant la forme sur le chemin
+        const tunnel = MeshBuilder.ExtrudeShape("tunnel", { shape, path, closeShape: true, closePath: false }, scene);
+
+        // Matériau du tunnel
         const tunnelMat = new StandardMaterial("tunnelMat", scene);
-        tunnelMat.diffuseColor = new Color3(0.2, 0.2, 0.2);
-        tunnelMat.backFaceCulling = false;
+        tunnelMat.diffuseTexture = new Texture("src/asset/texture/tunnel_texture.jpg", scene); // Texture
         tunnel.material = tunnelMat;
-        tunnel.position.z = 500;
+
+        // Rendu
+        engine.runRenderLoop(() => scene.render());
+        window.addEventListener("resize", () => engine.resize());
+
 
         const obstacles: Mesh[] = [];
 
@@ -71,9 +92,10 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
             const x = Math.random() * 10;
             const y = Math.random() * 10;
             positionz = 1 + Math.random() * 3 + positionz;
+            // @ts-ignore
             const position = new Vector3(x - 5, y - 5, positionz);
 
-            loadAsteroid(scene, position, obstacles);
+            //loadAsteroid(scene, position, obstacles);
         }
 
         const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
@@ -261,11 +283,12 @@ export class XRSceneWithHavok4 implements CreateSceneClass {
 
 export default new XRSceneWithHavok4();
 
+// @ts-ignore
 async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) {
     try {
         const meshes = await SceneLoader.ImportMeshAsync(
             "", 
-            "./src/asset/AZURE Nature/", 
+            "public/AZURE Nature/", 
             "asteroid_1.glb", 
             scene
         );
@@ -324,17 +347,19 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene) {
     );
 }
 
-function switchScene(engine: AbstractEngine, scene: Scene) {
+// @ts-ignore
+function switchScene(engine: AbstractEngine, scene: Scene, canvas: HTMLCanvasElement, audioContext: AudioContext) {
     scene.dispose();
 
-    const newSceneInstance = new XRSceneWithHavok2();
-    newSceneInstance.createScene(engine).then(newScene => {
+    const newSceneInstance = new XRSceneWithHavok4();
+    newSceneInstance.createScene(engine, canvas, audioContext).then(newScene => {
         engine.runRenderLoop(() => {
             newScene.render();
         });
     });
 }
 
+// @ts-ignore
 function addKeyboardControls(xr: any, moveSpeed: number) {
     window.addEventListener("keydown", (event: KeyboardEvent) => {
         switch (event.key) {
@@ -361,6 +386,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 }
 
 // Add movement with left joystick
+// @ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     xr.input.onControllerAddedObservable.add((controller: any) => {
         console.log("Ajout d'un controller");
@@ -381,6 +407,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
+            // @ts-ignore
             motionController.onModelLoadedObservable.add((mc: any) => {
                 console.log("Ajout d'un mesh au controller");
 

@@ -6,6 +6,7 @@ import type { Scene } from "@babylonjs/core/scene";
 import { XRSceneWithHavok } from "./scenes/xrSceneWithHavok";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import { Player } from "./Player";
+// @ts-ignore
 import { SceneNiveau3 } from "./scenes/sceneNiveau3.ts";
 // @ts-ignore
 import {XRSceneWithHavok5} from "./scenes/SceneTestAlai2.ts";
@@ -27,5 +28,6 @@ export interface CreateSceneModule {
 
 export const getSceneModule = (): CreateSceneClass => {
     return new SceneNiveau3();
+
 }
 

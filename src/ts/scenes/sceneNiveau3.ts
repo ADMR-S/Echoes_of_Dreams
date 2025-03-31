@@ -27,6 +27,7 @@ import {
     // @ts-ignore
     WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, WebXRDefaultExperience
 } from "@babylonjs/core";
+
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
 
@@ -37,7 +38,6 @@ import {SceneLoader} from "@babylonjs/core/Loading/sceneLoader";
 
 export class SceneNiveau3 implements CreateSceneClass {
     preTasks = [havokModule];
-
 
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {

@@ -2,6 +2,7 @@ import {Color3, Mesh, MeshBuilder, PolygonMeshBuilder, StandardMaterial, Vector2
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {Scene} from "@babylonjs/core/scene";
 
+// @ts-ignore
 class Cage{
     public cageSize : number = 10;
     public halfSize : number = this.cageSize / 2;
