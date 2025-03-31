@@ -12,7 +12,7 @@ import { Utility } from "./Utility";
 const audioContext: AudioContext = new AudioContext();
 // ----- END OF AUDIO INIT ------
 
-
+// @ts-ignore
 let scene: Scene | null = null; //Utile ?
 let sceneToRender: Scene | null = null; //Utile ?
 
@@ -57,7 +57,7 @@ window.onload = () => {
 
 }
 
-
+// @ts-ignore
 const startRenderLoop = (engine: AbstractEngine, canvas: HTMLCanvasElement) => { //canvas inutile ?
   engine.runRenderLoop(() => {
       if (sceneToRender && sceneToRender.activeCamera) {

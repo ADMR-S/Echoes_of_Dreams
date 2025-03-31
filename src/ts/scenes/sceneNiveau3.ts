@@ -3,6 +3,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+import 'babylonjs-loaders';
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
 // If you don't need the standard material you will still need to import it since the scene requires it.
@@ -16,12 +17,14 @@ import { CreateSceneClass } from "../createScene";
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
+// @ts-ignore
 import {
     Mesh,
     MeshBuilder,
     PhysicsAggregate,
     PhysicsShapeType,
     PhysicsPrestepType,
+    // @ts-ignore
     WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, WebXRDefaultExperience
 } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
@@ -29,12 +32,14 @@ import HavokPhysics from "@babylonjs/havok";
 
 import {WebXRInputSource} from "@babylonjs/core/XR/webXRInputSource";
 import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
+import {SceneLoader} from "@babylonjs/core/Loading/sceneLoader";
 
 
 export class SceneNiveau3 implements CreateSceneClass {
     preTasks = [havokModule];
 
-    
+
+    // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
@@ -46,6 +51,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         const hk = new HavokPlugin(true, havokInstance);
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+        // @ts-ignore
         const physicsEngine = scene.getPhysicsEngine();
 
         const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
@@ -66,35 +72,59 @@ export class SceneNiveau3 implements CreateSceneClass {
 
 
 
+        // Création du tunnel
         const tunnel = MeshBuilder.CreateBox("tunnel", { width: 10, height: 10, depth: 1000 }, scene);
         const tunnelMat = new StandardMaterial("tunnelMat", scene);
         tunnelMat.diffuseColor = new Color3(0.2, 0.2, 0.2);
         tunnelMat.backFaceCulling = false;
         tunnel.material = tunnelMat;
         tunnel.position.z = 500;
-        const obstacles: Mesh[] = [];
 
-        let positionz = -10;
-        while (positionz < 1000) {
+        // Chargement du GLB
+        const glbResult = await SceneLoader.ImportMeshAsync("", "src/asset/", "super_mario_star.glb", scene);
+
+        const meshEnfant = glbResult.meshes[0];
+        const meshParent = glbResult.meshes[1];
+
+        meshEnfant.parent = meshParent;
+        const glbMeshTemplate = meshParent;
+
+        // on le cache
+
+        // Matériau unique pour les cubes
+        const cubeMat = new StandardMaterial("cubeMat", scene);
+        cubeMat.diffuseColor = new Color3(0, 1, 0);
+
+        const obstacles: Mesh[] = [];
+        let positionZ = -10;
+
+        while (positionZ < 1000) {
             const isCube = Math.random() < 0.5;
             let obstacle: Mesh;
-            const size = 1;
+
             if (isCube) {
-                obstacle = MeshBuilder.CreateBox("obstacle", { size: size }, scene);
+                // Création d'un cube
+                obstacle = MeshBuilder.CreateBox("obstacleCube", { size: 1 }, scene);
+                obstacle.material = cubeMat;
             } else {
-                obstacle = MeshBuilder.CreateSphere("obstacle", { diameter: size }, scene);
+                // Clonage de l'étoile
+                // @ts-ignore
+                obstacle = glbMeshTemplate.clone("obstacleStar") as Mesh;
+                // Important : on l’active
+                obstacle.setEnabled(true);
+                // Ajuster la taille si nécessaire
+                obstacle.scaling.setAll(1);
             }
-            const obstacleMat = new StandardMaterial("obstacleMat", scene);
-            obstacleMat.diffuseColor = new Color3(0, 1, 0);
-            obstacle.material = obstacleMat;
 
-            const x = Math.random() * 10;
-            const y = Math.random() * 10;
-            positionz = 1 + Math.random() * 3 +positionz;
-            obstacle.position = new Vector3(x-5, y-5, positionz);
+            // Placement
+            positionZ += 1 + Math.random() * 3;
+            const x = Math.random() * 10 - 5;
+            const y = Math.random() * 10 - 5;
+            obstacle.position.set(x, y, positionZ);
 
-            const shapeType = isCube ? PhysicsShapeType.BOX : PhysicsShapeType.SPHERE;
-            new PhysicsAggregate(obstacle, shapeType, { mass: 0, restitution: 0 }, scene);
+            // Collision simplifiée : BOX pour tout le monde
+            new PhysicsAggregate(obstacle, PhysicsShapeType.BOX, { mass: 0, restitution: 0 }, scene);
+
             obstacles.push(obstacle);
         }
 
@@ -482,6 +512,7 @@ export default new SceneNiveau3();
 
 
 function spawnMeteor(scene: Scene, platform: Mesh): Mesh {
+
     const meteor = MeshBuilder.CreateSphere("obstacle", { diameter: 2 }, scene);
     const meteorMat = new StandardMaterial("meteorMat", scene);
     meteorMat.diffuseColor = new Color3(1, 1, 0);
@@ -544,7 +575,7 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles
     projectiles.push(projectile);
 }
 
-
+// @ts-ignore
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
@@ -556,7 +587,7 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
     });
 }
 
-
+// @ts-ignore
 function addKeyboardControls(xr: any, moveSpeed: number) {
 
     window.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -585,6 +616,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 }
 
 // Add movement with left joystick
+// @ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     xr.input.onControllerAddedObservable.add((controller: any) => {        console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
@@ -605,6 +637,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
+            // @ts-ignore
             motionController.onModelLoadedObservable.add((mc: any) => {
 
                 console.log("Ajout d'un mesh au controller");
