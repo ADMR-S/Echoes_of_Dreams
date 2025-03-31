@@ -15,6 +15,10 @@ modules to install :
 npm install --save-dev @babylonjs/havok
 npm install --save-dev @babylonjs/inspector
 npm install --save-dev @babylonjs/core 
+
+OR 
+
+npm i
 ``` 
 
 
