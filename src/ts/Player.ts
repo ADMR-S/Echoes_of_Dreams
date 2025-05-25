@@ -117,8 +117,9 @@ export class Player{
                 if (hit && hit.pickedPoint) {
                     this.selectedObject.position = hit.pickedPoint;
                 } 
-                else {
-                    //this.selectedObject.position = camera.position.add(camera.getForwardRay().direction.scale(0.1));
+                else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
+                    // Place the object at the original selection distance along the ray
+                    this.selectedObject.position = camera.position.add(cameraRay.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
                 }
             }
         });

@@ -84,30 +84,33 @@ export class XRHandler{
 
     setupHighlighting() {
         this.scene.onBeforeRenderObservable.add(() => {
-            const camera = this.xr.baseExperience.camera;
-            const ray = camera.getForwardRay();
-            const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
 
-            // Remove highlight from previous mesh
-            if (this.highlightedMesh && this.highlightedMesh !== pickResult?.pickedMesh) {
-                const mat = this.highlightedMesh.material;
-                if (mat && mat instanceof StandardMaterial && (mat as any)._originalDiffuseColor) {
-                    mat.diffuseColor = (mat as any)._originalDiffuseColor;
-                }
-                this.highlightedMesh = null;
-            }
+            if(!this.player.selectedObject){
+                const camera = this.xr.baseExperience.camera;
+                const ray = camera.getForwardRay();
+                const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
 
-            // Highlight the new mesh
-            if (pickResult && pickResult.pickedMesh) {
-                const mesh = pickResult.pickedMesh as AbstractMesh;
-                const mat = mesh.material;
-                if (mat && mat instanceof StandardMaterial) {
-                    if (!(mat as any)._originalDiffuseColor) {
-                        (mat as any)._originalDiffuseColor = mat.diffuseColor.clone();
+                // Remove highlight from previous mesh
+                if (this.highlightedMesh && this.highlightedMesh !== pickResult?.pickedMesh) {
+                    const mat = this.highlightedMesh.material;
+                    if (mat && mat instanceof StandardMaterial && (mat as any)._originalDiffuseColor) {
+                        mat.diffuseColor = (mat as any)._originalDiffuseColor;
                     }
-                    mat.diffuseColor = Color3.FromHexString("#FFA500"); // Orange
+                    this.highlightedMesh = null;
                 }
-                this.highlightedMesh = mesh;
+
+                // Highlight the new mesh
+                if (pickResult && pickResult.pickedMesh) {
+                    const mesh = pickResult.pickedMesh as AbstractMesh;
+                    const mat = mesh.material;
+                    if (mat && mat instanceof StandardMaterial) {
+                        if (!(mat as any)._originalDiffuseColor) {
+                            (mat as any)._originalDiffuseColor = mat.diffuseColor.clone();
+                        }
+                        mat.diffuseColor = Color3.FromHexString("#FFA500"); // Orange
+                    }
+                    this.highlightedMesh = mesh;
+                }
             }
         });
     }
