@@ -17,7 +17,6 @@ export class Player{
     private resizeObservable: any;
     private displacementObservable: any;
     private rayHelper: RayHelper | null = null;
-    private cameraRay : Ray | null = null;
 
     constructor(){
         this.selectedObject = null;
@@ -102,20 +101,16 @@ export class Player{
     snapObjectToRayHit(xr: WebXRDefaultExperience, scene: Scene) {
         this.displacementObservable = scene.onBeforeRenderObservable.add(() => {
             const camera = xr.baseExperience.camera;
-            if(this.cameraRay == null){
-                this.cameraRay = camera.getForwardRay();
-                this.visualizeRay(this.cameraRay, scene);
-            }
-            else{
-                camera.getForwardRayToRef(this.cameraRay);
-            }
+            var cameraRay = camera.getForwardRay();
+
+            this.visualizeRay(cameraRay, scene);
 
             //For visibility : 
             // const offset = new Vector3(0.1, 0, 0);
             // this.cameraRay.origin.addInPlace(offset);
 
 
-            const hit = scene.pickWithRay(this.cameraRay, (mesh) => mesh !== this.selectedObject);
+            const hit = scene.pickWithRay(cameraRay, (mesh) => mesh !== this.selectedObject);
             if(this.selectedObject !=null){     
                 if (hit && hit.pickedPoint) {
                     this.selectedObject.position = hit.pickedPoint;
