@@ -71,19 +71,25 @@ export class XRHandler{
                         xButtonComponent.onButtonStateChangedObservable.add((button) => {
                             if (button.pressed) {
                                 console.log("X Button pressed");
-                                // Cast a ray from the headset (camera) forward
                                 const camera = this.xr.baseExperience.camera;
                                 const ray = camera.getForwardRay();
                                 // Only pick meshes that belong to Object3DPickable
-                                const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
+                                const pickResult = this.scene.pickWithRay(ray, (mesh) =>
+                                    !!mesh && mesh.isPickable && (mesh as any).object3DPickable
+                                );
                                 if (pickResult && pickResult.pickedMesh && pickResult.pickedPoint) {
-                                    this.player.selectObject(pickResult.pickedMesh, pickResult.pickedPoint, this.xr, this.scene);
-                                    // Distance from camera to the intersection point
-                                    const distance = camera.position.subtract(pickResult.pickedPoint).length();
-                                    console.log("Distance to target:", distance);
-                                }
-                                else if(this.player.selectedObject){
+                                    // Only select if not already selected, or if selecting a different object
+                                    if (!this.player.selectedObject || this.player.selectedObject !== pickResult.pickedMesh) {
+                                        this.player.selectObject(pickResult.pickedMesh, pickResult.pickedPoint, this.xr, this.scene);
+                                        const distance = camera.position.subtract(pickResult.pickedPoint).length();
+                                        console.log("Distance to target:", distance);
+                                    } else {
+                                        // If already selected, deselect
                                         this.player.deselectObject(this.scene);
+                                    }
+                                } else if (this.player.selectedObject) {
+                                    // Deselect if nothing is picked but something is selected
+                                    this.player.deselectObject(this.scene);
                                 }
                             }
                         });
