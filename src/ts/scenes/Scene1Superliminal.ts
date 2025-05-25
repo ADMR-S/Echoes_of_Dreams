@@ -167,6 +167,11 @@ export class Scene1Superliminal implements CreateSceneClass {
 
             new GlowLayer("glow", scene);
 
+            // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
+            scene.onBeforeRenderObservable.add(() => {
+                pointLight.position.copyFrom(bulb.position);
+            });
+
             return { bulb, pointLight };
         }
 
