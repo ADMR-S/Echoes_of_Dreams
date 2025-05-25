@@ -13,6 +13,7 @@ export class Player{
     
     selectedObject : AbstractMesh | null;
     selectedObjectInitialDistance : number | null = null; //To update the selected object's size
+    private selectedObjectOriginalScaling: Vector3 | null = null; // Store original scaling
     private animationObservable: any;
     private resizeObservable: any;
     private displacementObservable: any;
@@ -31,6 +32,7 @@ export class Player{
             console.log("On déselectionne : ");
             console.log(this.selectedObject);
             this.selectedObject.parent = null;
+            this.selectedObject.isPickable = true; // Make it pickable again
             if (this.animationObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
@@ -41,6 +43,7 @@ export class Player{
             }
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
+            this.selectedObjectOriginalScaling = null;
             return;
         }
         else{
@@ -49,6 +52,8 @@ export class Player{
             // Do NOT parent to camera
             // object.parent = xr.baseExperience.camera;
             this.selectedObject = object;
+            this.selectedObject.isPickable = false; // Make it not pickable
+            this.selectedObjectOriginalScaling = object.scaling.clone(); // Store original scaling
             this.animateObject(object, scene);
             this.resizeObject(object, scene, xr);
             this.snapObjectToRayHit(xr, scene);
@@ -70,7 +75,6 @@ export class Player{
 
     resizeObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience){
         this.resizeObservable = scene.onBeforeRenderObservable.add(() => {
-
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
             // Pick the first mesh hit by the ray (ignoring the camera itself)
@@ -84,11 +88,10 @@ export class Player{
                 //Valeur par défaut si trop loin ou pas de hit
             }
 
-            if(this.selectedObjectInitialDistance){
+            if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
                 const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance);
-                console.log("scaleFactor");
-                console.log(scaleFactor);
-                object.scaling.set(scaleFactor, scaleFactor, scaleFactor);
+                // Always scale from the original scaling
+                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             }
         });
     }
