@@ -142,11 +142,15 @@ export class Player{
                     
                     //GET OBJECT CLOSER TO AVOID CLIPPING
                     // Iteratively move the object closer to the camera until no collision
+                    // Compute a base distance for scaling step/minOffset
+                    const cameraToHit = camera.position.subtract(hit.pickedPoint).length();
+                    // Proportional step and minOffset (e.g., 1% and 0.1% of the distance)
+                    const step = Math.max(0.01, cameraToHit * 0.01);
+                    const minOffset = Math.max(0.01, cameraToHit * 0.001);
+
                     let offsetDistance = selectedObjectOffsetDistance;
-                    const minOffset = 0.01;
-                    var step = 0.1;
                     let foundSafe = false;
-                    let maxIterations = 20;
+                    let maxIterations = 100;
 
                     // Store candidate position and scaling
                     let candidatePosition = this.selectedObject.position.clone();
@@ -186,8 +190,7 @@ export class Player{
                             console.log("OFFSET : Found safe position for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId, "at distance:", offsetDistance);
                             break;
                         }
-                        step *= 2; // Double the step size to speed up the search
-                        offsetDistance += step;
+                        offsetDistance -= step; // Use proportional decrement
                     }
 
                     // Restore original position/scaling if no safe position found
