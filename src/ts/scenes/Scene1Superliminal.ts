@@ -32,6 +32,8 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import "@babylonjs/core/Helpers/sceneHelpers";
+import { PointLight } from "@babylonjs/core/Lights/pointLight";
+import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -142,6 +144,46 @@ export class Scene1Superliminal implements CreateSceneClass {
 
             }
         })
+
+        // Light bulb creation and conditional rendering
+        let lightBulbMesh: Mesh | null = null;
+        let lightBulbLight: PointLight | null = null;
+        let showLightBulb = true; // Toggle this variable to show/hide the bulb
+
+        function createLightBulb() {
+            const bulb = MeshBuilder.CreateSphere("lightBulb", { diameter: 0.3 }, scene);
+            bulb.position = new Vector3(0, 2, 0);
+
+            const bulbMat = new StandardMaterial("bulbMat", scene);
+            bulbMat.emissiveColor = new Color3(1, 0.8, 0.2);
+            bulb.material = bulbMat;
+
+            const pointLight = new PointLight("bulbLight", bulb.position, scene);
+            pointLight.diffuse = new Color3(1, 0.8, 0.2);
+            pointLight.intensity = 2;
+
+            new GlowLayer("glow", scene);
+
+            return { bulb, pointLight };
+        }
+
+        // Create the light bulb and store references
+        {
+            const { bulb, pointLight } = createLightBulb();
+            lightBulbMesh = bulb;
+            lightBulbLight = pointLight;
+            bulb.setEnabled(showLightBulb);
+            pointLight.setEnabled(showLightBulb);
+        }
+
+        // Example: Toggle bulb visibility with the "b" key
+        window.addEventListener("keydown", (event: KeyboardEvent) => {
+            if (event.key === "b" && lightBulbMesh && lightBulbLight) {
+                showLightBulb = !showLightBulb;
+                lightBulbMesh.setEnabled(showLightBulb);
+                lightBulbLight.setEnabled(showLightBulb);
+            }
+        });
 
         return scene;
     };
