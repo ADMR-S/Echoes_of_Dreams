@@ -148,59 +148,56 @@ export class Player{
                     let foundSafe = false;
                     let maxIterations = 20;
 
+                    // Store candidate position and scaling
+                    let candidatePosition = this.selectedObject.position.clone();
+                    let candidateScaling = this.selectedObject.scaling.clone();
+
                     while (offsetDistance >= minOffset && maxIterations-- > 0) {
                         const testPosition = hit.pickedPoint.add(cameraRay.direction.scale(-offsetDistance));
+                        // Temporarily set position for bounding box calculation
                         this.selectedObject.position.copyFrom(testPosition);
 
                         // If you want to rescale as you get closer, do it here:
+                        let testScaling = this.selectedObject.scaling.clone();
                         if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
                             const cameraToTest = camera.position.subtract(testPosition).length();
                             const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, cameraToTest, offsetDistance);
-                            this.selectedObject.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
+                            testScaling = this.selectedObjectOriginalScaling.scale(scaleFactor);
+                            this.selectedObject.scaling.copyFrom(testScaling);
                         }
 
-                        // Check for collisions using physics engine
-                        const physicsBody = (this.selectedObject as any).physicsBody || (this.selectedObject as any)._physicsBody;
+                        // Check for collisions using bounding box intersection
+                        const boundingBox = this.selectedObject.getBoundingInfo().boundingBox;
                         let isColliding = false;
-                        if (physicsBody && physicsBody.getCollisionObservable) {
-                            // If you have a way to check for collisions directly, use it here.
-                            // Otherwise, use bounding box intersection as a fallback:
-                            const boundingBox = this.selectedObject.getBoundingInfo().boundingBox;
-                            for (const mesh of scene.meshes) {
-                                if (mesh !== this.selectedObject && mesh.isEnabled() && mesh.isVisible && mesh.isPickable) {
-                                    const otherBox = mesh.getBoundingInfo().boundingBox;
-                                    if (BoundingBox.Intersects(boundingBox, otherBox)) {
-                                        isColliding = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        } else {
-                            // Fallback: bounding box intersection
-                            const boundingBox = this.selectedObject.getBoundingInfo().boundingBox;
-                            for (const mesh of scene.meshes) {
-                                if (mesh !== this.selectedObject && mesh.isEnabled() && mesh.isVisible && mesh.isPickable) {
-                                    const otherBox = mesh.getBoundingInfo().boundingBox;
-                                    if (BoundingBox.Intersects(boundingBox, otherBox)) {
-                                        isColliding = true;
-                                        break;
-                                    }
+                        for (const mesh of scene.meshes) {
+                            if (mesh !== this.selectedObject && mesh.isEnabled() && mesh.isVisible && mesh.isPickable) {
+                                const otherBox = mesh.getBoundingInfo().boundingBox;
+                                if (BoundingBox.Intersects(boundingBox, otherBox)) {
+                                    isColliding = true;
+                                    break;
                                 }
                             }
                         }
 
                         if (!isColliding) {
                             foundSafe = true;
+                            candidatePosition.copyFrom(testPosition);
+                            candidateScaling.copyFrom(this.selectedObject.scaling);
                             console.log("OFFSET : Found safe position for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId, "at distance:", offsetDistance);
                             break;
                         }
                         step *= 2; // Double the step size to speed up the search
                         offsetDistance += step;
                     }
-                    if(!foundSafe) {
+
+                    // Restore original position/scaling if no safe position found
+                    if (foundSafe) {
+                        this.selectedObject.position.copyFrom(candidatePosition);
+                        this.selectedObject.scaling.copyFrom(candidateScaling);
+                    } else {
+                        // Optionally, do not update position/scaling at all
                         console.log("ERROR : No safe position found for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
                     }
-                    // If no safe position found, keep at the last tested position
                 } 
                 else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
                     this.selectedObject.position = camera.position.add(cameraRay.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
