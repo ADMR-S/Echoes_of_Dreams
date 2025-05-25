@@ -116,7 +116,7 @@ export class Player{
             const offset = new Vector3(0.1, 0, 0);
             cameraRay.origin.addInPlace(offset);
 
-            this.visualizeRay(cameraRay, scene);
+            //this.visualizeRay(cameraRay, scene);
 
             // Only pick meshes that are not the selected object (Babylon.js already ignores non-pickable meshes)
             const hit = scene.pickWithRay(cameraRay, (mesh) => mesh !== this.selectedObject);
