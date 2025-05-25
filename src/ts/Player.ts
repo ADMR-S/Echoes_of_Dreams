@@ -26,7 +26,7 @@ export class Player{
     }
 
     selectObject(object : AbstractMesh, objectCoordinates : Vector3, xr : WebXRDefaultExperience, scene : Scene){
-        if(this.selectedObject){ //In case an object is already selected
+        if(!object && this.selectedObject || this.selectedObject){ //In case an object is already selected
          
             console.log("Un objet est déjà sélectionné !");
             console.log("On déselectionne : ");
@@ -53,6 +53,17 @@ export class Player{
             if (!(object as any).object3DPickable){
                 return; // Not a pickable object
             }
+            // Stop motion if physics body exists
+            const object3DPickable = (object as any).object3DPickable;
+            const body = object3DPickable.body;
+            if (body) {
+                body.setLinearVelocity(Vector3.Zero());
+                body.setAngularVelocity(Vector3.Zero());
+            }
+            // Set motion type to ANIMATED to prevent physics simulation
+            object3DPickable.setMotionType(PhysicsMotionType.ANIMATED);
+            object3DPickable.body.setPrestepType(PhysicsPrestepType.TELEPORT);
+
             console.log("ON SELECTIONNE : ");
             console.log(object);
             // Do NOT parent to camera

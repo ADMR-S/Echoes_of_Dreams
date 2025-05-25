@@ -71,6 +71,11 @@ export class XRHandler{
                         xButtonComponent.onButtonStateChangedObservable.add((button) => {
                             if (button.pressed) {
                                 console.log("X Button pressed");
+                                // Deselect if something is selected
+                                if (this.player.selectedObject) {
+                                    this.player.selectObject(null, null, this.xr, this.scene);
+                                    return;
+                                }
                                 // Cast a ray from the headset (camera) forward
                                 const camera = this.xr.baseExperience.camera;
                                 const ray = camera.getForwardRay();
