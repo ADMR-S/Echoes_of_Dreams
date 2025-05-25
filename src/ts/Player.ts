@@ -144,7 +144,7 @@ export class Player{
                     // Iteratively move the object closer to the camera until no collision
                     let offsetDistance = selectedObjectOffsetDistance;
                     const minOffset = 0.01;
-                    const step = 0.02;
+                    var step = 0.1;
                     let foundSafe = false;
                     let maxIterations = 20;
 
@@ -193,6 +193,7 @@ export class Player{
                             foundSafe = true;
                             break;
                         }
+                        step *= 2; // Double the step size to speed up the search
                         offsetDistance -= step;
                     }
                     if(!foundSafe) {
