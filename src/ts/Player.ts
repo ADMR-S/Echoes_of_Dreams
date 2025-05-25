@@ -196,7 +196,7 @@ export class Player{
                         offsetDistance -= step;
                     }
                     if(!foundSafe) {
-                        console.error("No safe position found for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
+                        console.log("ERROR : No safe position found for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
                     }
                     // If no safe position found, keep at the last tested position
                 } 
