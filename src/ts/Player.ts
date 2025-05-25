@@ -5,7 +5,7 @@ import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-
+import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -42,12 +42,17 @@ export class Player{
                 scene.onBeforeRenderObservable.remove(this.displacementObservable);
                 this.displacementObservable = null;
             }
+            (this.selectedObject as any).object3DPickable.setMotionType(PhysicsMotionType.DYNAMIC);
+            (this.selectedObject as any).object3DPickable.body.setPrestepType(PhysicsPrestepType.DISABLED);
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
             return;
         }
         else{
+            if (!(object as any).object3DPickable){
+                return; // Not a pickable object
+            }
             console.log("ON SELECTIONNE : ");
             console.log(object);
             // Do NOT parent to camera

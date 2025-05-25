@@ -7,7 +7,7 @@ import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 // If you don't need the standard material you will still need to import it since the scene requires it.
 //import "@babylonjs/core/Materials/standardMaterial";
-import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { havokModule } from "../externals/havok.ts";
 import HavokPhysics from "@babylonjs/havok";
@@ -18,7 +18,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsPrestepType, WebXRControllerPhysics } from "@babylonjs/core";
+import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -34,6 +34,7 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import "@babylonjs/core/Helpers/sceneHelpers";
 import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
+import { Object3DPickable } from "../object/Object3DPickable";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -145,36 +146,6 @@ export class Scene1Superliminal implements CreateSceneClass {
             }
         })
 
-        // Light bulb creation and conditional rendering
-        let lightBulbMesh: Mesh | null = null;
-        let lightBulbLight: PointLight | null = null;
-        let showLightBulb = true; // Toggle this variable to show/hide the bulb
-
-        function createLightBulb() {
-            const bulb = MeshBuilder.CreateSphere("lightBulb", { diameter: 0.3 }, scene);
-            bulb.position = new Vector3(0, 2, 0);
-
-            const bulbMat = new StandardMaterial("bulbMat", scene);
-            bulbMat.emissiveColor = new Color3(1, 0.8, 0.2);
-            bulb.material = bulbMat;
-
-            const pointLight = new PointLight("bulbLight", bulb.position, scene);
-            pointLight.diffuse = new Color3(1, 0.8, 0.2);
-            pointLight.intensity = 0.5;
-
-            // Parent the light to the bulb mesh so it follows position and scaling
-            pointLight.parent = bulb;
-
-            new GlowLayer("glow", scene);
-
-            // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
-            scene.onBeforeRenderObservable.add(() => {
-                pointLight.position.copyFrom(bulb.position);
-            });
-
-            return { bulb, pointLight };
-        }
-
         // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
         const wallWidth = 0.5;
         const wallHeight = 5;
@@ -193,24 +164,8 @@ export class Scene1Superliminal implements CreateSceneClass {
         // Optional: add physics to the wall
         new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
 
-
-        // Create the light bulb and store references
-        {
-            const { bulb, pointLight } = createLightBulb();
-            lightBulbMesh = bulb;
-            lightBulbLight = pointLight;
-            bulb.setEnabled(showLightBulb);
-            pointLight.setEnabled(showLightBulb);
-        }
-
-        // Example: Toggle bulb visibility with the "b" key
-        window.addEventListener("keydown", (event: KeyboardEvent) => {
-            if (event.key === "b" && lightBulbMesh && lightBulbLight) {
-                showLightBulb = !showLightBulb;
-                lightBulbMesh.setEnabled(showLightBulb);
-                lightBulbLight.setEnabled(showLightBulb);
-            }
-        });
+        //@ts-ignore
+        var lightBulb = createLightBulbPickable(scene);
 
         return scene;
     };
@@ -307,5 +262,55 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
             });
         });
     });
+}
+
+// Create a light bulb as an Object3DPickable
+function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPickable {
+    // Usage in scene :
+    // const bulbPickable = createLightBulbPickable(scene);
+    // Access mesh: bulbPickable.mesh
+    // Access light: bulbPickable.extra.pointLight
+    // Access physics: bulbPickable.extra.bulbAggregate
+
+    const mat = new StandardMaterial("bulbMat", scene);
+    mat.emissiveColor = new Color3(1, 0.8, 0.2);
+
+    return new Object3DPickable(
+        scene,
+        "lightBulb",
+        mat,
+        "sphere",
+        0.3,
+        (scene, name, material, size) => {
+            const mesh = MeshBuilder.CreateSphere(name, { diameter: size }, scene);
+            mesh.material = material;
+            mesh.position = new Vector3(0, 2, 0);
+
+            const pointLight = new PointLight("bulbLight", mesh.position, scene);
+            pointLight.diffuse = new Color3(1, 0.8, 0.2);
+            pointLight.intensity = 0.5;
+            pointLight.parent = mesh;
+
+            new GlowLayer("glow", scene);
+
+            const bulbAggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
+
+            bulbAggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+            bulbAggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            bulbAggregate.body.setCollisionCallbackEnabled(true);
+            bulbAggregate.body.setEventMask(eventMask);
+
+            bulbAggregate.body.getCollisionObservable().add((collisionEvent: any) => {
+                if (collisionEvent.type === "COLLISION_STARTED") {
+                }
+            });
+
+            // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
+            scene.onBeforeRenderObservable.add(() => {
+                pointLight.position.copyFrom(mesh.position);
+            });
+            return { mesh, extra: { pointLight, bulbAggregate } };
+        }
+    );
 }
 

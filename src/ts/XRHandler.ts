@@ -74,8 +74,10 @@ export class XRHandler{
                                 // Cast a ray from the headset (camera) forward
                                 const camera = this.xr.baseExperience.camera;
                                 const ray = camera.getForwardRay();
-                                // Pick the first mesh hit by the ray (ignoring the camera itself)
-                                const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
+                                // Only pick meshes that belong to Object3DPickable
+                                const pickResult = this.scene.pickWithRay(ray, (mesh) => 
+                                    !!mesh && mesh.isPickable && (mesh as any).object3DPickable
+                                );
                                 if (pickResult && pickResult.pickedMesh && pickResult.pickedPoint) {
                                     this.player.selectObject(pickResult.pickedMesh, pickResult.pickedPoint, this.xr, this.scene);
                                     // Distance from camera to the intersection point
@@ -96,7 +98,10 @@ export class XRHandler{
             if(!this.player.selectedObject){
                 const camera = this.xr.baseExperience.camera;
                 const ray = camera.getForwardRay();
-                const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
+                // Only highlight meshes that belong to Object3DPickable
+                const pickResult = this.scene.pickWithRay(ray, (mesh) => 
+                    !!mesh && mesh.isPickable && (mesh as any).object3DPickable
+                );
 
                 // Remove highlight from previous mesh
                 if (this.highlightedMesh && this.highlightedMesh !== pickResult?.pickedMesh) {
