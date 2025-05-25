@@ -106,6 +106,12 @@ export class XRHandler{
                 }
                 this.highlightedMesh = mesh;
             }
+
+            if (pickResult && pickResult.pickedPoint) {
+                // Distance from camera to the intersection point
+                const distance = camera.position.subtract(pickResult.pickedPoint).length();
+                console.log("Distance to target:", distance);
+            }
         });
     }
 

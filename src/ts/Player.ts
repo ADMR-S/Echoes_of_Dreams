@@ -16,6 +16,7 @@ const DEFAULT_DISPLACEMENT = new Vector3(0, 0, 0); // Default displacement if no
 export class Player{
     
     selectedObject : AbstractMesh | null;
+    selectedObjectInitialDistance : number | null = null; //To update the selected object's size
     initialCameraPitch : number; //To update the selected object's size
     private animationObservable: any;
     private resizeObservable: any;
@@ -25,11 +26,12 @@ export class Player{
 
     constructor(){
         this.selectedObject = null;
+        this.selectedObjectInitialDistance = null;
         this.animationObservable = null;
         this.initialCameraPitch = 0;
     }
 
-    selectObject(object : AbstractMesh, xr : WebXRDefaultExperience, scene : Scene){
+    selectObject(object : AbstractMesh, objectCoordinates : Vector3, xr : WebXRDefaultExperience, scene : Scene){
         if(this.selectedObject){ //In case an object is already selected
          
             console.log("Un objet est déjà sélectionné !");
@@ -56,8 +58,12 @@ export class Player{
             this.resizeObject(object, scene, xr);
             this.selectedObject = object;
             this.snapObjectToRayHit(xr, scene);
+
+            const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
+            this.selectedObjectInitialDistance = distance;
+            console.log("Distance to target:", distance)
+        }
     }
-}
 
     animateObject(object : AbstractMesh, scene : Scene){
         this.animationObservable = scene.onBeforeRenderObservable.add(() => {
@@ -70,23 +76,31 @@ export class Player{
 
     resizeObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience){
         this.resizeObservable = scene.onBeforeRenderObservable.add(() => {
-            const scaleFactor = this.calculateScaleFactor(xr);
-            console.log("scaleFactor");
-            console.log(scaleFactor);
-            object.scaling.set(scaleFactor, scaleFactor, scaleFactor);
+
+            const camera = xr.baseExperience.camera;
+            const ray = camera.getForwardRay();
+            // Pick the first mesh hit by the ray (ignoring the camera itself)
+            const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
+
+            var distance = 0;
+            if(pickResult?.pickedPoint){
+                distance = camera.position.subtract(pickResult.pickedPoint).length();
+            }
+            else{
+                //Valeur par défaut si trop loin ou pas de hit
+            }
+
+            if(this.selectedObjectInitialDistance){
+                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance);
+                console.log("scaleFactor");
+                console.log(scaleFactor);
+                object.scaling.set(scaleFactor, scaleFactor, scaleFactor);
+            }
         });
     }
 
-    calculateScaleFactor(xr : WebXRDefaultExperience){
-        const camera = xr.baseExperience.camera;
-        console.log("camera");
-        console.log(camera);
-        if(camera != null){
-            if(this.initialCameraPitch === DEFAULTCAMERAPITCHVALUE){
-                this.initialCameraPitch = camera.rotationQuaternion.x;
-            }
-        }
-        const scaleFactor = 1 + (this.initialCameraPitch-camera.rotationQuaternion.x);
+    calculateScaleFactor(initialDistance : number, distance: number): number {
+        const scaleFactor = distance/initialDistance;
         return scaleFactor;
     }
 
