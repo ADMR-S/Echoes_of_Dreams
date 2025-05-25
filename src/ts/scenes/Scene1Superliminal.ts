@@ -160,7 +160,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
             const pointLight = new PointLight("bulbLight", bulb.position, scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
-            pointLight.intensity = 2;
+            pointLight.intensity = 0.5;
 
             new GlowLayer("glow", scene);
 
