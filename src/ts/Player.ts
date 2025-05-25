@@ -145,8 +145,7 @@ export class Player{
                     // Compute a base distance for scaling step/minOffset
                     const cameraToHit = camera.position.subtract(hit.pickedPoint).length();
                     // Proportional step and minOffset (e.g., 1% and 0.1% of the distance)
-                    const step = Math.max(0.01, cameraToHit * 0.01);
-                    const minOffset = Math.max(0.01, cameraToHit * 0.001);
+                    const step = Math.max(0.1, cameraToHit * 0.01);
 
                     let offsetDistance = selectedObjectOffsetDistance;
                     let foundSafe = false;
@@ -156,7 +155,7 @@ export class Player{
                     let candidatePosition = this.selectedObject.position.clone();
                     let candidateScaling = this.selectedObject.scaling.clone();
 
-                    while (offsetDistance >= minOffset && maxIterations-- > 0) {
+                    while (maxIterations-- > 0) {
                         const testPosition = hit.pickedPoint.add(cameraRay.direction.scale(-offsetDistance));
                         // Temporarily set position for bounding box calculation
                         this.selectedObject.position.copyFrom(testPosition);
@@ -190,7 +189,7 @@ export class Player{
                             console.log("OFFSET : Found safe position for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId, "at distance:", offsetDistance);
                             break;
                         }
-                        offsetDistance += step; // Use proportional decrement
+                        offsetDistance += step; // Use proportional increment
                     }
 
                     // Restore original position/scaling if no safe position found
