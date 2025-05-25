@@ -9,6 +9,8 @@ import { Object3DPickable } from "./object/Object3DPickable";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Player } from "./Player";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 
 export class XRHandler{
 
@@ -18,6 +20,7 @@ export class XRHandler{
     scene: Scene;
     player : Player;
     headset: WebXRInputSource | null;
+    private highlightedMesh: AbstractMesh | null = null;
 
     constructor(scene: Scene, xr : WebXRDefaultExperience, player : Player){
         this.scene = scene;
@@ -26,8 +29,10 @@ export class XRHandler{
         this.leftController = null;
         this.rightController = null;
         this.headset = null; //TODO : Get headset
+        this.highlightedMesh = null;
         this.getLeftAndRightControllers();
         this.setupObjectSelection();
+        this.setupHighlighting(); // Add highlighting setup
     }
 
     getLeftAndRightControllers(){
@@ -58,9 +63,13 @@ export class XRHandler{
                         xButtonComponent.onButtonStateChangedObservable.add((button) => {
                             if (button.pressed) {
                                 console.log("X Button pressed");
-                                const pickResult = this.xr.pointerSelection.getMeshUnderPointer(controller.uniqueId);
-                                if (pickResult) {
-                                    this.player.selectObject(pickResult, this.xr, this.scene);
+                                // Cast a ray from the headset (camera) forward
+                                const camera = this.xr.baseExperience.camera;
+                                const ray = camera.getForwardRay();
+                                // Pick the first mesh hit by the ray (ignoring the camera itself)
+                                const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
+                                if (pickResult && pickResult.pickedMesh) {
+                                    this.player.selectObject(pickResult.pickedMesh, this.xr, this.scene);
                                 }
                             }
                         });
@@ -70,6 +79,35 @@ export class XRHandler{
         });
     }
 
+    setupHighlighting() {
+        this.scene.onBeforeRenderObservable.add(() => {
+            const camera = this.xr.baseExperience.camera;
+            const ray = camera.getForwardRay();
+            const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
+
+            // Remove highlight from previous mesh
+            if (this.highlightedMesh && this.highlightedMesh !== pickResult?.pickedMesh) {
+                const mat = this.highlightedMesh.material;
+                if (mat && mat instanceof StandardMaterial && (mat as any)._originalDiffuseColor) {
+                    mat.diffuseColor = (mat as any)._originalDiffuseColor;
+                }
+                this.highlightedMesh = null;
+            }
+
+            // Highlight the new mesh
+            if (pickResult && pickResult.pickedMesh) {
+                const mesh = pickResult.pickedMesh as AbstractMesh;
+                const mat = mesh.material;
+                if (mat && mat instanceof StandardMaterial) {
+                    if (!(mat as any)._originalDiffuseColor) {
+                        (mat as any)._originalDiffuseColor = mat.diffuseColor.clone();
+                    }
+                    mat.diffuseColor = Color3.FromHexString("#FFA500"); // Orange
+                }
+                this.highlightedMesh = mesh;
+            }
+        });
+    }
 
 }
 export default XRHandler;
