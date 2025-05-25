@@ -106,12 +106,11 @@ export class Player{
             const camera = xr.baseExperience.camera;
             var cameraRay = camera.getForwardRay();
 
-            this.visualizeRay(cameraRay, scene);
-
             //For visibility : 
-            // const offset = new Vector3(0.1, 0, 0);
-            // this.cameraRay.origin.addInPlace(offset);
+            const offset = new Vector3(0.1, 0, 0);
+            cameraRay.origin.addInPlace(offset);
 
+            this.visualizeRay(cameraRay, scene);
 
             const hit = scene.pickWithRay(cameraRay, (mesh) => mesh !== this.selectedObject);
             if(this.selectedObject !=null){     
@@ -119,7 +118,7 @@ export class Player{
                     this.selectedObject.position = hit.pickedPoint;
                 } 
                 else {
-                    this.selectedObject.position = camera.position.add(camera.getForwardRay().direction.scale(0.1));
+                    //this.selectedObject.position = camera.position.add(camera.getForwardRay().direction.scale(0.1));
                 }
             }
         });
