@@ -9,15 +9,10 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
-const DEFAULTCAMERAPITCHVALUE = 2; //The value of the camera's pitch when no object is selected
-// @ts-ignore
-const DEFAULT_DISPLACEMENT = new Vector3(0, 0, 0); // Default displacement if no hit or too far
-
 export class Player{
     
     selectedObject : AbstractMesh | null;
     selectedObjectInitialDistance : number | null = null; //To update the selected object's size
-    initialCameraPitch : number; //To update the selected object's size
     private animationObservable: any;
     private resizeObservable: any;
     private displacementObservable: any;
@@ -28,7 +23,6 @@ export class Player{
         this.selectedObject = null;
         this.selectedObjectInitialDistance = null;
         this.animationObservable = null;
-        this.initialCameraPitch = 0;
     }
 
     selectObject(object : AbstractMesh, objectCoordinates : Vector3, xr : WebXRDefaultExperience, scene : Scene){
@@ -43,7 +37,6 @@ export class Player{
                 this.animationObservable = null;
                 scene.onBeforeRenderObservable.remove(this.resizeObservable);
                 this.resizeObservable = null;
-                this.initialCameraPitch = DEFAULTCAMERAPITCHVALUE;
                 scene.onBeforeRenderObservable.remove(this.displacementObservable);
                 this.displacementObservable = null;
             }
@@ -54,7 +47,8 @@ export class Player{
         else{
             console.log("ON SELECTIONNE : ");
             console.log(object);
-            object.parent = xr.baseExperience.camera;
+            // Do NOT parent to camera
+            // object.parent = xr.baseExperience.camera;
             this.selectedObject = object;
             this.animateObject(object, scene);
             this.resizeObject(object, scene, xr);
@@ -116,14 +110,9 @@ export class Player{
                 camera.getForwardRayToRef(this.cameraRay);
             }
 
-            // Offset the ray slightly to ensure visibility
-            const offset = new Vector3(0.1, 0, 0);
-            this.cameraRay.origin.addInPlace(offset);
-
-            console.log("camera.target");
-            console.log(camera.target);
-            console.log("camera.position");
-            console.log(camera.position);
+            //For visibility : 
+            // const offset = new Vector3(0.1, 0, 0);
+            // this.cameraRay.origin.addInPlace(offset);
 
 
             const hit = scene.pickWithRay(this.cameraRay, (mesh) => mesh !== this.selectedObject);
