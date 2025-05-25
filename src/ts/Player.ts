@@ -112,7 +112,14 @@ export class Player{
 
             this.visualizeRay(cameraRay, scene);
 
+            // Only pick meshes that are not the selected object (Babylon.js already ignores non-pickable meshes)
             const hit = scene.pickWithRay(cameraRay, (mesh) => mesh !== this.selectedObject);
+
+            // Debug: log what mesh is being picked
+            if (hit && hit.pickedMesh) {
+                console.log("DISPLACEMENT Picked mesh:", hit.pickedMesh.name, "Selected object:", this.selectedObject?.name);
+            }
+
             if(this.selectedObject !=null){     
                 if (hit && hit.pickedPoint) {
                     this.selectedObject.position = hit.pickedPoint;
