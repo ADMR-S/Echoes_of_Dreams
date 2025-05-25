@@ -33,6 +33,7 @@ export class Player{
             console.log(this.selectedObject);
             this.selectedObject.parent = null;
             this.selectedObject.isPickable = true; // Make it pickable again
+            console.log("Set isPickable = true for", this.selectedObject.name);
             if (this.animationObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
@@ -52,7 +53,8 @@ export class Player{
             // Do NOT parent to camera
             // object.parent = xr.baseExperience.camera;
             this.selectedObject = object;
-            this.selectedObject.isPickable = false; // Make it not pickable
+            object.isPickable = false; // Make it not pickable
+            console.log("Set isPickable = false for", this.selectedObject.name);
             this.selectedObjectOriginalScaling = object.scaling.clone(); // Store original scaling
             this.animateObject(object, scene);
             this.resizeObject(object, scene, xr);
