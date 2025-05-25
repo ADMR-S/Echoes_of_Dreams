@@ -48,15 +48,16 @@ export class Player{
                 this.displacementObservable = null;
             }
             this.selectedObject = null;
+            this.selectedObjectInitialDistance = null;
             return;
         }
         else{
             console.log("ON SELECTIONNE : ");
             console.log(object);
             object.parent = xr.baseExperience.camera;
+            this.selectedObject = object;
             this.animateObject(object, scene);
             this.resizeObject(object, scene, xr);
-            this.selectedObject = object;
             this.snapObjectToRayHit(xr, scene);
 
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
@@ -105,7 +106,7 @@ export class Player{
     }
 
     snapObjectToRayHit(xr: WebXRDefaultExperience, scene: Scene) {
-        this.displacementObservable = scene.onAfterRenderObservable.add(() => {
+        this.displacementObservable = scene.onBeforeRenderObservable.add(() => {
             const camera = xr.baseExperience.camera;
             if(this.cameraRay == null){
                 this.cameraRay = camera.getForwardRay();
