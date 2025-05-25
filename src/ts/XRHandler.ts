@@ -11,6 +11,7 @@ import { Player } from "./Player";
 import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
+import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 
 export class XRHandler{
 
@@ -21,6 +22,7 @@ export class XRHandler{
     player : Player;
     headset: WebXRInputSource | null;
     private highlightedMesh: AbstractMesh | null = null;
+    private glowLayer: GlowLayer | null = null;
 
     constructor(scene: Scene, xr : WebXRDefaultExperience, player : Player){
         this.scene = scene;
@@ -30,6 +32,12 @@ export class XRHandler{
         this.rightController = null;
         this.headset = null; //TODO : Get headset
         this.highlightedMesh = null;
+        // Add a GlowLayer for highlighting effect if not already present
+        this.glowLayer = scene.getGlowLayerByName?.("xrHighlightGlow") as GlowLayer;
+        if (!this.glowLayer) {
+            this.glowLayer = new GlowLayer("xrHighlightGlow", scene);
+            this.glowLayer.intensity = 1.5; // Increase for stronger glow
+        }
         this.getLeftAndRightControllers();
         this.setupObjectSelection();
         this.setupHighlighting(); // Add highlighting setup
@@ -96,6 +104,9 @@ export class XRHandler{
                     if (mat && mat instanceof StandardMaterial && (mat as any)._originalDiffuseColor) {
                         mat.diffuseColor = (mat as any)._originalDiffuseColor;
                     }
+                    if (mat && mat instanceof StandardMaterial && (mat as any)._originalEmissiveColor) {
+                        mat.emissiveColor = (mat as any)._originalEmissiveColor;
+                    }
                     this.highlightedMesh = null;
                 }
 
@@ -107,7 +118,12 @@ export class XRHandler{
                         if (!(mat as any)._originalDiffuseColor) {
                             (mat as any)._originalDiffuseColor = mat.diffuseColor.clone();
                         }
-                        mat.diffuseColor = Color3.FromHexString("#FFA500"); // Orange
+                        if (!(mat as any)._originalEmissiveColor) {
+                            (mat as any)._originalEmissiveColor = mat.emissiveColor.clone();
+                        }
+                        // Set to violet
+                        mat.diffuseColor = Color3.FromHexString("#A020F0"); // Violet
+                        mat.emissiveColor = Color3.FromHexString("#A020F0"); // Violet for glow
                     }
                     this.highlightedMesh = mesh;
                 }
