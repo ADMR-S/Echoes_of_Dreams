@@ -12,6 +12,7 @@ import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class XRHandler{
 
@@ -73,22 +74,34 @@ export class XRHandler{
                                 console.log("X Button pressed");
                                 const camera = this.xr.baseExperience.camera;
                                 const ray = camera.getForwardRay();
-                                // Only pick meshes that belong to Object3DPickable
-                                const pickResult = this.scene.pickWithRay(ray, (mesh) =>
+
+                                // --- Cone picking logic ---
+                                const meshes = this.scene.meshes.filter(mesh =>
                                     !!mesh && mesh.isPickable && (mesh as any).object3DPickable
                                 );
-                                if (pickResult && pickResult.pickedMesh && pickResult.pickedPoint) {
-                                    // Only select if not already selected, or if selecting a different object
-                                    if (!this.player.selectedObject || this.player.selectedObject !== pickResult.pickedMesh) {
-                                        this.player.selectObject(pickResult.pickedMesh, pickResult.pickedPoint, this.xr, this.scene);
-                                        const distance = camera.position.subtract(pickResult.pickedPoint).length();
-                                        console.log("Distance to target:", distance);
-                                    } else {
-                                        // If already selected, deselect
-                                        this.player.deselectObject(this.scene);
+                                let bestPick: { mesh: AbstractMesh, point: Vector3, angle: number, distance: number } | null = null;
+                                const maxAngle = Math.PI / 16; // ~11.25° cone, increase for more margin
+                                const maxDistance = 10; // max picking distance
+
+                                for (const mesh of meshes) {
+                                    const boundingInfo = mesh.getBoundingInfo();
+                                    const center = boundingInfo.boundingBox.centerWorld;
+                                    const toCenter = center.subtract(ray.origin);
+                                    const distance = toCenter.length();
+                                    if (distance > maxDistance) continue;
+                                    const angle = Math.acos(Vector3.Dot(ray.direction.normalize(), toCenter.normalize()));
+                                    if (angle < maxAngle) {
+                                        if (!bestPick || angle < bestPick.angle || (angle === bestPick.angle && distance < bestPick.distance)) {
+                                            bestPick = { mesh, point: center, angle, distance };
+                                        }
                                     }
+                                }
+
+                                if (bestPick) {
+                                    this.player.selectObject(bestPick.mesh, bestPick.point, this.xr, this.scene);
+                                    const distance = camera.position.subtract(bestPick.point).length();
+                                    console.log("Distance to target:", distance);
                                 } else if (this.player.selectedObject) {
-                                    // Deselect if nothing is picked but something is selected
                                     this.player.deselectObject(this.scene);
                                 }
                             }
@@ -101,17 +114,34 @@ export class XRHandler{
 
     setupHighlighting() {
         this.scene.onBeforeRenderObservable.add(() => {
-
             if(!this.player.selectedObject){
                 const camera = this.xr.baseExperience.camera;
                 const ray = camera.getForwardRay();
-                // Only highlight meshes that belong to Object3DPickable
-                const pickResult = this.scene.pickWithRay(ray, (mesh) => 
+
+                // --- Cone highlighting logic ---
+                const meshes = this.scene.meshes.filter(mesh =>
                     !!mesh && mesh.isPickable && (mesh as any).object3DPickable
                 );
+                let bestPick: { mesh: AbstractMesh, angle: number, distance: number } | null = null;
+                const maxAngle = Math.PI / 16; // ~11.25° cone, increase for more margin
+                const maxDistance = 10;
+
+                for (const mesh of meshes) {
+                    const boundingInfo = mesh.getBoundingInfo();
+                    const center = boundingInfo.boundingBox.centerWorld;
+                    const toCenter = center.subtract(ray.origin);
+                    const distance = toCenter.length();
+                    if (distance > maxDistance) continue;
+                    const angle = Math.acos(Vector3.Dot(ray.direction.normalize(), toCenter.normalize()));
+                    if (angle < maxAngle) {
+                        if (!bestPick || angle < bestPick.angle || (angle === bestPick.angle && distance < bestPick.distance)) {
+                            bestPick = { mesh, angle, distance };
+                        }
+                    }
+                }
 
                 // Remove highlight from previous mesh
-                if (this.highlightedMesh && this.highlightedMesh !== pickResult?.pickedMesh) {
+                if (this.highlightedMesh && this.highlightedMesh !== bestPick?.mesh) {
                     const mat = this.highlightedMesh.material;
                     if (mat && mat instanceof StandardMaterial && (mat as any)._originalDiffuseColor) {
                         mat.diffuseColor = (mat as any)._originalDiffuseColor;
@@ -123,8 +153,8 @@ export class XRHandler{
                 }
 
                 // Highlight the new mesh
-                if (pickResult && pickResult.pickedMesh) {
-                    const mesh = pickResult.pickedMesh as AbstractMesh;
+                if (bestPick) {
+                    const mesh = bestPick.mesh as AbstractMesh;
                     const mat = mesh.material;
                     if (mat && mat instanceof StandardMaterial) {
                         if (!(mat as any)._originalDiffuseColor) {
@@ -133,7 +163,6 @@ export class XRHandler{
                         if (!(mat as any)._originalEmissiveColor) {
                             (mat as any)._originalEmissiveColor = mat.emissiveColor.clone();
                         }
-                        // Set to violet
                         mat.diffuseColor = Color3.FromHexString("#A020F0"); // Violet
                         mat.emissiveColor = Color3.FromHexString("#A020F0"); // Violet for glow
                     }
