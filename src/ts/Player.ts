@@ -35,7 +35,7 @@ export class Player{
             console.log("Un objet est déjà sélectionné !");
             console.log("On déselectionne : ");
             console.log(this.selectedObject);
-            this.selectedObject.setParent(null);
+            this.selectedObject.parent = null;
             if (this.animationObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
@@ -51,7 +51,7 @@ export class Player{
         else{
             console.log("ON SELECTIONNE : ");
             console.log(object);
-            object.setParent(xr.baseExperience.camera);
+            object.parent = xr.baseExperience.camera;
             this.animateObject(object, scene);
             this.resizeObject(object, scene, xr);
             this.selectedObject = object;

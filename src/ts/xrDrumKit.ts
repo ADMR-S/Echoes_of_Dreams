@@ -9,7 +9,7 @@ import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { WebXRControllerPhysics } from "@babylonjs/core/XR/features/WebXRControllerPhysics";
 // @ts-ignore
 import { Observable } from "@babylonjs/core/Misc/observable";
-
+import XRLogger from "./XRLogger.ts";
 //TODO : 
 //Intégration avec Musical Metaverse
 //Prendre en compte la vitesse du mouvement 
@@ -77,6 +77,7 @@ class XRDrumKit {
         this.drumSticks = this.createSticks(xr);
         this.drumSoundsEnabled = false; // Initialize to false and set to true only when controllers are added
         //Currently in pickstick, move later
+        new XRLogger(xr, scene); //Redirects log messages to XR Console
     }   
 
     async initializePlugin() {
