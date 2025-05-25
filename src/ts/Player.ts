@@ -56,12 +56,21 @@ export class Player{
             object.isPickable = false;
             console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             this.selectedObjectOriginalScaling = object.scaling.clone();
+
+            // Calculate offset distance based on bounding box
+            const boundingInfo = object.getBoundingInfo();
+            const min = boundingInfo.boundingBox.minimumWorld;
+            const max = boundingInfo.boundingBox.maximumWorld;
+            const size = max.subtract(min);
+            const greatestDimension = Math.max(size.x, size.y, size.z);
+            const selectedObjectOffsetDistance = greatestDimension / 2 + 0.01; // Add small epsilon
+
             this.animateObject(object, scene);
-            this.resizeObject(object, scene, xr);
+            this.resizeObject(object, scene, xr, selectedObjectOffsetDistance);
 
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
-                this.snapObjectToRayHit(xr, scene);
+                this.snapObjectToRayHit(xr, scene, selectedObjectOffsetDistance);
             }, 0);
 
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
@@ -79,7 +88,7 @@ export class Player{
         });
     }
 
-    resizeObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience){
+    resizeObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience, selectedObjectOffsetDistance: number = 0.1) {
         this.resizeObservable = scene.onBeforeRenderObservable.add(() => {
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
@@ -95,19 +104,20 @@ export class Player{
             }
 
             if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance);
+                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, selectedObjectOffsetDistance);
                 // Always scale from the original scaling
                 object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             }
         });
     }
 
-    calculateScaleFactor(initialDistance : number, distance: number): number {
-        const scaleFactor = distance/initialDistance;
-        return scaleFactor;
+    calculateScaleFactor(initialDistance : number, distance: number, offsetDistance: number = 0): number {
+        // Subtract offsetDistance from the measured distance to keep the object in front of the surface
+        const scaleFactor = (distance - offsetDistance) / initialDistance;
+        return scaleFactor > 0 ? scaleFactor : 0.01; // Prevent negative or zero scale
     }
 
-    snapObjectToRayHit(xr: WebXRDefaultExperience, scene: Scene) {
+    snapObjectToRayHit(xr: WebXRDefaultExperience, scene: Scene, selectedObjectOffsetDistance: number = 0) {
         this.displacementObservable = scene.onBeforeRenderObservable.add(() => {
             const camera = xr.baseExperience.camera;
             const cameraRay = camera.getForwardRay();
@@ -126,11 +136,10 @@ export class Player{
                 console.log("DISPLACEMENT Picked mesh:", hit.pickedMesh.name, "uniqueId:", hit.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
             }
 
-            if(this.selectedObject !=null){     
+            if(this.selectedObject != null){     
                 if (hit && hit.pickedPoint) {
-                    // Offset the object slightly toward the camera to avoid clipping
-                    const offsetDistance = 0.1; // Adjust as needed
-                    const offsetVec = cameraRay.direction.scale(-offsetDistance);
+                    // Use precomputed offset distance
+                    const offsetVec = cameraRay.direction.scale(-selectedObjectOffsetDistance);
                     this.selectedObject.position = hit.pickedPoint.add(offsetVec);
                 } 
                 else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
