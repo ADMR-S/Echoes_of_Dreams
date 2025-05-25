@@ -32,8 +32,8 @@ export class Player{
             console.log("On déselectionne : ");
             console.log(this.selectedObject);
             this.selectedObject.parent = null;
-            this.selectedObject.isPickable = true; // Make it pickable again
-            console.log("Set isPickable = true for", this.selectedObject.name);
+            this.selectedObject.isPickable = true;
+            console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             if (this.animationObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
@@ -53,12 +53,16 @@ export class Player{
             // Do NOT parent to camera
             // object.parent = xr.baseExperience.camera;
             this.selectedObject = object;
-            object.isPickable = false; // Make it not pickable
-            console.log("Set isPickable = false for", this.selectedObject.name);
-            this.selectedObjectOriginalScaling = object.scaling.clone(); // Store original scaling
+            object.isPickable = false;
+            console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
+            this.selectedObjectOriginalScaling = object.scaling.clone();
             this.animateObject(object, scene);
             this.resizeObject(object, scene, xr);
-            this.snapObjectToRayHit(xr, scene);
+
+            // Delay displacement observable by one frame to ensure isPickable is updated
+            setTimeout(() => {
+                this.snapObjectToRayHit(xr, scene);
+            }, 0);
 
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
             this.selectedObjectInitialDistance = distance;
@@ -106,7 +110,7 @@ export class Player{
     snapObjectToRayHit(xr: WebXRDefaultExperience, scene: Scene) {
         this.displacementObservable = scene.onBeforeRenderObservable.add(() => {
             const camera = xr.baseExperience.camera;
-            var cameraRay = camera.getForwardRay();
+            const cameraRay = camera.getForwardRay();
 
             //For visibility : 
             const offset = new Vector3(0.1, 0, 0);
@@ -119,7 +123,7 @@ export class Player{
 
             // Debug: log what mesh is being picked
             if (hit && hit.pickedMesh) {
-                console.log("DISPLACEMENT Picked mesh:", hit.pickedMesh.name, "Selected object:", this.selectedObject?.name);
+                console.log("DISPLACEMENT Picked mesh:", hit.pickedMesh.name, "uniqueId:", hit.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
             }
 
             if(this.selectedObject !=null){     
@@ -127,7 +131,6 @@ export class Player{
                     this.selectedObject.position = hit.pickedPoint;
                 } 
                 else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
-                    // Place the object at the original selection distance along the ray
                     this.selectedObject.position = camera.position.add(cameraRay.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
                 }
             }
