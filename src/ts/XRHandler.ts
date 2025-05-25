@@ -68,8 +68,11 @@ export class XRHandler{
                                 const ray = camera.getForwardRay();
                                 // Pick the first mesh hit by the ray (ignoring the camera itself)
                                 const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
-                                if (pickResult && pickResult.pickedMesh) {
-                                    this.player.selectObject(pickResult.pickedMesh, this.xr, this.scene);
+                                if (pickResult && pickResult.pickedMesh && pickResult.pickedPoint) {
+                                    this.player.selectObject(pickResult.pickedMesh, pickResult.pickedPoint, this.xr, this.scene);
+                                    // Distance from camera to the intersection point
+                                    const distance = camera.position.subtract(pickResult.pickedPoint).length();
+                                    console.log("Distance to target:", distance);
                                 }
                             }
                         });
@@ -105,12 +108,6 @@ export class XRHandler{
                     mat.diffuseColor = Color3.FromHexString("#FFA500"); // Orange
                 }
                 this.highlightedMesh = mesh;
-            }
-
-            if (pickResult && pickResult.pickedPoint) {
-                // Distance from camera to the intersection point
-                const distance = camera.position.subtract(pickResult.pickedPoint).length();
-                console.log("Distance to target:", distance);
             }
         });
     }
