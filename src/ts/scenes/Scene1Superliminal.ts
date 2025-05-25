@@ -167,6 +167,25 @@ export class Scene1Superliminal implements CreateSceneClass {
             return { bulb, pointLight };
         }
 
+        // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
+        const wallWidth = 0.5;
+        const wallHeight = 5;
+        const wallLength = 10;
+        const wallPosition = new Vector3(5, wallHeight / 2, 0); // y = height/2 to sit on ground
+
+        const wall = MeshBuilder.CreateBox("rightWall", { width: wallWidth, height: wallHeight, depth: wallLength }, scene);
+        wall.position = wallPosition;
+        wall.isPickable = true;
+
+        // Optional: give the wall a material
+        const wallMat = new StandardMaterial("wallMat", scene);
+        wallMat.diffuseColor = new Color3(0.8, 0.8, 0.9);
+        wall.material = wallMat;
+
+        // Optional: add physics to the wall
+        new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+
         // Create the light bulb and store references
         {
             const { bulb, pointLight } = createLightBulb();
