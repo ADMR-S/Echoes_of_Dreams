@@ -5,7 +5,6 @@ import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { BoundingBox } from "@babylonjs/core/Culling/boundingBox"; // Add this import
 
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
@@ -140,66 +139,9 @@ export class Player{
             if(this.selectedObject != null){     
                 if (hit && hit.pickedPoint) {
                     
-                    //GET OBJECT CLOSER TO AVOID CLIPPING
-                    // Iteratively move the object closer to the camera until no collision
-                    // Compute a base distance for scaling step/minOffset
-                    const cameraToHit = camera.position.subtract(hit.pickedPoint).length();
-                    // Proportional step and minOffset (e.g., 1% and 0.1% of the distance)
-                    const step = Math.max(0.1, cameraToHit * 0.01);
-
-                    let offsetDistance = selectedObjectOffsetDistance;
-                    let foundSafe = false;
-                    let maxIterations = 100;
-
-                    // Store candidate position and scaling
-                    let candidatePosition = this.selectedObject.position.clone();
-                    let candidateScaling = this.selectedObject.scaling.clone();
-
-                    while (maxIterations-- > 0) {
-                        const testPosition = hit.pickedPoint.add(cameraRay.direction.scale(-offsetDistance));
-                        // Temporarily set position for bounding box calculation
-                        this.selectedObject.position.copyFrom(testPosition);
-
-                        // If you want to rescale as you get closer, do it here:
-                        let testScaling = this.selectedObject.scaling.clone();
-                        if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
-                            const cameraToTest = camera.position.subtract(testPosition).length();
-                            const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, cameraToTest, offsetDistance);
-                            testScaling = this.selectedObjectOriginalScaling.scale(scaleFactor);
-                            this.selectedObject.scaling.copyFrom(testScaling);
-                        }
-
-                        // Check for collisions using bounding box intersection
-                        const boundingBox = this.selectedObject.getBoundingInfo().boundingBox;
-                        let isColliding = false;
-                        for (const mesh of scene.meshes) {
-                            if (mesh !== this.selectedObject && mesh.isEnabled() && mesh.isVisible && mesh.isPickable) {
-                                const otherBox = mesh.getBoundingInfo().boundingBox;
-                                if (BoundingBox.Intersects(boundingBox, otherBox)) {
-                                    isColliding = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (!isColliding) {
-                            foundSafe = true;
-                            candidatePosition.copyFrom(testPosition);
-                            candidateScaling.copyFrom(this.selectedObject.scaling);
-                            console.log("OFFSET : Found safe position for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId, "at distance:", offsetDistance);
-                            break;
-                        }
-                        offsetDistance += step; // Use proportional increment
-                    }
-
-                    // Restore original position/scaling if no safe position found
-                    if (foundSafe) {
-                        this.selectedObject.position.copyFrom(candidatePosition);
-                        this.selectedObject.scaling.copyFrom(candidateScaling);
-                    } else {
-                        // Optionally, do not update position/scaling at all
-                        console.log("ERROR : No safe position found for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
-                    }
+                // Use precomputed offset distance
+                const offsetVec = cameraRay.direction.scale(-selectedObjectOffsetDistance);
+                this.selectedObject.position = hit.pickedPoint.add(offsetVec);
                 } 
                 else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
                     this.selectedObject.position = camera.position.add(cameraRay.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
