@@ -2,7 +2,7 @@
 
 import { Scene } from "@babylonjs/core/scene";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
+//import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
 // If you don't need the standard material you will still need to import it since the scene requires it.
@@ -43,8 +43,8 @@ export class Scene1Superliminal implements CreateSceneClass {
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext, player : Player): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
 
-        const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-        light.intensity = 0.7;
+        //const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
+        //light.intensity = 0.7;
 
         // Our built-in 'ground' shape.
         const ground: Mesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
