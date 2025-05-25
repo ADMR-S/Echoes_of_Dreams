@@ -162,6 +162,9 @@ export class Scene1Superliminal implements CreateSceneClass {
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
             pointLight.intensity = 0.5;
 
+            // Parent the light to the bulb mesh so it follows position and scaling
+            pointLight.parent = bulb;
+
             new GlowLayer("glow", scene);
 
             return { bulb, pointLight };

@@ -128,7 +128,10 @@ export class Player{
 
             if(this.selectedObject !=null){     
                 if (hit && hit.pickedPoint) {
-                    this.selectedObject.position = hit.pickedPoint;
+                    // Offset the object slightly toward the camera to avoid clipping
+                    const offsetDistance = 0.1; // Adjust as needed
+                    const offsetVec = cameraRay.direction.scale(-offsetDistance);
+                    this.selectedObject.position = hit.pickedPoint.add(offsetVec);
                 } 
                 else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
                     this.selectedObject.position = camera.position.add(cameraRay.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
