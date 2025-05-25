@@ -293,14 +293,14 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
 
             new GlowLayer("glow", scene);
 
-            const bulbAggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
+            const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
 
-            bulbAggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-            bulbAggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-            bulbAggregate.body.setCollisionCallbackEnabled(true);
-            bulbAggregate.body.setEventMask(eventMask);
+            aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+            aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            aggregate.body.setCollisionCallbackEnabled(true);
+            aggregate.body.setEventMask(eventMask);
 
-            bulbAggregate.body.getCollisionObservable().add((collisionEvent: any) => {
+            aggregate.body.getCollisionObservable().add((collisionEvent: any) => {
                 if (collisionEvent.type === "COLLISION_STARTED") {
                 }
             });
@@ -309,7 +309,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
             scene.onBeforeRenderObservable.add(() => {
                 pointLight.position.copyFrom(mesh.position);
             });
-            return { mesh, extra: { pointLight, bulbAggregate } };
+            return { mesh, extra: { pointLight, aggregate } };
         }
     );
 }

@@ -41,8 +41,8 @@ export class Player{
                 scene.onBeforeRenderObservable.remove(this.displacementObservable);
                 this.displacementObservable = null;
             }
-            (this.selectedObject as any).object3DPickable.setMotionType(PhysicsMotionType.DYNAMIC);
-            (this.selectedObject as any).object3DPickable.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            (this.selectedObject as any).object3DPickable.extra.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+            (this.selectedObject as any).object3DPickable.extra.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
@@ -61,14 +61,12 @@ export class Player{
             }
             // Stop motion if physics body exists
             const object3DPickable = (object as any).object3DPickable;
-            const body = object3DPickable.body;
-            if (body) {
-                body.setLinearVelocity(Vector3.Zero());
-                body.setAngularVelocity(Vector3.Zero());
-            }
-            // Set motion type to ANIMATED to prevent physics simulation
-            object3DPickable.setMotionType(PhysicsMotionType.ANIMATED);
-            object3DPickable.body.setPrestepType(PhysicsPrestepType.TELEPORT);
+            const body = object3DPickable.extra.aggregate.body;
+            body.setLinearVelocity(Vector3.Zero());
+            body.setAngularVelocity(Vector3.Zero());
+                        // Set motion type to ANIMATED to prevent physics simulation
+            body.setMotionType(PhysicsMotionType.ANIMATED);
+            body.setPrestepType(PhysicsPrestepType.TELEPORT);
 
             console.log("ON SELECTIONNE : ");
             console.log(object);
