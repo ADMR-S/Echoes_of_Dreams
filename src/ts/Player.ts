@@ -25,9 +25,8 @@ export class Player{
         this.animationObservable = null;
     }
 
-    selectObject(object : AbstractMesh, objectCoordinates : Vector3, xr : WebXRDefaultExperience, scene : Scene){
-        if(!object && this.selectedObject || this.selectedObject){ //In case an object is already selected
-         
+    deselectObject(scene: Scene){
+        if(this.selectedObject){
             console.log("Un objet est déjà sélectionné !");
             console.log("On déselectionne : ");
             console.log(this.selectedObject);
@@ -48,6 +47,13 @@ export class Player{
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
             return;
+        }
+    }
+
+
+    selectObject(object : AbstractMesh, objectCoordinates : Vector3, xr : WebXRDefaultExperience, scene : Scene){
+        if(this.selectedObject){ //In case an object is already selected
+            this.deselectObject(scene);
         }
         else{
             if (!(object as any).object3DPickable){

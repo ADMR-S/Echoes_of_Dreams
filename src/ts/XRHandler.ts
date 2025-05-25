@@ -71,23 +71,19 @@ export class XRHandler{
                         xButtonComponent.onButtonStateChangedObservable.add((button) => {
                             if (button.pressed) {
                                 console.log("X Button pressed");
-                                // Deselect if something is selected
-                                if (this.player.selectedObject) {
-                                    this.player.selectObject(null, null, this.xr, this.scene);
-                                    return;
-                                }
                                 // Cast a ray from the headset (camera) forward
                                 const camera = this.xr.baseExperience.camera;
                                 const ray = camera.getForwardRay();
                                 // Only pick meshes that belong to Object3DPickable
-                                const pickResult = this.scene.pickWithRay(ray, (mesh) => 
-                                    !!mesh && mesh.isPickable && (mesh as any).object3DPickable
-                                );
+                                const pickResult = this.scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
                                 if (pickResult && pickResult.pickedMesh && pickResult.pickedPoint) {
                                     this.player.selectObject(pickResult.pickedMesh, pickResult.pickedPoint, this.xr, this.scene);
                                     // Distance from camera to the intersection point
                                     const distance = camera.position.subtract(pickResult.pickedPoint).length();
                                     console.log("Distance to target:", distance);
+                                }
+                                else if(this.player.selectedObject){
+                                        this.player.deselectObject(this.scene);
                                 }
                             }
                         });
