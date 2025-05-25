@@ -191,6 +191,7 @@ export class Player{
 
                         if (!isColliding) {
                             foundSafe = true;
+                            console.log("OFFSET : Found safe position for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId, "at distance:", offsetDistance);
                             break;
                         }
                         step *= 2; // Double the step size to speed up the search
