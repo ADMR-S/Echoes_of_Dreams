@@ -5,6 +5,7 @@ import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { BoundingBox } from "@babylonjs/core/Culling/boundingBox"; // Add this import
 
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
@@ -138,9 +139,66 @@ export class Player{
 
             if(this.selectedObject != null){     
                 if (hit && hit.pickedPoint) {
-                    // Use precomputed offset distance
-                    const offsetVec = cameraRay.direction.scale(-selectedObjectOffsetDistance);
-                    this.selectedObject.position = hit.pickedPoint.add(offsetVec);
+                    
+                    //GET OBJECT CLOSER TO AVOID CLIPPING
+                    // Iteratively move the object closer to the camera until no collision
+                    let offsetDistance = selectedObjectOffsetDistance;
+                    const minOffset = 0.01;
+                    const step = 0.02;
+                    let foundSafe = false;
+                    let maxIterations = 20;
+
+                    while (offsetDistance >= minOffset && maxIterations-- > 0) {
+                        const testPosition = hit.pickedPoint.add(cameraRay.direction.scale(-offsetDistance));
+                        this.selectedObject.position.copyFrom(testPosition);
+
+                        // If you want to rescale as you get closer, do it here:
+                        if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
+                            const cameraToTest = camera.position.subtract(testPosition).length();
+                            const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, cameraToTest, offsetDistance);
+                            this.selectedObject.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
+                        }
+
+                        // Check for collisions using physics engine
+                        const physicsBody = (this.selectedObject as any).physicsBody || (this.selectedObject as any)._physicsBody;
+                        let isColliding = false;
+                        if (physicsBody && physicsBody.getCollisionObservable) {
+                            // If you have a way to check for collisions directly, use it here.
+                            // Otherwise, use bounding box intersection as a fallback:
+                            const boundingBox = this.selectedObject.getBoundingInfo().boundingBox;
+                            for (const mesh of scene.meshes) {
+                                if (mesh !== this.selectedObject && mesh.isEnabled() && mesh.isVisible && mesh.isPickable) {
+                                    const otherBox = mesh.getBoundingInfo().boundingBox;
+                                    if (BoundingBox.Intersects(boundingBox, otherBox)) {
+                                        isColliding = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        } else {
+                            // Fallback: bounding box intersection
+                            const boundingBox = this.selectedObject.getBoundingInfo().boundingBox;
+                            for (const mesh of scene.meshes) {
+                                if (mesh !== this.selectedObject && mesh.isEnabled() && mesh.isVisible && mesh.isPickable) {
+                                    const otherBox = mesh.getBoundingInfo().boundingBox;
+                                    if (BoundingBox.Intersects(boundingBox, otherBox)) {
+                                        isColliding = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!isColliding) {
+                            foundSafe = true;
+                            break;
+                        }
+                        offsetDistance -= step;
+                    }
+                    if(!foundSafe) {
+                        console.error("No safe position found for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
+                    }
+                    // If no safe position found, keep at the last tested position
                 } 
                 else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
                     this.selectedObject.position = camera.position.add(cameraRay.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
