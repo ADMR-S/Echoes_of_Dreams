@@ -194,7 +194,7 @@ export class Player{
                             break;
                         }
                         step *= 2; // Double the step size to speed up the search
-                        offsetDistance -= step;
+                        offsetDistance += step;
                     }
                     if(!foundSafe) {
                         console.log("ERROR : No safe position found for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
