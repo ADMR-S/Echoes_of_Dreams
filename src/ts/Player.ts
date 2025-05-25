@@ -190,7 +190,7 @@ export class Player{
                             console.log("OFFSET : Found safe position for object:", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId, "at distance:", offsetDistance);
                             break;
                         }
-                        offsetDistance -= step; // Use proportional decrement
+                        offsetDistance += step; // Use proportional decrement
                     }
 
                     // Restore original position/scaling if no safe position found
