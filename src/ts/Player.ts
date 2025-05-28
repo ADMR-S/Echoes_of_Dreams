@@ -15,8 +15,7 @@ export class Player{
     selectedObjectInitialDistance : number | null = null; //To update the selected object's size
     private selectedObjectOriginalScaling: Vector3 | null = null; // Store original scaling
     private animationObservable: any;
-    private resizeObservable: any;
-    private displacementObservable: any;
+    private resizeAndRepositionObjectObservable: any;
     private rayHelper: RayHelper | null = null;
 
     constructor(){
@@ -36,10 +35,8 @@ export class Player{
             if (this.animationObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
-                scene.onBeforeRenderObservable.remove(this.resizeObservable);
-                this.resizeObservable = null;
-                scene.onBeforeRenderObservable.remove(this.displacementObservable);
-                this.displacementObservable = null;
+                scene.onBeforeRenderObservable.remove(this.resizeAndRepositionObjectObservable);
+                this.resizeAndRepositionObjectObservable = null;
             }
             (this.selectedObject as any).object3DPickable.extra.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
             (this.selectedObject as any).object3DPickable.extra.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
@@ -85,12 +82,11 @@ export class Player{
             const greatestDimension = Math.max(size.x, size.y, size.z);
             const selectedObjectOffsetDistance = greatestDimension / 2 + 0.01; // Add small epsilon
 
-            this.animateObject(object, scene);
-            this.resizeObject(object, scene, xr, selectedObjectOffsetDistance);
-
+            
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
-                this.snapObjectToRayHit(xr, scene, selectedObjectOffsetDistance);
+                this.animateObject(object, scene);
+                this.resizeAndRepositionObject(object, scene, xr, selectedObjectOffsetDistance);
             }, 0);
 
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
@@ -108,25 +104,56 @@ export class Player{
         });
     }
 
-    resizeObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience, selectedObjectOffsetDistance: number = 0.1) {
-        this.resizeObservable = scene.onBeforeRenderObservable.add(() => {
+    resizeAndRepositionObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience, selectedObjectOffsetDistance: number = 0.1) {
+        this.resizeAndRepositionObjectObservable = scene.onBeforeRenderObservable.add(() => {
+        
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
             // Pick the first mesh hit by the ray (ignoring the camera itself)
-            const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
+            const pickResult = scene.pickWithRay(ray, (mesh) => !this.selectedObject && mesh.isPickable);
 
             var distance = 0;
-            if(pickResult?.pickedPoint){
+            if(pickResult?.pickedPoint && pickResult.pickedMesh){
                 distance = camera.position.subtract(pickResult.pickedPoint).length();
+                console.log("DISPLACEMENT Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
+
             }
+            /* //Restrict distance to a maximum value and handle no hit cases
             else{
+                distance = 100;
                 //Valeur par défaut si trop loin ou pas de hit
             }
+            if(distance > 100){
+                distance = 100
+            }
+            */
 
             if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
                 const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, selectedObjectOffsetDistance);
                 // Always scale from the original scaling
                 object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
+            }
+
+
+            /*
+            //For visibility : 
+            const offset = new Vector3(0.1, 0, 0);
+            ray.origin.addInPlace(offset);
+            */
+
+            //this.visualizeRay(cameraRay, scene);
+
+
+            if(this.selectedObject != null){     
+                if (pickResult && pickResult.pickedPoint) {
+                    
+                // Use precomputed offset distance
+                const offsetVec = ray.direction.scale(-selectedObjectOffsetDistance);
+                this.selectedObject.position = pickResult.pickedPoint.add(offsetVec);
+                } 
+                else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
+                    this.selectedObject.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
+                }
             }
         });
     }
@@ -135,39 +162,6 @@ export class Player{
         // Subtract offsetDistance from the measured distance to keep the object in front of the surface
         const scaleFactor = (distance - offsetDistance) / initialDistance;
         return scaleFactor > 0 ? scaleFactor : 0.01; // Prevent negative or zero scale
-    }
-
-    snapObjectToRayHit(xr: WebXRDefaultExperience, scene: Scene, selectedObjectOffsetDistance: number = 0) {
-        this.displacementObservable = scene.onBeforeRenderObservable.add(() => {
-            const camera = xr.baseExperience.camera;
-            const cameraRay = camera.getForwardRay();
-
-            //For visibility : 
-            const offset = new Vector3(0.1, 0, 0);
-            cameraRay.origin.addInPlace(offset);
-
-            //this.visualizeRay(cameraRay, scene);
-
-            // Only pick meshes that are not the selected object (Babylon.js already ignores non-pickable meshes)
-            const hit = scene.pickWithRay(cameraRay, (mesh) => mesh !== this.selectedObject);
-
-            // Debug: log what mesh is being picked
-            if (hit && hit.pickedMesh) {
-                console.log("DISPLACEMENT Picked mesh:", hit.pickedMesh.name, "uniqueId:", hit.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
-            }
-
-            if(this.selectedObject != null){     
-                if (hit && hit.pickedPoint) {
-                    
-                // Use precomputed offset distance
-                const offsetVec = cameraRay.direction.scale(-selectedObjectOffsetDistance);
-                this.selectedObject.position = hit.pickedPoint.add(offsetVec);
-                } 
-                else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
-                    this.selectedObject.position = camera.position.add(cameraRay.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
-                }
-            }
-        });
     }
 
     visualizeRay(ray: Ray, scene: Scene) {

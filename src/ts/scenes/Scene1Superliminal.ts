@@ -222,8 +222,41 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 if (xrInput) {
                     xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
                         const speed = 0.05;
-                        xr.baseExperience.camera.position.x += axisValues.x * speed;
-                        xr.baseExperience.camera.position.z -= axisValues.y * speed;
+                        // Move relative to camera orientation
+                        const camera = xr.baseExperience.camera;
+                        const forward = camera.getDirection(new Vector3(0, 0, 1));
+                        const right = camera.getDirection(new Vector3(1, 0, 0));
+                        // Remove y component to keep movement horizontal
+                        forward.y = 0;
+                        right.y = 0;
+                        forward.normalize();
+                        right.normalize();
+                        camera.position.addInPlace(forward.scale(-axisValues.y * speed));
+                        camera.position.addInPlace(right.scale(axisValues.x * speed));
+                    });
+                }
+                // --- Disable teleportation feature for left controller ---
+                const teleportation = xr.baseExperience.featuresManager.getEnabledFeature("xr-teleportation");
+                if (teleportation && teleportation.attachedController && teleportation.attachedController === controller) {
+                    teleportation.detach();
+                }
+
+                // --- Jump on A button press ---
+                const aButton = motionController.getComponent("a-button");
+                if (aButton) {
+                    aButton.onButtonStateChangedObservable.add((button: any) => {
+                        if (button.pressed) {
+                            // Apply jump to camera (simple upward velocity)
+                            const camera = xr.baseExperience.camera;
+                            // If camera has a physics impostor/body, apply velocity, else just move up
+                            if ((camera as any).physicsImpostor) {
+                                (camera as any).physicsImpostor.setLinearVelocity(new Vector3(0, 5, 0));
+                            } else if ((camera as any).body && (camera as any).body.setLinearVelocity) {
+                                (camera as any).body.setLinearVelocity(new Vector3(0, 5, 0));
+                            } else {
+                                camera.position.y += 1; // fallback: move up by 1 unit
+                            }
+                        }
                     });
                 }
             });
