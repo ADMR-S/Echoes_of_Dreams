@@ -168,7 +168,7 @@ export class Player{
             var currentOffset = distance/20;
             const maxIterations = 5;
             for(let i = 0; i < maxIterations; i++){
-                this.resizeObject(objectPickable, distance, ray.direction.scale(-currentOffset).length());
+                this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-currentOffset).length()));
                 if(distance === 20){//If distance >= 20, we use the ray direction to position the object
                     this.displaceObject(objectPickable, ray, currentOffset, camera, undefined);
                 } else {
