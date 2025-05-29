@@ -80,13 +80,13 @@ export class Player{
             const max = boundingInfo.boundingBox.maximumWorld;
             const size = max.subtract(min);
             const greatestDimension = Math.max(size.x, size.y, size.z);
-            const selectedObjectOffsetDistance = greatestDimension / 2 + 0.01; // Add small epsilon
+            const selectedObjectBaseOffsetDistance = greatestDimension / 2 + 0.01; // Add small epsilon
 
             
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
                 this.animateObject(object, scene);
-                this.resizeAndRepositionObject(object, scene, xr, selectedObjectOffsetDistance);
+                this.resizeAndRepositionObject(object, scene, xr, selectedObjectBaseOffsetDistance);
             }, 0);
 
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
@@ -104,7 +104,7 @@ export class Player{
         });
     }
 
-    resizeAndRepositionObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience, selectedObjectOffsetDistance: number = 0.1) {
+    resizeAndRepositionObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience, selectedObjectBaseOffsetDistance: number = 0.01) {
         this.resizeAndRepositionObjectObservable = scene.onBeforeRenderObservable.add(() => {
         
             const camera = xr.baseExperience.camera;
@@ -128,12 +128,6 @@ export class Player{
             }
             */
 
-            if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, selectedObjectOffsetDistance);
-                // Always scale from the original scaling
-                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
-            }
-
 
             /*
             //For visibility : 
@@ -144,16 +138,22 @@ export class Player{
             //this.visualizeRay(cameraRay, scene);
 
 
-            if(this.selectedObject != null){     
+            if(this.selectedObject){     
                 if (pickResult && pickResult.pickedPoint) {
                     
                 // Use precomputed offset distance
-                const offsetVec = ray.direction.scale(-selectedObjectOffsetDistance);
+                const offsetVec = ray.direction.scale(-selectedObjectBaseOffsetDistance);
                 this.selectedObject.position = pickResult.pickedPoint.add(offsetVec);
                 } 
                 else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
                     this.selectedObject.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
                 }
+            }
+
+            if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
+                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, selectedObjectBaseOffsetDistance);
+                // Always scale from the original scaling
+                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             }
         });
     }
