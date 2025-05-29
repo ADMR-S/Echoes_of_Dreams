@@ -181,7 +181,7 @@ export class Player{
                     break;
                 } else {
                     console.log("MESHES INTERSECTING, REPOSITIONNING");
-                    currentOffset *= 1.8;
+                    currentOffset *= 2;
                     if(i == maxIterations - 1){
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-currentOffset).length()));
