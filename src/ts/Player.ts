@@ -1,4 +1,4 @@
-import { WebXRDefaultExperience } from "@babylonjs/core";
+import { Camera, WebXRDefaultExperience } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -132,7 +132,7 @@ export class Player{
                 //Valeur par défaut si trop loin ou pas de hit
             }
             if(distance > 20){
-                distance = 100
+                distance = 20
             }
             
 
@@ -145,34 +145,27 @@ export class Player{
 
             //this.visualizeRay(cameraRay, scene);
 
-
-            
-            if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, selectedObjectBaseOffsetDistance);
-                // Always scale from the original scaling
-                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
-            }
-
-            if(this.selectedObject){     
-                if (pickResult && pickResult.pickedPoint) {
-                    
-                // Use precomputed offset distance
-                const offsetVec = ray.direction.scale(-selectedObjectBaseOffsetDistance);
-                this.selectedObject.position = pickResult.pickedPoint.add(offsetVec);
-                } 
-                else if (this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling) {
-                    this.selectedObject.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(this.selectedObject.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
-                }
-            }
-
+            this.resizeObject(object, distance, selectedObjectBaseOffsetDistance);
+            this.displaceObject(object, ray, selectedObjectBaseOffsetDistance, camera, pickResult?.pickedPoint || undefined);
         });
     }
 
-    resizeObject(){
-
+    resizeObject(object : AbstractMesh, distance : number, offsetDistance : number) {
+        if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
+                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, offsetDistance);
+                // Always scale from the original scaling
+                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
+        }
     }
-    displaceObject(){
-
+    displaceObject(object : AbstractMesh, ray : Ray, offsetDistance : number, camera : Camera, targetPoint? : Vector3){                    
+                if(targetPoint){
+                // Use precomputed offset distance
+                const offsetVec = ray.direction.scale(-offsetDistance);
+                object.position = targetPoint.add(offsetVec);
+                }
+                else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
+                    object.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(object.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
+                }
     }
 
     calculateScaleFactor(initialDistance : number, distance: number, offsetDistance: number = 0): number {
