@@ -457,24 +457,31 @@ export class SceneNiveau3 implements CreateSceneClass {
                             gameProgressZ -= 15;
                             this.showScoreFeedback("-15", "red");
                         } else if (obstacleType === "star") {
-                            gameProgressZ -= 20; // Diminue comme demandé
-                            this.showScoreFeedback("+20", "green"); // Affiche +20 vert comme demandé
+                            gameProgressZ -= 20;
+                            this.showScoreFeedback("+20", "green");
                         }
-
-                        // Logique de suppression commune
+                        if ((currentObstacle as any).ambientSound) {
+                            (currentObstacle as any).ambientSound.stop();
+                            (currentObstacle as any).ambientSound.dispose();
+                        }
                         if ((currentObstacle as any).particleAura) {
-                            (currentObstacle as any).particleAura.dispose(true,true); // true pour les textures
+                            (currentObstacle as any).particleAura.dispose(true,true);
                         }
                         if ((currentObstacle as any).particleSmokeTrail) {
-                            (currentObstacle as any).particleSmokeTrail.dispose(true,true); // true pour les textures
+                            (currentObstacle as any).particleSmokeTrail.dispose(true,true);
                         }
-                        currentObstacle.dispose(false, true); // false pour ne pas disposer les material/textures partagés par les instances, true pour les enfants
+                        currentObstacle.dispose(false, true);
                         obstacles.splice(i, 1);
                         disposedThisFrame = true;
+
                     }
 
                     // Nettoyage des obstacles hors champ
                     if (!disposedThisFrame && currentObstacle.position.z < xr.baseExperience.camera.globalPosition.z - 20) {
+                        if ((currentObstacle as any).ambientSound) {
+                            (currentObstacle as any).ambientSound.stop();
+                            (currentObstacle as any).ambientSound.dispose();
+                        }
                         if ((currentObstacle as any).particleAura) {
                             (currentObstacle as any).particleAura.dispose(true,true);
                         }
