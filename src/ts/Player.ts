@@ -169,6 +169,8 @@ export class Player{
             else{
                 this.displaceObject(objectPickable, ray, selectedObjectBaseOffsetDistance, camera, pickResult?.pickedPoint || undefined);
             }
+            // Check for nearby bounding boxes
+            console.log("INTERSECTIONS : " + this.checkNearbyBoundingBoxes(objectPickable));
                 
         });
     }
@@ -211,5 +213,33 @@ export class Player{
         }
         this.rayHelper = new RayHelper(ray);
         this.rayHelper.show(scene, new Color3(0, 1, 0)); // Set ray color to green
+    }
+
+    checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
+        //maxDistance = object greatest dimension :
+        
+        const maxDistance = Math.max(
+            objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.x - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.x,
+            objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.y - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.y,
+            objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.z - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.z
+        ) / 2;
+        
+        const myPos = objectPickable.mesh.position;
+        const myBoundingBox = objectPickable.mesh.getBoundingInfo().boundingBox;
+        const scene = objectPickable.mesh.getScene();
+        const closeMeshes = scene.meshes.filter(mesh => {
+            if (mesh === objectPickable.mesh) return false;
+            // Quick distance check
+            return mesh.position.subtract(myPos).length() < maxDistance;
+        });
+        for (const mesh of closeMeshes) {
+            const otherBox = mesh.getBoundingInfo().boundingBox;
+            if ((BABYLON as any).BoundingBox.Intersects(myBoundingBox, otherBox)) {
+                // Do something on intersection
+                console.log("Bounding boxes intersect:", mesh.name);
+                return true;
+            }
+        }
+        return false; // No intersections found
     }
 }
