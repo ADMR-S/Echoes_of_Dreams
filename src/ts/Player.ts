@@ -13,6 +13,7 @@ import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 
 export class Player{
     
+    MAX_DISTANCE = 20; // Maximum distance for object placement
     selectedObject : AbstractMesh | null;
     selectedObjectInitialDistance : number | null = null; //To update the selected object's size
     private selectedObjectOriginalScaling: Vector3 | null = null; // Store original scaling
@@ -150,11 +151,11 @@ export class Player{
             }
              //Restrict distance to a maximum value and handle no hit cases
             else{
-                distance = 20;
+                distance = this.MAX_DISTANCE;
                 //Valeur par défaut si trop loin ou pas de hit
             }
-            if(distance > 20){
-                distance = 20
+            if(distance > this.MAX_DISTANCE){
+                distance = this.MAX_DISTANCE;
             }
             
 
@@ -170,7 +171,7 @@ export class Player{
             const maxIterations = 5;
             for(let i = 0; i < maxIterations; i++){
                 this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-currentOffset).length()));
-                if(distance === 20){//If distance >= 20, we use the ray direction to position the object
+                if(distance === this.MAX_DISTANCE){//If distance >= MAX_DISTANCE, we use the ray direction to position the object
                     this.displaceObject(objectPickable, ray, currentOffset, camera, undefined);
                 } else {
                     this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
@@ -217,10 +218,15 @@ export class Player{
         camera : Camera,
         targetPoint? : Vector3){                    
                 if(targetPoint){
-                // Use precomputed offset distance
-                const offsetVec = ray.direction.scale(-offsetDistance);
-                console.log("DISPLACEMENT : Offset vector:", offsetVec);
-                objectPickable.mesh.position = targetPoint.add(offsetVec);
+                    if(camera.position.subtract(targetPoint).length() > this.MAX_DISTANCE){
+                        targetPoint = camera.position.add(ray.direction.scale(this.MAX_DISTANCE));
+                    }
+                    else{
+                    // Use precomputed offset distance
+                    const offsetVec = ray.direction.scale(-offsetDistance);
+                    console.log("DISPLACEMENT : Offset vector:", offsetVec);
+                    objectPickable.mesh.position = targetPoint.add(offsetVec);
+                    }
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
                     objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
