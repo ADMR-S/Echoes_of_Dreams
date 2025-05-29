@@ -323,6 +323,16 @@ export class Player{
             const otherCenter = otherWorldBox.centerWorld;
             const otherRadius = otherWorldBox.extendSize.length();
 
+            // --- Ignore ground if object is very small (fallback state) ---
+            if (
+                mesh.name.toLowerCase().includes("ground") &&
+                objectPickable.mesh.scaling.x <= 0.011 &&
+                objectPickable.mesh.scaling.y <= 0.011 &&
+                objectPickable.mesh.scaling.z <= 0.011
+            ) {
+                continue;
+            }
+
             // --- Sphere radius sum quick check ---
             const centerDist = myCenter.subtract(otherCenter).length();
             if (centerDist > myRadius + otherRadius) continue; // Too far, skip expensive check
