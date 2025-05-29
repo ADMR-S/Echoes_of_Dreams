@@ -188,6 +188,7 @@ export class Player{
                         this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-offsetDistance).length()));
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
+                        console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-offsetDistance).length());
                     }
                 }
             }
