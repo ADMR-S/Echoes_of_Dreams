@@ -182,6 +182,7 @@ export class Player{
                 }
                 objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
 
+                /*
                 // If offset length is greater than distance, break and put object close to camera
                 if (offsetLen > distance) {
                     this.resizeObject(objectPickable, distance*0.2, 0);
@@ -190,6 +191,7 @@ export class Player{
                     console.log("Offset length > distance, moving object close to camera.");
                     break;
                 }
+                */
 
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
