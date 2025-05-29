@@ -7,6 +7,7 @@ import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Object3DPickable } from "./object/Object3DPickable";
+import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -224,13 +225,12 @@ export class Player{
 
     checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
         //maxDistance = object greatest dimension :
-        
         const maxDistance = Math.max(
             objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.x - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.x,
             objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.y - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.y,
             objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.z - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.z
         ) / 2;
-        
+
         const myPos = objectPickable.mesh.position;
         const myBoundingBox = objectPickable.mesh.getBoundingInfo().boundingBox;
         const scene = objectPickable.mesh.getScene();
@@ -241,7 +241,7 @@ export class Player{
         });
         for (const mesh of closeMeshes) {
             const otherBox = mesh.getBoundingInfo().boundingBox;
-            if ((BABYLON as any).BoundingBox.Intersects(myBoundingBox, otherBox)) {
+            if (BoundingBox.Intersects(myBoundingBox, otherBox)) {
                 // Do something on intersection
                 console.log("Bounding boxes intersect:", mesh.name);
                 return true;
