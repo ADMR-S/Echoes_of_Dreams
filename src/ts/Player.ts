@@ -214,6 +214,7 @@ export class Player{
                 if(targetPoint){
                 // Use precomputed offset distance
                 const offsetVec = ray.direction.scale(-offsetDistance);
+                console.log("DISPLACEMENT : Offset vector:", offsetVec);
                 objectPickable.mesh.position = targetPoint.add(offsetVec);
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
