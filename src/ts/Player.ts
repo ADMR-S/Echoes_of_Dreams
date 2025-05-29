@@ -11,6 +11,9 @@ import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
+
+//Idea to try : Divide each component of the ray.direction vector by the length of the vector to get a vector of length 1 
+
 export class Player{
     
     MAX_DISTANCE = 20; // Maximum distance for object placement
@@ -170,7 +173,7 @@ export class Player{
             var currentOffset = distance/20;
             const maxIterations = 5;
             for(let i = 0; i < maxIterations; i++){
-                this.resizeObject(objectPickable, distance, ray.direction.scale(-currentOffset).length());
+                this.resizeObject(objectPickable, distance, ray.direction.scale(-currentOffset/ray.direction.length()).length());
                 if(distance === this.MAX_DISTANCE){//If distance >= MAX_DISTANCE, we use the ray direction to position the object
                     this.displaceObject(objectPickable, ray, 1.26*currentOffset, camera, undefined);
                 } else {
@@ -183,7 +186,7 @@ export class Player{
                 } else {
                     console.log("MESHES INTERSECTING, REPOSITIONNING");
                     currentOffset *= 2;
-                    if(i == maxIterations - 1){
+                    if(i === maxIterations - 1){
                         /*
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
@@ -193,7 +196,7 @@ export class Player{
                         */
                         // If no valid position found after all attempts, set minimal scale and move close to camera
                         this.resizeObject(objectPickable, distance*0.1, 0);
-                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1));
+                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1/ray.direction.length()));
                         console.log("No valid position found: setting minimal scale and moving object close to camera.");
                         if(this.checkNearbyBoundingBoxes(objectPickable)){
                             console.log("Even minimal scale intersects with object" );
@@ -232,11 +235,11 @@ export class Player{
                 if(targetPoint){
                     const distanceToPickedPoint = camera.position.subtract(targetPoint).length();
                     if(distanceToPickedPoint > this.MAX_DISTANCE){
-                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.MAX_DISTANCE - offsetDistance));
+                        objectPickable.mesh.position = camera.position.add(ray.direction.scale((this.MAX_DISTANCE - offsetDistance)/ray.direction.length()));
                     }
                     else{
                     // Use precomputed offset distance
-                    const offsetVec = ray.direction.scale(-offsetDistance);
+                    const offsetVec = ray.direction.scale(-offsetDistance/ray.direction.length());
                     //this.showVector(targetPoint, offsetVec, objectPickable.mesh.getScene(), Color3.Blue(), "offsetVector");
                     console.log("DISPLACEMENT : Offset vector length:", offsetVec.length());
                     objectPickable.mesh.position = targetPoint.add(offsetVec);
@@ -244,7 +247,7 @@ export class Player{
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
                     const scaleFactor = objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length()
-                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*scaleFactor- offsetDistance));
+                    objectPickable.mesh.position = camera.position.add(ray.direction.scale((this.selectedObjectInitialDistance*scaleFactor- offsetDistance)/ray.direction.length()));
                 }
     }
 
