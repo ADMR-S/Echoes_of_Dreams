@@ -313,12 +313,12 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
         "lightBulb",
         mat,
         PhysicsShapeType.SPHERE, // Use sphere shape for bulb
-        0.3,
+        0.05, // Diameter of the bulb
         (scene, name, material, size) => {
             const mesh = MeshBuilder.CreateSphere(name, { diameter: size }, scene);
             mesh.material = material;
             // Place the bulb on the ground (y = radius)
-            mesh.position = new Vector3(0, size / 2, 0);
+            mesh.position = new Vector3(0, size / 2, 2);
 
             const pointLight = new PointLight("bulbLight", mesh.position, scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
