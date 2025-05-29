@@ -192,8 +192,8 @@ export class Player{
                         console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
                         */
                         // If no valid position found after all attempts, set minimal scale and move close to camera
-                        objectPickable.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
-                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.01));
+                        objectPickable.mesh.scaling = new Vector3(0.1, 0.1, 0.1);
+                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1));
                         console.log("No valid position found: setting minimal scale and moving object close to camera.");
                     
 
@@ -230,7 +230,7 @@ export class Player{
                 if(targetPoint){
                     const distanceToPickedPoint = camera.position.subtract(targetPoint).length();
                     if(distanceToPickedPoint > this.MAX_DISTANCE){
-                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.MAX_DISTANCE));
+                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.MAX_DISTANCE - offsetDistance));
                     }
                     else{
                     // Use precomputed offset distance
@@ -242,7 +242,7 @@ export class Player{
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
                     const scaleFactor = objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length()
-                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*scaleFactor));
+                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*scaleFactor- offsetDistance));
                 }
     }
 
