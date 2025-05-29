@@ -1,4 +1,4 @@
-import { Camera, WebXRDefaultExperience } from "@babylonjs/core";
+import { Camera, MeshBuilder, WebXRDefaultExperience } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -166,10 +166,6 @@ export class Player{
             ray.origin.addInPlace(offset);
             */
 
-            // Store original position and scaling in case no valid position is found
-            const originalPosition = objectPickable.mesh.position.clone();
-            const originalScaling = objectPickable.mesh.scaling.clone();
-
             //this.visualizeRay(cameraRay, scene);
             var currentOffset = distance/20;
             const maxIterations = 5;
@@ -189,8 +185,8 @@ export class Player{
                     currentOffset *= 2;
                     if(i == maxIterations - 1){
                         //Use initial positionning :
-                        objectPickable.mesh.position = originalPosition;
-                        objectPickable.mesh.scaling = originalScaling;
+                        this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-offsetDistance).length()));
+                        this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
                     }
                 }
@@ -228,6 +224,7 @@ export class Player{
                     else{
                     // Use precomputed offset distance
                     const offsetVec = ray.direction.scale(-offsetDistance);
+                    this.showVector(targetPoint, offsetVec, objectPickable.mesh.getScene(), Color3.Blue(), "offsetVector");
                     console.log("DISPLACEMENT : Offset vector:", offsetVec);
                     objectPickable.mesh.position = targetPoint.add(offsetVec);
                     }
@@ -250,6 +247,17 @@ export class Player{
         }
         this.rayHelper = new RayHelper(ray);
         this.rayHelper.show(scene, new Color3(0, 1, 0)); // Set ray color to green
+    }
+
+    showVector(origin: Vector3, vector: Vector3, scene: Scene, color: Color3 = Color3.Red(), name: string = "vectorLine") {
+        // Remove previous line if exists
+        const oldLine = scene.getMeshByName(name);
+        if (oldLine) {
+            oldLine.dispose();
+        }
+        const points = [origin, origin.add(vector)];
+        const line = MeshBuilder.CreateLines(name, { points }, scene);
+        (line as any).color = color;
     }
 
     checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
