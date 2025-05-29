@@ -232,7 +232,11 @@ export class Player{
         ) / 2;
 
         const myPos = objectPickable.mesh.position;
-        const myBoundingBox = objectPickable.mesh.getBoundingInfo().boundingBox;
+        const myBoundingInfo = objectPickable.mesh.getBoundingInfo();
+        const myWorldBox = new BoundingBox(
+            myBoundingInfo.boundingBox.minimumWorld,
+            myBoundingInfo.boundingBox.maximumWorld
+        );
         const scene = objectPickable.mesh.getScene();
         const closeMeshes = scene.meshes.filter(mesh => {
             if (mesh === objectPickable.mesh) return false;
@@ -240,8 +244,12 @@ export class Player{
             return mesh.position.subtract(myPos).length() < maxDistance;
         });
         for (const mesh of closeMeshes) {
-            const otherBox = mesh.getBoundingInfo().boundingBox;
-            if (BoundingBox.Intersects(myBoundingBox, otherBox)) {
+            const otherBoundingInfo = mesh.getBoundingInfo();
+            const otherWorldBox = new BoundingBox(
+                otherBoundingInfo.boundingBox.minimumWorld,
+                otherBoundingInfo.boundingBox.maximumWorld
+            );
+            if (BoundingBox.Intersects(myWorldBox, otherWorldBox)) {
                 // Do something on intersection
                 console.log("Bounding boxes intersect:", mesh.name);
                 return true;
