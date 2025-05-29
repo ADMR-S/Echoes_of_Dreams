@@ -28,7 +28,7 @@ import {
     PhysicsShapeType,
     PointerDragBehavior,
     Ray,
-    Scalar,
+    Scalar, Sound,
     StandardMaterial,
     WebXRControllerPhysics
 } from "@babylonjs/core";
@@ -47,12 +47,13 @@ import {AdvancedDynamicTexture, Control, Rectangle, TextBlock} from "@babylonjs/
 
 export class SceneNiveau3 implements CreateSceneClass {
     preTasks = [havokModule];
-    private hudTexture: AdvancedDynamicTexture;
-    private distanceText: TextBlock;
-    private hudBackground: Rectangle;
+    private hudTexture: AdvancedDynamicTexture | undefined;
+    private distanceText: TextBlock | undefined;
+    private hudBackground: Rectangle | undefined;
 
-    private scoreFeedbackText: TextBlock;
+    private scoreFeedbackText: TextBlock | undefined;
     private scoreFeedbackTimeout: number | undefined;
+    private backgroundMusic: Sound | null = null;
 
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
@@ -177,6 +178,7 @@ export class SceneNiveau3 implements CreateSceneClass {
             obstacleCounter++;
             let obstacle: AbstractMesh | null = null;
             const isCustomAssetType = Math.random() < 0.7;
+            let soundFile = "";
 
             if (isCustomAssetType && obstacleTemplates.length > 0) {
                 const randomIndex = Math.floor(Math.random() * obstacleTemplates.length);
@@ -187,13 +189,12 @@ export class SceneNiveau3 implements CreateSceneClass {
                 }
                 // @ts-ignore
                 obstacle = selectedTemplate.createInstance("customObstacle_" + obstacleCounter);
+
                 if (obstacle) {
-                    obstacle.setEnabled(true); // Assurez-vous que l'instance est visible
-                   // obstacle.rotation.z = Math.PI;
+                    obstacle.setEnabled(true);
                     (obstacle as any).particleSmokeTrail = createBlackSmokeTrail(scene, obstacle);
                     (obstacle as any).obstacleGameType = "penalty";
-
-
+                    soundFile = "/asset/sounds/boo.mp3";
                 } else {
                     console.warn("Échec de la création d'une instance d'obstacle GLB personnalisé.");
                     return null;
@@ -205,6 +206,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                 if (obstacle) {
                     (obstacle as any).particleAura = createRotatingRedAura(scene, obstacle);
                     (obstacle as any).obstacleGameType = "star";
+                    soundFile = "/asset/sounds/starSparkle.mp3";
 
                 } else {
                     console.warn("Impossible de créer une instance d'étoile");
@@ -219,6 +221,34 @@ export class SceneNiveau3 implements CreateSceneClass {
             obstacle.isPickable = true;
 
             new PhysicsAggregate(obstacle, PhysicsShapeType.BOX, { mass: 0, restitution: 0 }, scene);
+
+            if (soundFile) {
+                const obstacleSound = new Sound(
+                    "sound_" + obstacle.uniqueId,
+                    soundFile,
+                    scene,
+                    () => {
+
+                        if (obstacle && !obstacle.isDisposed() && obstacleSound) {
+                            obstacleSound.attachToMesh(obstacle);
+                            obstacleSound.play();
+                        }
+                    },
+                    {
+                        loop: true,
+                        autoplay: false,
+                        volume: 0.2,
+                        spatialSound: true,
+                        distanceModel: "linear",
+                        maxDistance: 50,
+                        rolloffFactor: 1.2
+                    }
+                );
+                (obstacle as any).ambientSound = obstacleSound;
+
+
+            }
+
             return obstacle;
         };
 
@@ -344,6 +374,24 @@ export class SceneNiveau3 implements CreateSceneClass {
                 });
             }
         });
+
+        this.backgroundMusic = new Sound(
+            "backgroundMusic",
+            "/asset/sounds/background.mp3",
+            scene,
+            () => {
+                if (this.backgroundMusic) {
+                    this.backgroundMusic.play();
+                    console.log("Musique de fond démarrée.");
+                }
+            },
+            {
+                loop: true,
+                autoplay: false,
+                volume: 0.6
+            }
+        );
+
 
 
 
@@ -722,7 +770,7 @@ export class SceneNiveau3 implements CreateSceneClass {
     };
 
     private showScoreFeedback(text: string, color: string, duration: number = 1500) {
-       /* if (!this.scoreFeedbackText) return;
+       if (!this.scoreFeedbackText) return;
 
         if (this.scoreFeedbackTimeout) {
             clearTimeout(this.scoreFeedbackTimeout);
@@ -736,7 +784,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                 this.scoreFeedbackText.isVisible = false;
             }
             this.scoreFeedbackTimeout = undefined;
-        }, duration);*/
+        }, duration);
     }
 }
 
