@@ -19,14 +19,15 @@ export class Object3DPickable implements Object3D{
       material: Material,
       shapeType: PhysicsShapeType,
       size: number = 1,
-      customMeshFactory?: (scene: Scene, name: string, material: Material, size: number) => { mesh: Mesh, extra?: any }
+      customMeshFactory?: (scene: Scene, name: string, material: Material, size: number) => { mesh: Mesh, extra?: any, aggregate?: PhysicsAggregate }
     ) 
     {
         this.shapeType = shapeType;
         if (customMeshFactory) {
-            const { mesh, extra } = customMeshFactory(scene, name, material, size);
+            const { mesh, extra, aggregate} = customMeshFactory(scene, name, material, size);
             this.mesh = mesh;
             this.extra = extra;
+            this.aggregate = aggregate;
         } else {
             this.mesh = this.createMesh(scene, name, shapeType, size);
             this.mesh.material = material;
