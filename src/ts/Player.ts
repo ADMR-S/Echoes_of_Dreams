@@ -128,10 +128,10 @@ export class Player{
             }
              //Restrict distance to a maximum value and handle no hit cases
             else{
-                distance = 100;
+                distance = 20;
                 //Valeur par défaut si trop loin ou pas de hit
             }
-            if(distance > 100){
+            if(distance > 20){
                 distance = 100
             }
             
@@ -152,7 +152,7 @@ export class Player{
                 // Always scale from the original scaling
                 object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             }
-            
+
             if(this.selectedObject){     
                 if (pickResult && pickResult.pickedPoint) {
                     
