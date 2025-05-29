@@ -168,7 +168,7 @@ export class Player{
             var currentOffset = distance/20;
             const maxIterations = 5;
             for(let i = 0; i < maxIterations; i++){
-                this.resizeObject(objectPickable, distance, currentOffset);
+                this.resizeObject(objectPickable, distance, ray.direction.scale(-currentOffset).length());
                 if(distance === 20){//If distance >= 20, we use the ray direction to position the object
                     this.displaceObject(objectPickable, ray, currentOffset, camera, undefined);
                 } else {
@@ -198,6 +198,10 @@ export class Player{
             const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, offsetDistance);
             objectPickable.mesh.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             
+            //Prevent meshes size to reach 0 : 
+            if(objectPickable.mesh.scaling.x < 0.01 || objectPickable.mesh.scaling.y < 0.01 || objectPickable.mesh.scaling.z < 0.01){
+                objectPickable.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+            }
             if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
                 // Clamp intensity to a maximum of 100
                 const newIntensity = Math.min(this.selectedObjectLightInitialIntensity * scaleFactor, 100);
