@@ -166,6 +166,10 @@ export class Player{
             ray.origin.addInPlace(offset);
             */
 
+            // Store original position and scaling in case no valid position is found
+            const originalPosition = objectPickable.mesh.position.clone();
+            const originalScaling = objectPickable.mesh.scaling.clone();
+
             //this.visualizeRay(cameraRay, scene);
             var currentOffset = distance/20;
             const maxIterations = 5;
@@ -185,8 +189,8 @@ export class Player{
                     currentOffset *= 2;
                     if(i == maxIterations - 1){
                         //Use initial positionning :
-                        this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-offsetDistance).length()));
-                        this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
+                        objectPickable.mesh.position = originalPosition;
+                        objectPickable.mesh.scaling = originalScaling;
                         console.log("Max iterations reached, using initial positioning");
                     }
                 }
@@ -229,7 +233,8 @@ export class Player{
                     }
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
+                    const scaleFactor = objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length()
+                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*scaleFactor));
                 }
     }
 
