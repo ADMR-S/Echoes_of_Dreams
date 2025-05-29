@@ -187,13 +187,14 @@ export class Player{
                     console.log("MESHES INTERSECTING, REPOSITIONNING");
                     currentOffset *= 2;
                     if(i === maxIterations - 1){
-                        /*
+                        
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
                         console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
-                        */
+                        
+                        /*
                         // If no valid position found after all attempts, set minimal scale and move close to camera
                         this.resizeObject(objectPickable, distance*0.1, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1/ray.direction.length()));
@@ -201,6 +202,7 @@ export class Player{
                         if(this.checkNearbyBoundingBoxes(objectPickable)){
                             console.log("Even minimal scale intersects with object" );
                         }
+                        */
 
                     }
                 }
@@ -325,22 +327,11 @@ export class Player{
             const otherCenter = otherWorldBox.centerWorld;
             const otherRadius = otherWorldBox.extendSize.length();
 
-            // --- Ignore ground if object is very small (fallback state) ---
-            if (
-                mesh.name.toLowerCase().includes("ground") &&
-                objectPickable.mesh.scaling.x <= 0.011 &&
-                objectPickable.mesh.scaling.y <= 0.011 &&
-                objectPickable.mesh.scaling.z <= 0.011
-            ) {
-                continue;
-            }
-
             // --- Sphere radius sum quick check ---
             const centerDist = myCenter.subtract(otherCenter).length();
             if (centerDist > myRadius + otherRadius) continue; // Too far, skip expensive check
 
             if (BoundingBox.Intersects(myWorldBox, otherWorldBox)) {
-                // Do something on intersection
                 console.log("Bounding boxes intersect:", mesh.name);
                 return true;
             }
