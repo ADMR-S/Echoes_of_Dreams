@@ -186,6 +186,7 @@ export class Player{
                 if (offsetLen > distance) {
                     this.resizeObject(objectPickable, distance*0.1, 0);
                     objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1/ray.direction.length()));
+                    objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
                     console.log("Offset length > distance, moving object close to camera.");
                     break;
                 }
@@ -199,13 +200,15 @@ export class Player{
                     currentOffset *= 2;
                     if(i === maxIterations - 1){
                         
+                        /*
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
                         console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
+                        */
+
                         
-                        /*
                         // If no valid position found after all attempts, set minimal scale and move close to camera
                         this.resizeObject(objectPickable, distance*0.1, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1/ray.direction.length()));
@@ -214,7 +217,7 @@ export class Player{
                         if(this.checkNearbyBoundingBoxes(objectPickable)){
                             console.log("Even minimal scale intersects with object" );
                         }
-                        */
+                        
 
                     }
                 }
@@ -325,7 +328,7 @@ export class Player{
             mesh.name !== "skyBox" &&
             mesh.name !== "laserPointer" &&
             mesh.name !== "rotationCone" &&
-            mesh.name !== "jointParent"
+            mesh.name.includes("joint") 
         );
         for (const mesh of otherMeshes) {
             // Defensive: skip meshes without bounding info (e.g., ground sometimes)
