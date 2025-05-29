@@ -255,9 +255,28 @@ export class Player{
         if (oldLine) {
             oldLine.dispose();
         }
-        const points = [origin, origin.add(vector)];
+        const end = origin.add(vector);
+        const points = [origin, end];
+
+        // Draw main line
         const line = MeshBuilder.CreateLines(name, { points }, scene);
         (line as any).color = color;
+
+        // Draw arrowhead
+        const arrowLength = Math.min(vector.length() * 0.2, 0.5); // Arrowhead size
+        if (arrowLength > 0) {
+            const dir = vector.normalize();
+            // Perpendicular vectors for arrowhead (pick arbitrary axis if parallel)
+            let perp = Vector3.Cross(dir, Vector3.Up());
+            if (perp.lengthSquared() < 0.001) perp = Vector3.Cross(dir, Vector3.Right());
+            perp.normalize();
+
+            const arrowLeft = end.subtract(dir.scale(arrowLength)).add(perp.scale(arrowLength * 0.5));
+            const arrowRight = end.subtract(dir.scale(arrowLength)).subtract(perp.scale(arrowLength * 0.5));
+            const arrowPoints = [end, arrowLeft, end, arrowRight];
+            const arrow = MeshBuilder.CreateLines(name + "_arrow", { points: arrowPoints }, scene);
+            (arrow as any).color = color;
+        }
     }
 
     checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
