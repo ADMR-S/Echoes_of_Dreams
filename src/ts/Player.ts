@@ -227,7 +227,7 @@ export class Player{
                     // Use precomputed offset distance
                     const offsetVec = ray.direction.scale(-offsetDistance);
                     //this.showVector(targetPoint, offsetVec, objectPickable.mesh.getScene(), Color3.Blue(), "offsetVector");
-                    console.log("DISPLACEMENT : Offset vector:", offsetVec);
+                    console.log("DISPLACEMENT : Offset vector length:", offsetVec.length());
                     objectPickable.mesh.position = targetPoint.add(offsetVec);
                     }
                 }
