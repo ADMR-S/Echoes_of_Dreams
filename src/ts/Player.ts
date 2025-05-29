@@ -126,7 +126,7 @@ export class Player{
                 console.log("DISPLACEMENT Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
 
             }
-            /* //Restrict distance to a maximum value and handle no hit cases
+             //Restrict distance to a maximum value and handle no hit cases
             else{
                 distance = 100;
                 //Valeur par défaut si trop loin ou pas de hit
@@ -134,7 +134,7 @@ export class Player{
             if(distance > 100){
                 distance = 100
             }
-            */
+            
 
 
             /*
@@ -146,6 +146,13 @@ export class Player{
             //this.visualizeRay(cameraRay, scene);
 
 
+            
+            if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
+                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, selectedObjectBaseOffsetDistance);
+                // Always scale from the original scaling
+                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
+            }
+            
             if(this.selectedObject){     
                 if (pickResult && pickResult.pickedPoint) {
                     
@@ -158,12 +165,14 @@ export class Player{
                 }
             }
 
-            if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, selectedObjectBaseOffsetDistance);
-                // Always scale from the original scaling
-                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
-            }
         });
+    }
+
+    resizeObject(){
+
+    }
+    displaceObject(){
+
     }
 
     calculateScaleFactor(initialDistance : number, distance: number, offsetDistance: number = 0): number {
