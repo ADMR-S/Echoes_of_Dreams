@@ -435,7 +435,7 @@ export class SceneNiveau3 implements CreateSceneClass {
 
                 forwardSpeed += 0.002;
                 if (this.distanceText) {
-                    const distanceRestante = Math.max(0, (maxLevelZ+100) - gameProgressZ);
+                    const distanceRestante = Math.max(0, (maxLevelZ+150) - gameProgressZ);
                     this.distanceText.text = `Partie 1\nDistance: ${distanceRestante.toFixed(0)}m`;
                 }
 
