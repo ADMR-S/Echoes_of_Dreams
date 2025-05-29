@@ -224,31 +224,33 @@ export class Player{
     }
 
     checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
-        //maxDistance = object greatest dimension :
-        const maxDistance = Math.max(
-            objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.x - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.x,
-            objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.y - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.y,
-            objectPickable.mesh.getBoundingInfo().boundingBox.maximumWorld.z - objectPickable.mesh.getBoundingInfo().boundingBox.minimumWorld.z
-        ) / 2;
-
-        const myPos = objectPickable.mesh.position;
         const myBoundingInfo = objectPickable.mesh.getBoundingInfo();
         const myWorldBox = new BoundingBox(
             myBoundingInfo.boundingBox.minimumWorld,
             myBoundingInfo.boundingBox.maximumWorld
         );
+        const myCenter = myWorldBox.centerWorld;
+        const myRadius = myWorldBox.extendSize.length();
+
         const scene = objectPickable.mesh.getScene();
-        const closeMeshes = scene.meshes.filter(mesh => {
-            if (mesh === objectPickable.mesh) return false;
-            // Quick distance check
-            return mesh.position.subtract(myPos).length() < maxDistance;
-        });
-        for (const mesh of closeMeshes) {
+        // Only exclude self, check all other meshes
+        const otherMeshes = scene.meshes.filter(mesh => mesh !== objectPickable.mesh);
+        for (const mesh of otherMeshes) {
+            // Defensive: skip meshes without bounding info (e.g., ground sometimes)
+            if (!mesh.getBoundingInfo) continue;
             const otherBoundingInfo = mesh.getBoundingInfo();
+            if (!otherBoundingInfo) continue;
             const otherWorldBox = new BoundingBox(
                 otherBoundingInfo.boundingBox.minimumWorld,
                 otherBoundingInfo.boundingBox.maximumWorld
             );
+            const otherCenter = otherWorldBox.centerWorld;
+            const otherRadius = otherWorldBox.extendSize.length();
+
+            // --- Sphere radius sum quick check ---
+            const centerDist = myCenter.subtract(otherCenter).length();
+            if (centerDist > myRadius + otherRadius) continue; // Too far, skip expensive check
+
             if (BoundingBox.Intersects(myWorldBox, otherWorldBox)) {
                 // Do something on intersection
                 console.log("Bounding boxes intersect:", mesh.name);
