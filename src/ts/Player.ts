@@ -167,24 +167,26 @@ export class Player{
             */
 
             //this.visualizeRay(cameraRay, scene);
-
+            var currentOffset = offsetDistance;
             const maxIterations = 20;
-            for(var i =0; i<maxIterations; i++){
-                this.resizeObject(objectPickable, distance, offsetDistance);
-                if(distance === 20){ //If distance >= 20, we position the object in the direction of the ray but not at a precise point
-                    this.displaceObject(objectPickable, ray, offsetDistance, camera, undefined);
+            for(let i = 0; i < maxIterations; i++){
+                this.resizeObject(objectPickable, distance, currentOffset);
+                if(distance === 20){//If distance >= 20, we use the ray direction to position the object
+                    this.displaceObject(objectPickable, ray, currentOffset, camera, undefined);
+                } else {
+                    this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
-                else{
-                    this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
-                }
+                // --- Update distance after displacement ---
+                distance = camera.position.subtract(objectPickable.mesh.position).length();
+
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
-                    console.log("CORRECT POSITION FOUND")
+                    console.log("CORRECT POSITION FOUND");
                     break;
+                } else {
+                    console.log("MESHES INTERSECTING, REPOSITIONNING");
+                    currentOffset *= 1.5;
                 }
-                else{
-                console.log("MESHES INTERSECTING, REPOSITIONNING")    
-                offsetDistance *= 1.5;} // Reduce distance to avoid collisions
             }
             
         });
