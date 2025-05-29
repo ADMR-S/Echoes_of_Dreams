@@ -170,7 +170,7 @@ export class Player{
             var currentOffset = distance/20;
             const maxIterations = 5;
             for(let i = 0; i < maxIterations; i++){
-                this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-currentOffset).length()));
+                this.resizeObject(objectPickable, distance, ray.direction.scale(-currentOffset).length());
                 if(distance === this.MAX_DISTANCE){//If distance >= MAX_DISTANCE, we use the ray direction to position the object
                     this.displaceObject(objectPickable, ray, 1.26*currentOffset, camera, undefined);
                 } else {
@@ -184,14 +184,23 @@ export class Player{
                     console.log("MESHES INTERSECTING, REPOSITIONNING");
                     currentOffset *= 2;
                     if(i == maxIterations - 1){
+                        /*
                         //Use initial positionning :
-                        this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-offsetDistance).length()));
+                        this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
                         console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
+                        */
+                        // If no valid position found after all attempts, set minimal scale and move close to camera
+                        objectPickable.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.01));
+                        console.log("No valid position found: setting minimal scale and moving object close to camera.");
+                    
+
                     }
                 }
             }
+
             
         });
     }
