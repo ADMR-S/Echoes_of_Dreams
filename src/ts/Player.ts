@@ -33,12 +33,12 @@ export class Player{
 
     deselectObject(scene: Scene){
         if(this.selectedObject){
-            console.log("Un objet est déjà sélectionné !");
-            console.log("On déselectionne : ");
-            console.log(this.selectedObject);
+            //console.log("Un objet est déjà sélectionné !");
+            //console.log("On déselectionne : ");
+            //console.log(this.selectedObject);
             this.selectedObject.parent = null;
             this.selectedObject.isPickable = true;
-            console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
+            //console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             if (this.animationObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
@@ -83,14 +83,14 @@ export class Player{
                 body.setMotionType(PhysicsMotionType.ANIMATED);
                 body.setPrestepType(PhysicsPrestepType.TELEPORT);
             }
-            console.log("ON SELECTIONNE : ");
-            console.log(object);
+            //console.log("ON SELECTIONNE : ");
+            //console.log(object);
             // Do NOT parent to camera
             // object.parent = xr.baseExperience.camera;
             // Store the pickable for later use if needed
             this.selectedObject = object;
             object.isPickable = false;
-            console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
+            //console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             this.selectedObjectOriginalScaling = object.scaling.clone();
             if(object3DPickable.extra.pointLight){
             this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
@@ -142,14 +142,14 @@ export class Player{
 
             if(pickResult?.pickedMesh){
                 // If a mesh is picked, log the details
-                console.log("Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId);
+                //console.log("Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId);
             }
 
 
             var distance = 0;
             if(pickResult?.pickedPoint && pickResult.pickedMesh){
                 distance = camera.position.subtract(pickResult.pickedPoint).length();
-                console.log("DISPLACEMENT Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
+                //console.log("DISPLACEMENT Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
 
             }
              //Restrict distance to a maximum value and handle no hit cases
@@ -180,23 +180,25 @@ export class Player{
                 } else {
                     this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
-                objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
+                objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
 
+                
                 // If offset length is greater than distance, break and put object close to camera
                 if (offsetLen > distance) {
                     this.resizeObject(objectPickable, distance*0.2, 0);
                     objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
-                    objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
+                    objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
                     console.log("Offset length > distance, moving object close to camera.");
                     break;
                 }
+                
 
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
                     console.log("CORRECT POSITION FOUND");
                     break;
                 } else {
-                    console.log("MESHES INTERSECTING, REPOSITIONNING");
+                    //console.log("MESHES INTERSECTING, REPOSITIONNING");
                     currentOffset *= 2;
                     if(i === maxIterations - 1){
                         
@@ -212,7 +214,7 @@ export class Player{
                         // If no valid position found after all attempts, set minimal scale and move close to camera
                         this.resizeObject(objectPickable, distance*0.2, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
-                        objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
+                        objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
                         console.log("No valid position found: setting minimal scale and moving object close to camera.");
                         if(this.checkNearbyBoundingBoxes(objectPickable)){
                             console.log("Even minimal scale intersects with object" );
@@ -232,8 +234,8 @@ export class Player{
             objectPickable.mesh.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             
             //Prevent meshes size to reach 0 : 
-            if(objectPickable.mesh.scaling.x < 0.01 || objectPickable.mesh.scaling.y < 0.01 || objectPickable.mesh.scaling.z < 0.01){
-                objectPickable.mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+            if(objectPickable.mesh.scaling.x < 0.001 || objectPickable.mesh.scaling.y < 0.001 || objectPickable.mesh.scaling.z < 0.001){
+                objectPickable.mesh.scaling = new Vector3(0.001, 0.001, 0.001);
             }
             if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
                 // Clamp intensity to a maximum of 100
@@ -257,7 +259,7 @@ export class Player{
                     // Use precomputed offset distance
                     const offsetVec = ray.direction.scale(-offsetDistance/ray.direction.length());
                     //this.showVector(targetPoint, offsetVec, objectPickable.mesh.getScene(), Color3.Blue(), "offsetVector");
-                    console.log("DISPLACEMENT : Offset vector length:", offsetVec.length());
+                    //console.log("DISPLACEMENT : Offset vector length:", offsetVec.length());
                     objectPickable.mesh.position = targetPoint.add(offsetVec);
                     }
                 }
