@@ -212,19 +212,23 @@ export class Player{
     }
     displaceObject(
         objectPickable: Object3DPickable,
+        //@ts-ignore
         ray : Ray,
         offsetDistance : number,
         camera : Camera,
         targetPoint? : Vector3){                    
-                if(targetPoint){
-                // Use precomputed offset distance
-                const offsetVec = ray.direction.scale(-offsetDistance);
+            // Always use the camera's forward direction for displacement
+            const forward = camera.getForwardRay().direction.normalize();
+            if(targetPoint){
+                // Move the object forward from the target point along the camera's forward direction
+                const offsetVec = forward.scale(offsetDistance);
                 console.log("DISPLACEMENT : Offset vector:", offsetVec);
                 objectPickable.mesh.position = targetPoint.add(offsetVec);
-                }
-                else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
-                }
+            }
+            else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
+                // Move the object forward from the camera along the forward direction
+                objectPickable.mesh.position = camera.position.add(forward.scale(this.selectedObjectInitialDistance*(objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
+            }
     }
 
     calculateScaleFactor(initialDistance : number, distance: number, offsetDistance: number = 0): number {
