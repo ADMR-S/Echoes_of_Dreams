@@ -165,7 +165,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
 
         //@ts-ignore
-        var lightBulb = createLightBulbPickable(scene);
+        var lightBulb = createLightBulbPickable(scene, eventMask);
 
         return scene;
     };
