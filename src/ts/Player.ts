@@ -112,6 +112,10 @@ export class Player{
             // Pick the first mesh hit by the ray (ignoring the camera itself)
             const pickResult = scene.pickWithRay(ray, (mesh) => !this.selectedObject && mesh.isPickable);
 
+            //Displace ray slightly to avoid picking the camera itself
+            const offset = new Vector3(0.1, 0, 0);
+            ray.origin.addInPlace(offset);
+
             var distance = 0;
             if(pickResult?.pickedPoint && pickResult.pickedMesh){
                 distance = camera.position.subtract(pickResult.pickedPoint).length();
