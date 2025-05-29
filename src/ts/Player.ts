@@ -165,8 +165,8 @@ export class Player{
             */
 
             //this.visualizeRay(cameraRay, scene);
-            var currentOffset = offsetDistance;
-            const maxIterations = 20;
+            var currentOffset = distance/20;
+            const maxIterations = 5;
             for(let i = 0; i < maxIterations; i++){
                 this.resizeObject(objectPickable, distance, currentOffset);
                 if(distance === 20){//If distance >= 20, we use the ray direction to position the object
@@ -180,7 +180,7 @@ export class Player{
                     break;
                 } else {
                     console.log("MESHES INTERSECTING, REPOSITIONNING");
-                    currentOffset += 0.5;
+                    currentOffset *= 1.8;
                     if(i == maxIterations - 1){
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, offsetDistance);
