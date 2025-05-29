@@ -176,9 +176,9 @@ export class Player{
                 const offsetLen = ray.direction.scale(-currentOffset/ray.direction.length()).length();
                 this.resizeObject(objectPickable, distance, offsetLen);
                 if(distance === this.MAX_DISTANCE){
-                    this.displaceObject(objectPickable, ray, 1.26*currentOffset, camera, undefined);
+                    this.displaceObject(objectPickable, ray, currentOffset, camera, undefined);
                 } else {
-                    this.displaceObject(objectPickable, ray, 1.26*currentOffset, camera, pickResult?.pickedPoint || undefined);
+                    this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
                 objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
 
