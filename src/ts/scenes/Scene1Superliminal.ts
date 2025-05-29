@@ -18,7 +18,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, WebXRControllerPhysics } from "@babylonjs/core";
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -320,7 +320,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
             // Place the bulb on the ground (y = radius)
             mesh.position = new Vector3(0, size / 2, 2);
 
-            const pointLight = new PointLight("bulbLight", mesh.position, scene);
+            const pointLight = new PointLight("bulbLight", Vector3.Zero(), scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
             // Scale intensity with size (tune the multiplier as needed)
             pointLight.intensity = size;
