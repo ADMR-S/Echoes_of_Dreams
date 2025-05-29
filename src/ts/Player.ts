@@ -139,9 +139,7 @@ export class Player{
                 // If a mesh is picked, log the details
                 console.log("Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId);
             }
-            //Displace ray slightly to avoid picking the camera itself
-            const offset = new Vector3(0.1, 0, 0);
-            ray.origin.addInPlace(offset);
+
 
             var distance = 0;
             if(pickResult?.pickedPoint && pickResult.pickedMesh){
@@ -176,16 +174,19 @@ export class Player{
                 } else {
                     this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
-                // --- Update distance after displacement ---
-                distance = camera.position.subtract(objectPickable.mesh.position).length();
-
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
                     console.log("CORRECT POSITION FOUND");
                     break;
                 } else {
                     console.log("MESHES INTERSECTING, REPOSITIONNING");
-                    currentOffset *= 1.5;
+                    currentOffset += 0.5;
+                    if(i == maxIterations - 1){
+                        //Use initial positionning :
+                        this.resizeObject(objectPickable, distance, offsetDistance);
+                        this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
+                        console.log("Max iterations reached, using initial positioning");
+                    }
                 }
             }
             
