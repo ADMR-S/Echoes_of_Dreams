@@ -110,8 +110,12 @@ export class Player{
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
             // Pick the first mesh hit by the ray (ignoring the camera itself)
-            const pickResult = scene.pickWithRay(ray, (mesh) => !this.selectedObject && mesh.isPickable);
+            const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh && mesh.isPickable);
 
+            if(pickResult?.pickedMesh){
+                // If a mesh is picked, log the details
+                console.log("Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId);
+            }
             //Displace ray slightly to avoid picking the camera itself
             const offset = new Vector3(0.1, 0, 0);
             ray.origin.addInPlace(offset);
