@@ -173,13 +173,23 @@ export class Player{
             var currentOffset = distance/20;
             const maxIterations = 5;
             for(let i = 0; i < maxIterations; i++){
-                this.resizeObject(objectPickable, distance, ray.direction.scale(-currentOffset/ray.direction.length()).length());
-                if(distance === this.MAX_DISTANCE){//If distance >= MAX_DISTANCE, we use the ray direction to position the object
+                const offsetLen = ray.direction.scale(-currentOffset/ray.direction.length()).length();
+                this.resizeObject(objectPickable, distance, offsetLen);
+                if(distance === this.MAX_DISTANCE){
                     this.displaceObject(objectPickable, ray, 1.26*currentOffset, camera, undefined);
                 } else {
                     this.displaceObject(objectPickable, ray, 1.26*currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
                 objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
+
+                // If offset length is greater than distance, break and put object close to camera
+                if (offsetLen > distance) {
+                    this.resizeObject(objectPickable, distance*0.1, 0);
+                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1/ray.direction.length()));
+                    console.log("Offset length > distance, moving object close to camera.");
+                    break;
+                }
+
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
                     console.log("CORRECT POSITION FOUND");
