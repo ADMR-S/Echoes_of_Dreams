@@ -172,9 +172,9 @@ export class Player{
             for(let i = 0; i < maxIterations; i++){
                 this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-currentOffset).length()));
                 if(distance === this.MAX_DISTANCE){//If distance >= MAX_DISTANCE, we use the ray direction to position the object
-                    this.displaceObject(objectPickable, ray, 150*currentOffset, camera, undefined);
+                    this.displaceObject(objectPickable, ray, 10*currentOffset, camera, undefined);
                 } else {
-                    this.displaceObject(objectPickable, ray, 150*currentOffset, camera, pickResult?.pickedPoint || undefined);
+                    this.displaceObject(objectPickable, ray, 10*currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
@@ -188,7 +188,7 @@ export class Player{
                         this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-offsetDistance).length()));
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
-                        console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-offsetDistance).length());
+                        console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
                     }
                 }
             }
