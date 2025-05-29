@@ -153,8 +153,12 @@ export class Player{
             //this.visualizeRay(cameraRay, scene);
 
             this.resizeObject(object, distance, selectedObjectBaseOffsetDistance);
-            this.displaceObject(object, ray, selectedObjectBaseOffsetDistance, camera, pickResult?.pickedPoint || undefined);
-                        
+            if(distance = 20){ //If distance >= 20, we position the object in the direction of the ray but not at a precise point
+                this.displaceObject(object, ray, selectedObjectBaseOffsetDistance, camera, undefined);
+            }
+            else{
+                this.displaceObject(object, ray, selectedObjectBaseOffsetDistance, camera, pickResult?.pickedPoint || undefined);
+            }        
         });
     }
 
