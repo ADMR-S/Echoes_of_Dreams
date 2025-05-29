@@ -33,12 +33,12 @@ export class Player{
 
     deselectObject(scene: Scene){
         if(this.selectedObject){
-            console.log("Un objet est déjà sélectionné !");
-            console.log("On déselectionne : ");
-            console.log(this.selectedObject);
+            //console.log("Un objet est déjà sélectionné !");
+            //console.log("On déselectionne : ");
+            //console.log(this.selectedObject);
             this.selectedObject.parent = null;
             this.selectedObject.isPickable = true;
-            console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
+            //console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             if (this.animationObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
@@ -83,14 +83,14 @@ export class Player{
                 body.setMotionType(PhysicsMotionType.ANIMATED);
                 body.setPrestepType(PhysicsPrestepType.TELEPORT);
             }
-            console.log("ON SELECTIONNE : ");
-            console.log(object);
+            //console.log("ON SELECTIONNE : ");
+            //console.log(object);
             // Do NOT parent to camera
             // object.parent = xr.baseExperience.camera;
             // Store the pickable for later use if needed
             this.selectedObject = object;
             object.isPickable = false;
-            console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
+            //console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             this.selectedObjectOriginalScaling = object.scaling.clone();
             if(object3DPickable.extra.pointLight){
             this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
@@ -142,14 +142,14 @@ export class Player{
 
             if(pickResult?.pickedMesh){
                 // If a mesh is picked, log the details
-                console.log("Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId);
+                //console.log("Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId);
             }
 
 
             var distance = 0;
             if(pickResult?.pickedPoint && pickResult.pickedMesh){
                 distance = camera.position.subtract(pickResult.pickedPoint).length();
-                console.log("DISPLACEMENT Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
+                //console.log("DISPLACEMENT Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
 
             }
              //Restrict distance to a maximum value and handle no hit cases
@@ -198,7 +198,7 @@ export class Player{
                     console.log("CORRECT POSITION FOUND");
                     break;
                 } else {
-                    console.log("MESHES INTERSECTING, REPOSITIONNING");
+                    //console.log("MESHES INTERSECTING, REPOSITIONNING");
                     currentOffset *= 2;
                     if(i === maxIterations - 1){
                         
@@ -259,7 +259,7 @@ export class Player{
                     // Use precomputed offset distance
                     const offsetVec = ray.direction.scale(-offsetDistance/ray.direction.length());
                     //this.showVector(targetPoint, offsetVec, objectPickable.mesh.getScene(), Color3.Blue(), "offsetVector");
-                    console.log("DISPLACEMENT : Offset vector length:", offsetVec.length());
+                    //console.log("DISPLACEMENT : Offset vector length:", offsetVec.length());
                     objectPickable.mesh.position = targetPoint.add(offsetVec);
                     }
                 }
