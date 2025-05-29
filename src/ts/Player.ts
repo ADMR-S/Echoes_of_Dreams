@@ -233,8 +233,11 @@ export class Player{
         const myRadius = myWorldBox.extendSize.length();
 
         const scene = objectPickable.mesh.getScene();
-        // Only exclude self, check all other meshes
-        const otherMeshes = scene.meshes.filter(mesh => mesh !== objectPickable.mesh);
+        // Exclude self and skyBox
+        const otherMeshes = scene.meshes.filter(mesh =>
+            mesh !== objectPickable.mesh &&
+            mesh.name !== "skyBox"
+        );
         for (const mesh of otherMeshes) {
             // Defensive: skip meshes without bounding info (e.g., ground sometimes)
             if (!mesh.getBoundingInfo) continue;
