@@ -184,8 +184,8 @@ export class Player{
                     currentOffset *= 2;
                     if(i == maxIterations - 1){
                         //Use initial positionning :
-                        this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-currentOffset).length()));
-                        this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
+                        this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-offsetDistance).length()));
+                        this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
                     }
                 }
