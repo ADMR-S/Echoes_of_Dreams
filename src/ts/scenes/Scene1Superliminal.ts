@@ -312,7 +312,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
         scene,
         "lightBulb",
         mat,
-        "sphere",
+        PhysicsShapeType.SPHERE, // Use sphere shape for bulb
         0.3,
         (scene, name, material, size) => {
             const mesh = MeshBuilder.CreateSphere(name, { diameter: size }, scene);
@@ -345,7 +345,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
                 pointLight.position.copyFrom(mesh.position);
             });
             */
-            return { mesh, extra: { pointLight, aggregate } };
+            return { mesh, extra: { pointLight }, aggregate }; // store aggregate at top-level
         }
     );
 }
