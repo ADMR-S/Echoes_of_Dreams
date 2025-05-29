@@ -181,7 +181,7 @@ export class Player{
                     // If no nearby bounding boxes, break the loop
                     break;
                 }
-                else{offsetDistance *= 2;} // Reduce distance to avoid collisions
+                else{offsetDistance *= 1.5;} // Reduce distance to avoid collisions
             }
             
         });
