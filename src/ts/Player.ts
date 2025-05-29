@@ -234,7 +234,7 @@ export class Player{
             objectPickable.mesh.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             
             //Prevent meshes size to reach 0 : 
-            if(objectPickable.mesh.scaling.x < 0.001 || objectPickable.mesh.scaling.y < 0.01 || objectPickable.mesh.scaling.z < 0.01){
+            if(objectPickable.mesh.scaling.x < 0.001 || objectPickable.mesh.scaling.y < 0.001 || objectPickable.mesh.scaling.z < 0.001){
                 objectPickable.mesh.scaling = new Vector3(0.001, 0.001, 0.001);
             }
             if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
