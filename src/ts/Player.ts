@@ -172,9 +172,9 @@ export class Player{
             for(let i = 0; i < maxIterations; i++){
                 this.resizeObject(objectPickable, distance, Math.abs(ray.direction.scale(-currentOffset).length()));
                 if(distance === this.MAX_DISTANCE){//If distance >= MAX_DISTANCE, we use the ray direction to position the object
-                    this.displaceObject(objectPickable, ray, 10*currentOffset, camera, undefined);
+                    this.displaceObject(objectPickable, ray, 3*currentOffset, camera, undefined);
                 } else {
-                    this.displaceObject(objectPickable, ray, 10*currentOffset, camera, pickResult?.pickedPoint || undefined);
+                    this.displaceObject(objectPickable, ray, 3*currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
