@@ -192,7 +192,7 @@ export class Player{
                         console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
                         */
                         // If no valid position found after all attempts, set minimal scale and move close to camera
-                        this.resizeObject(objectPickable, distance*0.01, 0);
+                        this.resizeObject(objectPickable, distance*0.1, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1));
                         console.log("No valid position found: setting minimal scale and moving object close to camera.");
                     
