@@ -30,7 +30,8 @@ import {
     Ray,
     Scalar,
     StandardMaterial,
-    WebXRControllerPhysics
+    WebXRControllerPhysics,
+    WebXRDefaultExperience
 } from "@babylonjs/core";
 
 import {AbstractEngine} from "@babylonjs/core/Engines/abstractEngine";
@@ -42,7 +43,7 @@ import {SceneLoader} from "@babylonjs/core/Loading/sceneLoader";
 import {AbstractMesh} from "@babylonjs/core/Meshes/abstractMesh";
 import {CubeTexture} from "@babylonjs/core/Materials/Textures/cubeTexture";
 import {Texture} from "@babylonjs/core/Materials/Textures/texture";
-import {AdvancedDynamicTexture, Control, Rectangle, TextBlock} from "@babylonjs/gui";
+import {AdvancedDynamicTexture, Rectangle, TextBlock} from "@babylonjs/gui";
 
 
 export class SceneNiveau3 implements CreateSceneClass {
@@ -50,10 +51,6 @@ export class SceneNiveau3 implements CreateSceneClass {
     private hudTexture: AdvancedDynamicTexture;
     private distanceText: TextBlock;
     private hudBackground: Rectangle;
-
-    private scoreFeedbackText: TextBlock;
-    private scoreFeedbackTimeout: number | undefined;
-
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
@@ -71,6 +68,7 @@ export class SceneNiveau3 implements CreateSceneClass {
 
         const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
         const lit = await SceneLoader.ImportMeshAsync("", "/asset/", "lit.glb", scene);
+        //use lit.glb for the platform
         const litMesh = lit.meshes[0];
 
         litMesh.scaling.x = 2;
@@ -79,27 +77,25 @@ export class SceneNiveau3 implements CreateSceneClass {
         litMesh.parent = platform;
 
         litMesh.position = new Vector3(0.7, -0.5, 0);
-        litMesh.isPickable = true;
+
         platform.isVisible = false;
 
 
         //const platformAggregate = new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 1, restitution: 0.1 }, scene);
-        /* if (platformAggregate.body.setMotionType) {
-             platformAggregate.body.setMotionType(PhysicsMotionType.A);
-         }*/
+       /* if (platformAggregate.body.setMotionType) {
+            platformAggregate.body.setMotionType(PhysicsMotionType.A);
+        }*/
 
-       // const barAsset = await SceneLoader.ImportMeshAsync("", "/asset/", "bar.glb", scene);
-      //  let handlebar: AbstractMesh;
-       // handlebar = barAsset.meshes[1];
-       // handlebar.name = "handlebar";
+        const barAsset = await SceneLoader.ImportMeshAsync("", "/asset/", "bar.glb", scene);
+        let handlebar: AbstractMesh;
+        handlebar = barAsset.meshes[1];
+        handlebar.name = "handlebar";
+
 
         // @ts-ignore
-        // handlebar.scaling = new Vector3(0.05, 0.1, 0.05);
-       //const handlebar = MeshBuilder.CreateBox("handlebar", { height: 0.8, width: 0.1, depth: 0.1 }, scene);
-        //const neutralLocalPos = new Vector3(0, 0.5, 0.9);
-
-        const handlebar = MeshBuilder.CreateBox("handlebar", { height: 0.8, width: 0.1, depth: 0.1 }, scene);
-        const neutralLocalPos = new Vector3(0, 1, 0.9);
+       // handlebar.scaling = new Vector3(0.05, 0.1, 0.05);
+        //const handlebar = MeshBuilder.CreateBox("handlebar", { height: 0.8, width: 0.1, depth: 0.1 }, scene);
+        const neutralLocalPos = new Vector3(0, 0.5, 0.9);
         handlebar.parent = platform;
         handlebar.position = neutralLocalPos.clone();
         handlebar.isPickable = true;
@@ -120,107 +116,93 @@ export class SceneNiveau3 implements CreateSceneClass {
 
         // Création du tunnel
         const tunnel = MeshBuilder.CreateBox("tunnel", { width: 10, height: 10, depth: 1000 }, scene);
-
+     //   const tunnelMat = new StandardMaterial("tunnelMat", scene);
+     //   tunnelMat.diffuseColor = new Color3(0.2, 0.2, 0.2);
+       // tunnelMat.backFaceCulling = false;
+       // tunnel.material = tunnelMat;
         tunnel.position.z = 500;
 
         // Chargement du GLB
         const glbResult = await SceneLoader.ImportMeshAsync("", "/asset/", "test10.glb", scene);
-
+    //    const glbMeshTemplate = glbResult.meshes[1];
+      //  console.log("Résultat du chargement GLB:", glbResult);
+      //  console.log("Meshes chargés:", glbResult.meshes);
+       // const meshParent = glbResult.meshes[1];
         const glbMeshTemplate = glbResult.meshes[1];
-        glbMeshTemplate.scaling.setAll(0.5);
+        glbMeshTemplate.scaling.setAll(0.5); // Ajustez la taille si nécessaire
+        // Positionnez-le pour le voir
+        glbMeshTemplate.setEnabled(false); // Assurez-vous qu'il est visible
+      //x  console.log("Template de l'étoile:"meshEnfant.parent = meshParent;
 
-        glbMeshTemplate.setEnabled(false);
+        // on le cache
 
+        // Matériau unique pour les cubes
+        const cubeMat = new StandardMaterial("cubeMat", scene);
+        cubeMat.diffuseColor = new Color3(0, 1, 0);
 
-        const obstacleAssetNames: string[] = [];
-        for (let i = 1; i <= 9; i++) {
-            obstacleAssetNames.push(`obstacle (${i}).glb`); // Attention aux espaces dans les noms de fichiers
-        }
-        const obstacleTemplates: AbstractMesh[] = [];
-        for (const assetName of obstacleAssetNames) {
-            try {
-                // Assurez-vous que le chemin "/asset/" est correct pour ces obstacles
-                const result = await SceneLoader.ImportMeshAsync("", "/asset/", assetName, scene);
-                const templateMesh = result.meshes[1] as AbstractMesh; // Ou result.meshes[1] selon la structure du GLB
-                if (templateMesh) {
-                    templateMesh.setEnabled(false);
-                    templateMesh.rotationQuaternion = null;
-
-                   // templateMesh.rotation.z = Math.PI;
-                    templateMesh.rotation.x = Math.PI*1.5; // Exemple pour pivoter sur X
-                    templateMesh.scaling.setAll(0.03);
-
-                    // templateMesh.rotation.z = Math.PI;
-
-                    obstacleTemplates.push(templateMesh);
-                } else {
-                    console.warn(`Le mesh principal de ${assetName} n'a pas été trouvé.`);
-                }
-            } catch (e) {
-                console.error(`Échec du chargement de l'asset d'obstacle ${assetName}:`, e);
-            }
-        }
-
-
-
-
-        const obstacles: AbstractMesh [] = [];
-        let nextObstacleSpawnZ = 20;
-        const spawnAheadDistance = 100;
-        const maxLevelZ = 700;
-        const obstacleSpawnIntervalMin = 4;
-        const obstacleSpawnIntervalMax = 8;
+        const obstacles: AbstractMesh [] = []; // Reste la liste des obstacles actifs
+        let nextObstacleSpawnZ = 20; // Commencer à spawner des obstacles à Z=20
+                                     // Ajustez en fonction de la position initiale de la plateforme
+        const spawnAheadDistance = 150; // Générer des obstacles jusqu'à 150 unités devant la plateforme
+        const maxLevelZ = 1000; // Z maximal pour la partie 1
+        const obstacleSpawnIntervalMin = 4; // Z minimum entre chaque "vague" d'obstacles
+        const obstacleSpawnIntervalMax = 8; // Z maximum entre chaque "vague" d'obstacles
         let obstacleCounter = 0;
 
-        // Fonction pour créer un obstacle
+        // Fonction pour créer un obstacle (cube ou étoile)
         const createSingleObstacle = (spawnZ: number): AbstractMesh | null => {
             obstacleCounter++;
-            let obstacle: AbstractMesh | null = null;
-            const isCustomAssetType = Math.random() < 0.7;
+            const isCube = Math.random() < 0.5;
+            let obstacle: Mesh;
 
-            if (isCustomAssetType && obstacleTemplates.length > 0) {
-                const randomIndex = Math.floor(Math.random() * obstacleTemplates.length);
-                const selectedTemplate = obstacleTemplates[randomIndex];
-                if (!selectedTemplate) {
-                    console.warn("Le template d'obstacle sélectionné est indéfini.");
-                    return null;
-                }
-                // @ts-ignore
-                obstacle = selectedTemplate.createInstance("customObstacle_" + obstacleCounter);
-                if (obstacle) {
-                    obstacle.setEnabled(true); // Assurez-vous que l'instance est visible
-                   // obstacle.rotation.z = Math.PI;
-                    (obstacle as any).particleSmokeTrail = createBlackSmokeTrail(scene, obstacle);
-                    (obstacle as any).obstacleGameType = "penalty";
-
-
-                } else {
-                    console.warn("Échec de la création d'une instance d'obstacle GLB personnalisé.");
-                    return null;
-                }
+            if (isCube) {
+                obstacle = MeshBuilder.CreateBox("obstacleCube_" + obstacleCounter, { size: 1 }, scene);
+                obstacle.material = cubeMat;
             } else {
-                if (!glbMeshTemplate) return null;
+                if (!glbMeshTemplate) return null; // Sécurité si le template n'est pas chargé
                 // @ts-ignore
                 obstacle = glbMeshTemplate.createInstance("obstacleStarInstance_" + obstacleCounter);
-                if (obstacle) {
-                    (obstacle as any).particleAura = createRotatingRedAura(scene, obstacle);
-                    (obstacle as any).obstacleGameType = "star";
-
+                if (obstacle) { // createInstance peut retourner null si le template a des soucis
+                    (obstacle as any).particleAura = createRotatingRedAura(scene, obstacle); // createRotatingRedAura doit être définie
                 } else {
                     console.warn("Impossible de créer une instance d'étoile");
                     return null;
                 }
             }
-            if (!obstacle) return null;
 
-            const x = Math.random() * 8 - 4;
-            const y = Math.random() * 8 - 4;
+            const x = Math.random() * 8 - 4; // Un peu moins large pour éviter les bords du tunnel ?
+            const y = Math.random() * 8 - 4; // Ajustez selon la taille du tunnel/zone jouable
             obstacle.position.set(x, y, spawnZ);
-            obstacle.isPickable = true;
 
+            // Collision simplifiée : BOX pour tout le monde
             new PhysicsAggregate(obstacle, PhysicsShapeType.BOX, { mass: 0, restitution: 0 }, scene);
             return obstacle;
         };
+
+        // Fonction pour vérifier et générer des obstacles si nécessaire
+        const spawnObstaclesIfNeeded = () => {
+            // Condition pour continuer à spawner pendant la partie 1
+            while (nextObstacleSpawnZ < platform.position.z + spawnAheadDistance && nextObstacleSpawnZ < maxLevelZ) {
+                // Vous pouvez décider de spawner un ou plusieurs obstacles à chaque "vague"
+                const numberOfObstaclesInWave = 1 + Math.floor(Math.random() * 3); // 1 à 3 obstacles par vague
+                for (let i = 0; i < numberOfObstaclesInWave; i++) {
+                    // Léger décalage en Z pour les obstacles d'une même vague pour éviter une ligne parfaite
+                    const individualSpawnZ = nextObstacleSpawnZ + (Math.random() - 0.5) * 2;
+                    const newObstacle = createSingleObstacle(individualSpawnZ);
+                    if (newObstacle) {
+                        obstacles.push(newObstacle);
+                    }
+                }
+                nextObstacleSpawnZ += obstacleSpawnIntervalMin + Math.random() * (obstacleSpawnIntervalMax - obstacleSpawnIntervalMin);
+            }
+        };
+
+       /* const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
+        target.position = new Vector3(0, 1, 5);
+        var targetAggregate = new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 0 }, scene);
+        targetAggregate.body.setCollisionCallbackEnabled(true);
+
+*/
 
         const xr = await scene.createDefaultXRExperienceAsync({
             uiOptions: {
@@ -236,47 +218,8 @@ export class SceneNiveau3 implements CreateSceneClass {
         cameraHitbox.parent = camera;
 
         cameraHitbox.isVisible = false;
-        cameraHitbox.isPickable = true;
 
 
-        this.hudTexture = AdvancedDynamicTexture.CreateFullscreenUI("HUD_UI", true, scene);
-
-        this.hudTexture = AdvancedDynamicTexture.CreateFullscreenUI("HUD_UI", true, scene);
-
-        //HUD
-        this.hudBackground = new Rectangle("hudBackground");
-        this.hudBackground.width = "320px";
-        this.hudBackground.height = "70px";
-        this.hudBackground.cornerRadius = 10;
-        this.hudBackground.color = "black";
-        this.hudBackground.thickness = 2;
-        this.hudBackground.background = "skyblue";
-        this.hudBackground.alpha = 0.85;
-        this.hudBackground.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-        this.hudBackground.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
-        this.hudBackground.paddingTop = "20px";
-        this.hudTexture.addControl(this.hudBackground);
-
-        this.distanceText = new TextBlock("hudMainText", "Chargement...");
-        this.distanceText.color = "black";
-        this.distanceText.fontSize = 18;
-        this.distanceText.fontWeight = "bold";
-        this.distanceText.textWrapping = true;
-        this.distanceText.lineSpacing = "5px";
-        this.distanceText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-        this.distanceText.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
-        this.hudBackground.addControl(this.distanceText);
-
-        this.hudBackground.isVisible = true;
-
-        this.scoreFeedbackText = new TextBlock("scoreFeedbackText", "");
-        this.scoreFeedbackText.fontSize = 38;
-        this.scoreFeedbackText.fontWeight = "bold";
-        this.scoreFeedbackText.top = "100px";
-        this.scoreFeedbackText.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-        this.scoreFeedbackText.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
-        this.scoreFeedbackText.isVisible = false;
-        this.hudTexture.addControl(this.scoreFeedbackText);
 
 
         //timer when shooting
@@ -299,25 +242,11 @@ export class SceneNiveau3 implements CreateSceneClass {
         const meteores: Mesh[] = [];
         const swords: Mesh[] = [];
         let partie = 1;
-        let gameProgressZ = 0;
         let part3StartTime: number | null = null;
         let part3Started = false;
         let timerpart2 = 180000;
         let timerpart3 = 180000;
-        const spawnObstaclesIfNeeded = (currentProgressZ: number) => {
 
-            while (nextObstacleSpawnZ < currentProgressZ + spawnAheadDistance && nextObstacleSpawnZ < maxLevelZ) {
-                const numberOfObstaclesInWave = 1 + Math.floor(Math.random() * 3);
-                for (let i = 0; i < numberOfObstaclesInWave; i++) {
-                    const individualSpawnZ = nextObstacleSpawnZ + (Math.random() - 0.5) * 2;
-                    const newObstacle = createSingleObstacle(individualSpawnZ);
-                    if (newObstacle) {
-                        obstacles.push(newObstacle);
-                    }
-                }
-                nextObstacleSpawnZ += obstacleSpawnIntervalMin + Math.random() * (obstacleSpawnIntervalMax - obstacleSpawnIntervalMin);
-            }
-        };
         //partie 2
         xr.input.onControllerAddedObservable.add((controller) => {
             if (controller.inputSource.handedness === 'right') {
@@ -349,125 +278,89 @@ export class SceneNiveau3 implements CreateSceneClass {
 
 
         scene.onBeforeRenderObservable.add(() => {
-            const dtMs = engine.getDeltaTime();
-            const deltaTime = dtMs / 1000;
-
-            const currentFrameForwardMovement = forwardSpeed * deltaTime;
+            const dtMs = engine.getDeltaTime();      // dtMs en millisecondes
+            const deltaTime = dtMs / 1000;        // deltaTime en secondes
 
             if (partie == 1) {
-                if (this.hudBackground && !this.hudBackground.isVisible) {
-                    this.hudBackground.isVisible = true;
-                }
-                gameProgressZ += currentFrameForwardMovement;
+                // Générer de nouveaux obstacles si nécessaire
+                spawnObstaclesIfNeeded();
 
-                spawnObstaclesIfNeeded(gameProgressZ);
-
-                const lateralMovement = lateralSpeed * deltaTime;
-                const verticalMovement = verticalSpeed * deltaTime;
-
-                if (isDragging) {
-                    if (deltax > 0) lateralSpeed += deltax * 0.1;
-                    else if (deltax < 0) lateralSpeed += deltax * 0.1;
-
-                    if (deltaz > 0) verticalSpeed += deltaz * 0.01;
-                    else if (deltaz < 0) verticalSpeed += deltaz * 0.3;
-
-                    verticalSpeed = Scalar.Clamp(verticalSpeed, -0.5, 0.5);
-                    lateralSpeed = Scalar.Clamp(lateralSpeed, -0.5, 0.5);
-                } else {
-                    lateralSpeed = Scalar.Lerp(lateralSpeed, 0, deltaTime * 5);
-                    verticalSpeed = Scalar.Lerp(verticalSpeed, 0, deltaTime * 5);
-                }
-
-                platform.position.y += verticalMovement;
-                platform.position.x += lateralMovement;
-
-                platform.position.y = Scalar.Clamp(platform.position.y, -1.8, 3);
-                platform.position.x = Scalar.Clamp(platform.position.x, -4, 4);
-
-                forwardSpeed += 0.002;
-                if (this.distanceText) {
-                    const distanceRestante = Math.max(0, (maxLevelZ+100) - gameProgressZ);
-                    this.distanceText.text = `Partie 1\nDistance: ${distanceRestante.toFixed(0)}m`;
-                }
-
-                obstacles.forEach(obstacle => {
-                    obstacle.position.z -= currentFrameForwardMovement;
-                });
-
-                //Nettoyage des obstacles
-                for (let i = obstacles.length - 1; i >= 0; i--) {
-                    const currentObstacle = obstacles[i];
-                    let disposedThisFrame = false;
-                    const playerHit = cameraHitbox.intersectsMesh(currentObstacle, false);
-                    const bedHit = litMesh && (litMesh.intersectsMesh(currentObstacle, false) || litMesh.getChildMeshes(false).some(m => m.intersectsMesh(currentObstacle, true)));
-                    if (playerHit || bedHit) {
-                        console.log(`Collision détectée avec ${currentObstacle.name} par ${playerHit ? 'joueur' : 'lit'}!`);
-                        const obstacleType = (currentObstacle as any).obstacleGameType;
-
-                        if (obstacleType === "penalty") {
-                            gameProgressZ -= 15;
-                            this.showScoreFeedback("-15", "red");
-                        } else if (obstacleType === "star") {
-                            gameProgressZ -= 20; // Diminue comme demandé
-                            this.showScoreFeedback("+20", "green"); // Affiche +20 vert comme demandé
-                        }
-
-                        // Logique de suppression commune
-                        if ((currentObstacle as any).particleAura) {
-                            (currentObstacle as any).particleAura.dispose(true,true); // true pour les textures
-                        }
-                        if ((currentObstacle as any).particleSmokeTrail) {
-                            (currentObstacle as any).particleSmokeTrail.dispose(true,true); // true pour les textures
-                        }
-                        currentObstacle.dispose(false, true); // false pour ne pas disposer les material/textures partagés par les instances, true pour les enfants
-                        obstacles.splice(i, 1);
-                        disposedThisFrame = true;
-                    }
-
-                    // Nettoyage des obstacles hors champ
-                    if (!disposedThisFrame && currentObstacle.position.z < xr.baseExperience.camera.globalPosition.z - 20) {
-                        if ((currentObstacle as any).particleAura) {
-                            (currentObstacle as any).particleAura.dispose(true,true);
-                        }
-                        if ((currentObstacle as any).particleSmokeTrail) {
-                            (currentObstacle as any).particleSmokeTrail.dispose(true,true);
-                        }
-                        currentObstacle.dispose(false, true);
-                        obstacles.splice(i, 1);
-                    }
-                    /*
-                    if (currentObstacle.position.z < xr.baseExperience.camera.globalPosition.z - 20) {
-                        if ((currentObstacle as any).particleAura) {
-                            (currentObstacle as any).particleAura.dispose();
-                        }
-                        currentObstacle.dispose();
-                        obstacles.splice(i, 1);
-                        disposed = true;
-                    } else if (!disposed && cameraHitbox.intersectsMesh(currentObstacle, false)) {
-                        console.log("Collision détectée avec obstacle !");
-                        if ((currentObstacle as any).particleAura) {
-                            (currentObstacle as any).particleAura.dispose();
-                        }
-                        currentObstacle.dispose();
-                        obstacles.splice(i, 1);
-                    }*/
-                }
-
-              //  console.log(nextObstacleSpawnZ)
-           //     console.log(obstacles.length)
+                // Si nextObstacleSpawnZ a dépassé la limite ET qu'il n'y a plus d'obstacles à l'écran
                 if (nextObstacleSpawnZ >= maxLevelZ && obstacles.length === 0) {
                     console.log("Partie 1 terminée");
                     partie = 2;
-                    if(tunnel) tunnel.dispose();
+                    // Potentiellement, commencez déjà à nettoyer des éléments de la partie 1 ici si besoin
+                    // tunnel.dispose(); // Vous le faites déjà au début de la partie 2, c'est bien
+                } else { // Continue la logique de la partie 1
+                    const forwardMovement = forwardSpeed * deltaTime;
+                    const lateralMovement = lateralSpeed * deltaTime;
+                    const verticalMovement = verticalSpeed * deltaTime;
+                    //forwardSpeed += 0.0005; // J'ai un peu réduit l'accélération, ajustez si besoin
+
+                    forwardSpeed += 0.002;
+
+                    //   console.log("lateralSpeed", lateralSpeed);
+                    //   console.log("verticalSpeed", verticalSpeed);
+                    //  console.log("lateralMovement", lateralMovement);
+                    //  console.log("verticalMovement", verticalMovement);
+                    if (isDragging) {
+                        if (deltax > 0) lateralSpeed += deltax * 0.1;
+                        else if (deltax < 0) lateralSpeed += deltax * 0.1;
+
+                        if (deltaz > 0) verticalSpeed += deltaz * 0.01; // Vers l'avant du guidon
+                        else if (deltaz < 0) verticalSpeed += deltaz * 0.3; // Vers soi
+
+                        verticalSpeed = Scalar.Clamp(verticalSpeed, -0.5, 0.5);
+                        lateralSpeed = Scalar.Clamp(lateralSpeed, -0.5, 0.5);
+                    } else {
+                        lateralSpeed = Scalar.Lerp(lateralSpeed, 0, deltaTime * 5); // Retour plus doux
+                        verticalSpeed = Scalar.Lerp(verticalSpeed, 0, deltaTime * 5); // Retour plus doux
+                    }
+
+                    platform.position.y += verticalMovement;
+                    platform.position.x += lateralMovement;
+
+                    // Clamp platform position
+                    platform.position.y = Scalar.Clamp(platform.position.y, -1.8, 3);
+                    platform.position.x = Scalar.Clamp(platform.position.x, -4, 4);
 
 
-                }
-                if (nextObstacleSpawnZ >= maxLevelZ && obstacles.length === 0) {
-                    console.log("Partie 1 terminée");
-                    partie = 2;
-                    if(tunnel) tunnel.dispose();
-                }
+                    // Déplacement des obstacles existants
+                    // Ce forEach ne s'exécutera que sur les obstacles actuellement dans le tableau `obstacles`
+                    obstacles.forEach(obstacle => {
+                        // Les obstacles sont statiques en X et Y par rapport au "monde du tunnel"
+                        // C'est la plateforme qui bouge latéralement et verticalement.
+                        // Les obstacles ne bougent qu'en Z vers le joueur (ou le joueur avance vers eux)
+                        obstacle.position.z -= forwardMovement; // Le monde défile vers le joueur
+                    });
+
+
+                    // Nettoyage des obstacles dépassés ou touchés
+                    for (let i = obstacles.length - 1; i >= 0; i--) {
+                        const currentObstacle = obstacles[i];
+                        let disposed = false;
+
+                        // Condition de nettoyage basée sur la position Z de la caméra (ou de la plateforme si la caméra est enfant)
+                        // Assurez-vous que platform.position.z est la référence correcte pour "derrière le joueur"
+                        if (currentObstacle.position.z < xr.baseExperience.camera.globalPosition.z - 20) { // 20 unités derrière la caméra
+                            if ((currentObstacle as any).particleAura) {
+                                (currentObstacle as any).particleAura.dispose();
+                            }
+                            currentObstacle.dispose();
+                            obstacles.splice(i, 1);
+                            disposed = true;
+                        } else if (!disposed && cameraHitbox.intersectsMesh(currentObstacle, false)) { // Utilisez cameraHitbox
+                            console.log("Collision détectée avec obstacle !");
+                            // Ici, vous pourriez vouloir déclencher un effet, perdre une vie, etc.
+                            // avant de disposer l'obstacle.
+                            if ((currentObstacle as any).particleAura) {
+                                (currentObstacle as any).particleAura.dispose();
+                            }
+                            currentObstacle.dispose(); // Disposez après la gestion de la collision
+                            obstacles.splice(i, 1);
+                        }
+                    }
+                } // Fin de la logique de la partie 1
             }
             // Partie 2
             else if (partie == 2) {
@@ -475,33 +368,17 @@ export class SceneNiveau3 implements CreateSceneClass {
                     part2Started = true;
                     part2StartTime = Date.now();
                     console.log("Partie 2 : les météores arrivent !");
+                    tunnel.dispose();
                 }
 
-                if (this.distanceText && part2StartTime !== null) {
-                    const elapsed = Date.now() - part2StartTime;
-                    const remainingTime = timerpart2 - elapsed;
-                    if (remainingTime <= 0) {
-                        this.distanceText.text = "Partie 2\nTemps écoulé !";
-                    } else {
-                        this.distanceText.text = `Partie 2\nTemps restant: ${formatTime(remainingTime)}`;
-                    }
-                }
-
-                const elapsedPart2Check = Date.now() - (part2StartTime as number);
-                if (elapsedPart2Check >= timerpart2) {
-                    console.log("Fin de la Partie 2, début Partie 3");
+                const elapsed = Date.now() - (part2StartTime as number);
+                if (elapsed >= timerpart2) { // 3 minutes
+                    console.log("Fin du niveau");
                     partie = 3;
-                    projectiles.forEach(p => p.dispose());
-                    projectiles.length = 0;
-                    meteores.forEach(m => {
-                        if (m.material) m.material.dispose();
-                        m.dispose();
-                    });
-                    meteores.length = 0;
                     return;
                 }
 
-                const spawnInterval = 2000 - ((2000 - 500) * (elapsedPart2Check / 180000));
+                const spawnInterval = 2000 - ((2000 - 500) * (elapsed / 180000));
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
@@ -555,43 +432,22 @@ export class SceneNiveau3 implements CreateSceneClass {
                 if (!part3Started) {
                     part3Started = true;
                     part3StartTime = Date.now();
-                    console.log("Partie 3 : Attaque à l'épée !");
-                    // Création des épées
+
+                    console.log("Partie 3 : les météores arrivent !");
                     xr.input.controllers.forEach((controller) => {
-                        if (controller.grip) {
-                            let swordExists = false;
-                            for (const s of swords) {
-                                if (s.parent === controller.grip) {
-                                    swordExists = true;
-                                    break;
-                                }
-                            }
-                            if (!swordExists) {
-                                const sword = createSword(controller, scene);
-                                swords.push(sword);
-                            }
-                        }
+                        const sword = createSword(controller, scene);
+                        swords.push(sword);
                     });
                 }
 
-                if (this.distanceText && part3StartTime !== null) {
-                    const elapsed = Date.now() - part3StartTime;
-                    const remainingTime = timerpart3 - elapsed;
-                    if (remainingTime <= 0) {
-                        this.distanceText.text = "Partie 3\nNIVEAU TERMINÉ !";
-                    } else {
-                        this.distanceText.text = `Partie 3\nTemps restant: ${formatTime(remainingTime)}`;
-                    }
-                }
-
-                const elapsedPart3Check = Date.now() - (part3StartTime as number);
-                if (elapsedPart3Check >= timerpart3) {
-                    console.log("Fin du niveau (Partie 3 terminée)");
-                    //TODO fin
+                const elapsed = Date.now() - (part3StartTime as number);
+                if (elapsed >= timerpart3) { // 3 minutes
+                    console.log("Fin du niveau");
+                    //TODO: fin du niveau
                     return;
                 }
 
-                const spawnInterval = 2000 - ((2000 - 500) * (elapsedPart3Check / 180000));
+                const spawnInterval = 2000 - ((2000 - 500) * (elapsed / 180000));
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
@@ -633,12 +489,6 @@ export class SceneNiveau3 implements CreateSceneClass {
                                 break;
                             }
                         }
-                    }
-                }
-            } else {
-                if (this.hudBackground && this.hudBackground.isVisible) {
-                    if (this.distanceText && this.distanceText.text !== "Partie 3\nNIVEAU TERMINÉ !") {
-                        this.distanceText.text = "JEU TERMINÉ";
                     }
                 }
             }
@@ -720,24 +570,6 @@ export class SceneNiveau3 implements CreateSceneClass {
 
         return scene;
     };
-
-    private showScoreFeedback(text: string, color: string, duration: number = 1500) {
-       /* if (!this.scoreFeedbackText) return;
-
-        if (this.scoreFeedbackTimeout) {
-            clearTimeout(this.scoreFeedbackTimeout);
-        }
-        this.scoreFeedbackText.text = text;
-        this.scoreFeedbackText.color = color;
-        this.scoreFeedbackText.isVisible = true;
-
-        this.scoreFeedbackTimeout = window.setTimeout(() => {
-            if (this.scoreFeedbackText) { // Vérifier si toujours existant (ex: changement de scène)
-                this.scoreFeedbackText.isVisible = false;
-            }
-            this.scoreFeedbackTimeout = undefined;
-        }, duration);*/
-    }
 }
 
 export default new SceneNiveau3();
@@ -847,6 +679,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
     });
 }
 
+// Add movement with left joystick
 // @ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     xr.input.onControllerAddedObservable.add((controller: any) => {        console.log("Ajout d'un controller")
@@ -865,6 +698,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     });
 
 
+    // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
             // @ts-ignore
@@ -878,16 +712,18 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 controllerMesh.rotationQuaternion = Quaternion.Identity();
 
                 const controllerAggregate = new PhysicsAggregate(controllerMesh, PhysicsShapeType.BOX, { mass: 1 }, scene);
-                controllerAggregate.body.setMotionType(PhysicsMotionType.ANIMATED);
+                controllerAggregate.body.setMotionType(PhysicsMotionType.ANIMATED); // Set motion type to ANIMATED
                 controllerAggregate.body.setPrestepType(PhysicsPrestepType.TELEPORT);
                 controllerAggregate.body.setCollisionCallbackEnabled(true);
                 controllerAggregate.body.setEventMask(eventMask);
 
 
 
+                // Make the controller mesh invisible and non-pickable
                 controllerMesh.isVisible = false;
                 controllerMesh.isPickable = false;
 
+                // Attach WebXRControllerPhysics to the controller
                 console.log("CONTROLLER")
                 console.log(controller)
                 const controllerPhysics = xr.baseExperience.featuresManager.enableFeature(WebXRControllerPhysics.Name, 'latest')
@@ -902,65 +738,83 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
 }
 
 function createRotatingRedAura(scene: Scene, parentObstacle: AbstractMesh): ParticleSystem {
+    // Crée un système de particules standard
+    const particleSystem = new ParticleSystem("aura_" + parentObstacle.name, 200, scene); // Max 200 particules par système
 
-    const particleSystem = new ParticleSystem("aura_" + parentObstacle.name, 200, scene);
-
+    // Texture des particules (une simple image de point/flare)
+    // Remplacez par l'URL de votre texture si vous en avez une spécifique
     particleSystem.particleTexture = new Texture("https://playground.babylonjs.com/textures/flare.png", scene);
 
+    // L'émetteur est l'obstacle lui-même
     particleSystem.emitter = parentObstacle;
 
-    particleSystem.color1 = new Color4(1, 0.2, 0.2, 0.8);
-    particleSystem.color2 = new Color4(0.8, 0, 0, 0.5);
-    particleSystem.colorDead = new Color4(0.5, 0, 0, 0.0);
+    // Couleurs : rouge, s'estompant vers le transparent
+    particleSystem.color1 = new Color4(1, 0.2, 0.2, 0.8); // Rouge vif
+    particleSystem.color2 = new Color4(0.8, 0, 0, 0.5);   // Rouge plus sombre
+    particleSystem.colorDead = new Color4(0.5, 0, 0, 0.0); // Disparition en rouge transparent
 
-
+    // Taille des particules
+    // Ajustez ces valeurs en fonction de la taille de vos étoiles après scaling
     const baseSize = 0.1;
     particleSystem.minSize = baseSize;
     particleSystem.maxSize = baseSize * 2.5;
 
+    // Durée de vie des particules
     particleSystem.minLifeTime = 0.8;
     particleSystem.maxLifeTime = 1.5;
 
+    // Taux d'émission
     particleSystem.emitRate = 150;
 
+    // Vitesse initiale des particules
     const baseEmitPower = 0.2;
     particleSystem.minEmitPower = baseEmitPower;
     particleSystem.maxEmitPower = baseEmitPower * 1.5;
-    particleSystem.updateSpeed = 0.005;
+    particleSystem.updateSpeed = 0.005; // Ralentissement optionnel des particules
 
+    // Force la mise à jour de la matrice et des informations de délimitation de l'obstacle
     parentObstacle.computeWorldMatrix(true);
     const boundingInfo = parentObstacle.getBoundingInfo();
 
-    const localRadius = boundingInfo.boundingSphere.radius;
-    const auraOrbitRadiusLocal = localRadius * 1.5;
+    // Utilise les dimensions locales pour définir la forme de l'émission par rapport au pivot de l'obstacle
+    const localRadius = boundingInfo.boundingSphere.radius; // Rayon local de la sphère de délimitation
+    const auraOrbitRadiusLocal = localRadius * 1.5; // Rayon de l'orbite en unités locales (1.5x la taille de l'objet)
 
     const localBoundingBox = boundingInfo.boundingBox;
     const localHeight = localBoundingBox.maximum.y - localBoundingBox.minimum.y; // Hauteur locale
 
-    // @ts-ignore
+    // Fonction pour définir la position de départ des particules
     particleSystem.startPositionFunction = (worldMatrix: Matrix, positionToUpdate: Vector3, particle: Particle, isLocal: boolean): void => {
-        const angle = Math.random() * Math.PI * 2;
+        const angle = Math.random() * Math.PI * 2; // Angle aléatoire pour une distribution circulaire
         const x = auraOrbitRadiusLocal * Math.cos(angle);
         const z = auraOrbitRadiusLocal * Math.sin(angle);
-
+        // Répartit les particules le long de l'axe Y local de l'obstacle, centré sur sa boîte de délimitation
         const y = localBoundingBox.center.y + (Math.random() - 0.5) * localHeight * 0.75;
 
+        // Transforme les coordonnées locales (x, y, z) en coordonnées mondiales
         Vector3.TransformCoordinatesFromFloatsToRef(x, y, z, worldMatrix, positionToUpdate);
     };
-    // @ts-ignore
+
+    // Fonction pour définir la direction de départ des particules (pour l'effet de rotation)
     particleSystem.startDirectionFunction = (worldMatrix: Matrix, directionToUpdate: Vector3, particle: Particle, isLocal: boolean): void => {
-        const particleWorldPosition = particle.position;
-        const emitterWorldPosition = parentObstacle.absolutePosition;
+        const particleWorldPosition = particle.position; // Position mondiale de la particule (déjà définie par startPositionFunction)
+        const emitterWorldPosition = parentObstacle.absolutePosition; // Position mondiale de l'émetteur (centre de l'obstacle)
+
+        // Vecteur du centre de l'émetteur à la particule, en coordonnées mondiales
         const worldRadialVector = particleWorldPosition.subtract(emitterWorldPosition);
 
+        // Axe Y local de l'obstacle, transformé en coordonnées mondiales
         const localYAxisInWorld = Vector3.TransformNormal(Vector3.UpReadOnly, worldMatrix);
 
         let tangentWorld: Vector3;
         if (Math.abs(Vector3.Dot(worldRadialVector.normalize(), localYAxisInWorld.normalize())) > 0.99) {
             tangentWorld = Vector3.TransformNormal(Vector3.RightReadOnly, worldMatrix).normalize();
         } else {
+            // Calcule la tangente par produit vectoriel (donne un vecteur perpendiculaire aux deux autres)
             tangentWorld = Vector3.Cross(localYAxisInWorld, worldRadialVector).normalize();
         }
+
+        // if (Math.random() < 0.5) { tangentWorld.scaleInPlace(-1); }
 
         directionToUpdate.copyFrom(tangentWorld);
     };
@@ -970,67 +824,4 @@ function createRotatingRedAura(scene: Scene, parentObstacle: AbstractMesh): Part
     particleSystem.start();
     return particleSystem;
 }
-function createBlackSmokeTrail(scene: Scene, emitterMesh: AbstractMesh): ParticleSystem {
-    const particleSystem = new ParticleSystem("distinctRearCloud_" + emitterMesh.name, 2000, scene); // Nom pour refléter le changement
 
-    particleSystem.particleTexture = new Texture("https://playground.babylonjs.com/textures/flare.png", scene);
-
-    particleSystem.emitter = emitterMesh;
-    emitterMesh.computeWorldMatrix(true);
-
-    const meshBoundingBox = emitterMesh.getBoundingInfo().boundingBox;
-    const extendSize = meshBoundingBox.extendSize;
-    const rearEmitterOffset = -(extendSize.y * 2);
-    const headVolumeDepth = extendSize.y * 1.1;
-    const headVolumeWidth = extendSize.x * 2 * 0.9;
-    const headVolumeHeight = extendSize.z * 2 * 0.9;
-    // @ts-ignore
-    particleSystem.startPositionFunction = (worldMatrix: Matrix, positionToUpdate: Vector3, particle: Particle, isLocal: boolean): void => {
-        const startYLocalForCloud = meshBoundingBox.maximum.y + rearEmitterOffset;
-
-        const localPosition = new Vector3(
-            (Math.random() - 0.5) * headVolumeWidth,
-            startYLocalForCloud + (Math.random() * headVolumeDepth),
-            (Math.random() - 0.5) * headVolumeHeight
-        );
-        Vector3.TransformCoordinatesToRef(localPosition, worldMatrix, positionToUpdate);
-    };
-
-    particleSystem.color1 = new Color4(0.1, 0.1, 0.1, 0.05);
-    particleSystem.color2 = new Color4(0.12, 0.12, 0.12, 0.75);
-    particleSystem.colorDead = new Color4(0.05, 0.05, 0.05, 0.0);
-
-    const baseParticleSize = 0.008;
-    particleSystem.minSize = baseParticleSize * 1.1;
-    particleSystem.maxSize = baseParticleSize * 2.2;
-    particleSystem.minLifeTime = 0.6;
-    particleSystem.maxLifeTime = 1.2;
-    particleSystem.emitRate = 850;
-
-    particleSystem.minEmitPower = 0.0018;
-    particleSystem.maxEmitPower = 0.0040;
-
-    particleSystem.direction1 = new Vector3(-0.25, 0.4, -0.25);
-    particleSystem.direction2 = new Vector3(0.25, 0.9, 0.25);
-
-    particleSystem.minAngularSpeed = -Math.PI;
-    particleSystem.maxAngularSpeed = Math.PI;
-
-    // Gradients
-    particleSystem.addSizeGradient(0, 0.2);
-    particleSystem.addSizeGradient(0.25, 1.0);
-    particleSystem.addSizeGradient(0.75, 0.3);
-    particleSystem.addSizeGradient(1.0, 0.05);
-
-    particleSystem.blendMode = ParticleSystem.BLENDMODE_STANDARD;
-    particleSystem.start();
-    return particleSystem;
-}
-
-function formatTime(ms: number): string {
-    if (ms < 0) ms = 0;
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
