@@ -179,6 +179,7 @@ export class Player{
                 } else {
                     this.displaceObject(objectPickable, ray, 1.26*currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
+                objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
                     console.log("CORRECT POSITION FOUND");
@@ -198,6 +199,7 @@ export class Player{
                         // If no valid position found after all attempts, set minimal scale and move close to camera
                         this.resizeObject(objectPickable, distance*0.1, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1/ray.direction.length()));
+                        objectPickable.mesh.refreshBoundingInfo(); // <-- Force update bounding box
                         console.log("No valid position found: setting minimal scale and moving object close to camera.");
                         if(this.checkNearbyBoundingBoxes(objectPickable)){
                             console.log("Even minimal scale intersects with object" );
