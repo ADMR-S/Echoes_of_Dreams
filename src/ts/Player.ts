@@ -309,7 +309,9 @@ export class Player{
         const otherMeshes = scene.meshes.filter(mesh =>
             mesh !== objectPickable.mesh &&
             mesh.name !== "skyBox" &&
-            mesh.name !== "laserPointer"
+            mesh.name !== "laserPointer" &&
+            mesh.name !== "rotationCone" &&
+            mesh.name !== "jointParent"
         );
         for (const mesh of otherMeshes) {
             // Defensive: skip meshes without bounding info (e.g., ground sometimes)
