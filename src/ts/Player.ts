@@ -15,6 +15,7 @@ export class Player{
     selectedObject : AbstractMesh | null;
     selectedObjectInitialDistance : number | null = null; //To update the selected object's size
     private selectedObjectOriginalScaling: Vector3 | null = null; // Store original scaling
+    private selectedObjectLightInitialIntensity: number | null = null; // Store original light intensity if needed
     private animationObservable: any;
     private resizeAndRepositionObjectObservable: any;
     private rayHelper: RayHelper | null = null;
@@ -53,6 +54,7 @@ export class Player{
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
+            this.selectedObjectLightInitialIntensity = null; // Reset light intensity if needed
             return;
         }
     }
@@ -85,6 +87,9 @@ export class Player{
             object.isPickable = false;
             console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             this.selectedObjectOriginalScaling = object.scaling.clone();
+            if(object3DPickable.extra.pointLight){
+            this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
+            }
 
             // Calculate offset distance based on bounding box
             const boundingInfo = object.getBoundingInfo();
@@ -180,8 +185,8 @@ export class Player{
             const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, offsetDistance);
             objectPickable.mesh.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             
-            if(objectPickable.extra.pointLight){
-                objectPickable.extra.pointLight.intensity *= scaleFactor; // Adjust light intensity based on scaling
+            if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
+                objectPickable.extra.pointLight.intensity = this.selectedObjectLightInitialIntensity * scaleFactor; // Adjust light intensity based on scaling
             }
         }
     }
