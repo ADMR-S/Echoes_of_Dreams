@@ -219,7 +219,7 @@ export class Player{
         targetPoint? : Vector3){                    
                 if(targetPoint){
                     if(camera.position.subtract(targetPoint).length() > this.MAX_DISTANCE){
-                        targetPoint = camera.position.add(ray.direction.scale(this.MAX_DISTANCE));
+                        objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.MAX_DISTANCE));
                     }
                     else{
                     // Use precomputed offset distance
