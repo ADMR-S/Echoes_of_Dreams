@@ -6,6 +6,7 @@ import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { Object3DPickable } from "./object/Object3DPickable";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -47,6 +48,8 @@ export class Player{
             );
             objPickable.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
             objPickable.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            // Enable air friction after refreshing aggregate
+            objPickable.enableAirFriction(0.98); // or your preferred damping factor
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
@@ -64,18 +67,20 @@ export class Player{
                 return; // Not a pickable object
             }
             // Stop motion if physics body exists
-            const object3DPickable = (object as any).object3DPickable;
-            const body = object3DPickable.aggregate.body;
-            body.setLinearVelocity(Vector3.Zero());
-            body.setAngularVelocity(Vector3.Zero());
-                        // Set motion type to ANIMATED to prevent physics simulation
-            body.setMotionType(PhysicsMotionType.ANIMATED);
-            body.setPrestepType(PhysicsPrestepType.TELEPORT);
-
+            const object3DPickable = (object as any).object3DPickable as Object3DPickable;
+            if(object3DPickable.aggregate){
+                const body = object3DPickable.aggregate.body;
+                body.setLinearVelocity(Vector3.Zero());
+                body.setAngularVelocity(Vector3.Zero());
+                            // Set motion type to ANIMATED to prevent physics simulation
+                body.setMotionType(PhysicsMotionType.ANIMATED);
+                body.setPrestepType(PhysicsPrestepType.TELEPORT);
+            }
             console.log("ON SELECTIONNE : ");
             console.log(object);
             // Do NOT parent to camera
             // object.parent = xr.baseExperience.camera;
+            // Store the pickable for later use if needed
             this.selectedObject = object;
             object.isPickable = false;
             console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
@@ -93,7 +98,7 @@ export class Player{
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
                 this.animateObject(object, scene);
-                this.resizeAndRepositionObject(object, scene, xr, selectedObjectBaseOffsetDistance);
+                this.resizeAndRepositionObject(object3DPickable, scene, xr, selectedObjectBaseOffsetDistance);
             }, 0);
 
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
@@ -111,7 +116,12 @@ export class Player{
         });
     }
 
-    resizeAndRepositionObject(object : AbstractMesh, scene : Scene, xr : WebXRDefaultExperience, selectedObjectBaseOffsetDistance: number = 0.01) {
+    resizeAndRepositionObject(
+        objectPickable: Object3DPickable,
+        scene: Scene,
+        xr: WebXRDefaultExperience,
+        selectedObjectBaseOffsetDistance: number = 0.01
+    ) {
         this.resizeAndRepositionObjectObservable = scene.onBeforeRenderObservable.add(() => {
         
             const camera = xr.baseExperience.camera;
@@ -152,31 +162,40 @@ export class Player{
 
             //this.visualizeRay(cameraRay, scene);
 
-            this.resizeObject(object, distance, selectedObjectBaseOffsetDistance);
-            if(distance = 20){ //If distance >= 20, we position the object in the direction of the ray but not at a precise point
-                this.displaceObject(object, ray, selectedObjectBaseOffsetDistance, camera, undefined);
+            this.resizeObject(objectPickable, distance, selectedObjectBaseOffsetDistance);
+            if(distance === 20){ //If distance >= 20, we position the object in the direction of the ray but not at a precise point
+                this.displaceObject(objectPickable, ray, selectedObjectBaseOffsetDistance, camera, undefined);
             }
             else{
-                this.displaceObject(object, ray, selectedObjectBaseOffsetDistance, camera, pickResult?.pickedPoint || undefined);
-            }        
+                this.displaceObject(objectPickable, ray, selectedObjectBaseOffsetDistance, camera, pickResult?.pickedPoint || undefined);
+            }
+                
         });
     }
 
-    resizeObject(object : AbstractMesh, distance : number, offsetDistance : number) {
+    resizeObject(objectPickable: Object3DPickable, distance : number, offsetDistance : number) {
         if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, offsetDistance);
-                // Always scale from the original scaling
-                object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
+            const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, offsetDistance);
+            objectPickable.mesh.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
+            
+            if(objectPickable.extra.pointLight){
+                objectPickable.extra.pointLight.intensity *= scaleFactor; // Adjust light intensity based on scaling
+            }
         }
     }
-    displaceObject(object : AbstractMesh, ray : Ray, offsetDistance : number, camera : Camera, targetPoint? : Vector3){                    
+    displaceObject(
+        objectPickable: Object3DPickable,
+        ray : Ray,
+        offsetDistance : number,
+        camera : Camera,
+        targetPoint? : Vector3){                    
                 if(targetPoint){
                 // Use precomputed offset distance
                 const offsetVec = ray.direction.scale(-offsetDistance);
-                object.position = targetPoint.add(offsetVec);
+                objectPickable.mesh.position = targetPoint.add(offsetVec);
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
-                    object.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(object.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
+                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(this.selectedObjectInitialDistance*(objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length())));
                 }
     }
 

@@ -313,7 +313,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
         "lightBulb",
         mat,
         PhysicsShapeType.SPHERE, // Use sphere shape for bulb
-        0.05, // Diameter of the bulb
+        0.01, // Diameter of the bulb
         (scene, name, material, size) => {
             const mesh = MeshBuilder.CreateSphere(name, { diameter: size }, scene);
             mesh.material = material;
@@ -322,7 +322,8 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
 
             const pointLight = new PointLight("bulbLight", mesh.position, scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
-            pointLight.intensity = 0.5;
+            // Scale intensity with size (tune the multiplier as needed)
+            pointLight.intensity = 5 * size;
             pointLight.parent = mesh;
 
             new GlowLayer("glow", scene);

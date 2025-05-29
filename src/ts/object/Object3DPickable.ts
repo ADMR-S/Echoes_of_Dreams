@@ -65,5 +65,26 @@ export class Object3DPickable implements Object3D{
         return this.aggregate;
     }
 
+    /**
+     * Enable air friction by damping velocity each frame while the object is moving.
+     * @param dampingFactor A value between 0 and 1 (e.g., 0.98 for light friction)
+     */
+    enableAirFriction(dampingFactor: number = 0.98) {
+        if (!this.aggregate || !this.aggregate.body) return;
+        const body = this.aggregate.body;
+        const scene = this.mesh.getScene();
+        // Avoid multiple subscriptions
+        if ((this as any)._airFrictionObserver) {
+            scene.onBeforeRenderObservable.remove((this as any)._airFrictionObserver);
+        }
+        (this as any)._airFrictionObserver = scene.onBeforeRenderObservable.add(() => {
+            const v = body.getLinearVelocity();
+            if (v.length() > 0.001) {
+                v.scaleInPlace(dampingFactor);
+                body.setLinearVelocity(v);
+            }
+        });
+    }
+
     
 }
