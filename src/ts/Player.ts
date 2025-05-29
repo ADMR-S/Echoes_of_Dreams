@@ -195,7 +195,9 @@ export class Player{
                         this.resizeObject(objectPickable, distance*0.1, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.1));
                         console.log("No valid position found: setting minimal scale and moving object close to camera.");
-                    
+                        if(this.checkNearbyBoundingBoxes(objectPickable)){
+                            console.log("Even minimal scale intersects with object" );
+                        }
 
                     }
                 }
