@@ -5,7 +5,7 @@ import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { PhysicsMotionType, PhysicsPrestepType, PhysicsShapeType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -38,8 +38,15 @@ export class Player{
                 scene.onBeforeRenderObservable.remove(this.resizeAndRepositionObjectObservable);
                 this.resizeAndRepositionObjectObservable = null;
             }
-            (this.selectedObject as any).object3DPickable.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-            (this.selectedObject as any).object3DPickable.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            const objPickable = (this.selectedObject as any).object3DPickable;
+            // --- Refresh physics aggregate on deselect ---
+            objPickable.refreshPhysicsAggregate(
+                this.selectedObject.getScene(),
+                objPickable.shapeType,
+                { mass: 1 }
+            );
+            objPickable.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+            objPickable.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
@@ -156,17 +163,6 @@ export class Player{
                 const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, offsetDistance);
                 // Always scale from the original scaling
                 object.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
-                // --- Refresh physics aggregate after resizing ---
-                if ((object as any).object3DPickable) {
-                    const objPickable = (object as any).object3DPickable;
-                    // You may want to store the shape type and options somewhere, or infer from mesh type
-                    // Here, we assume sphere and mass: 1 for example
-                    objPickable.refreshPhysicsAggregate(
-                        object.getScene(),
-                        PhysicsShapeType.MESH,
-                        { mass: 1 }
-                    );
-                }
         }
     }
     displaceObject(object : AbstractMesh, ray : Ray, offsetDistance : number, camera : Camera, targetPoint? : Vector3){                    
