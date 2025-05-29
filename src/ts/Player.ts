@@ -186,7 +186,9 @@ export class Player{
             objectPickable.mesh.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             
             if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
-                objectPickable.extra.pointLight.intensity = this.selectedObjectLightInitialIntensity * scaleFactor; // Adjust light intensity based on scaling
+                // Clamp intensity to a maximum of 100
+                const newIntensity = Math.min(this.selectedObjectLightInitialIntensity * scaleFactor, 100);
+                objectPickable.extra.pointLight.intensity = newIntensity;
             }
         }
     }
