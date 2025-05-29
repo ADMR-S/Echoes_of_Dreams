@@ -179,9 +179,12 @@ export class Player{
                 }
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
+                    console.log("CORRECT POSITION FOUND")
                     break;
                 }
-                else{offsetDistance *= 1.5;} // Reduce distance to avoid collisions
+                else{
+                console.log("MESHES INTERSECTING, REPOSITIONNING")    
+                offsetDistance *= 1.5;} // Reduce distance to avoid collisions
             }
             
         });
