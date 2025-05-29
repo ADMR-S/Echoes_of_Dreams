@@ -126,7 +126,7 @@ export class Player{
         objectPickable: Object3DPickable,
         scene: Scene,
         xr: WebXRDefaultExperience,
-        selectedObjectBaseOffsetDistance: number = 0.01
+        offsetDistance: number = 0.01
     ) {
         this.resizeAndRepositionObjectObservable = scene.onBeforeRenderObservable.add(() => {
         
@@ -168,16 +168,22 @@ export class Player{
 
             //this.visualizeRay(cameraRay, scene);
 
-            this.resizeObject(objectPickable, distance, selectedObjectBaseOffsetDistance);
-            if(distance === 20){ //If distance >= 20, we position the object in the direction of the ray but not at a precise point
-                this.displaceObject(objectPickable, ray, selectedObjectBaseOffsetDistance, camera, undefined);
+            const maxIterations = 20;
+            for(var i =0; i<maxIterations; i++){
+                this.resizeObject(objectPickable, distance, offsetDistance);
+                if(distance === 20){ //If distance >= 20, we position the object in the direction of the ray but not at a precise point
+                    this.displaceObject(objectPickable, ray, offsetDistance, camera, undefined);
+                }
+                else{
+                    this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
+                }
+                if(!this.checkNearbyBoundingBoxes(objectPickable)){
+                    // If no nearby bounding boxes, break the loop
+                    break;
+                }
+                else{offsetDistance *= 2;} // Reduce distance to avoid collisions
             }
-            else{
-                this.displaceObject(objectPickable, ray, selectedObjectBaseOffsetDistance, camera, pickResult?.pickedPoint || undefined);
-            }
-            // Check for nearby bounding boxes
-            console.log("INTERSECTIONS : " + this.checkNearbyBoundingBoxes(objectPickable));
-                
+            
         });
     }
 
