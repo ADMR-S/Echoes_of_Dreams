@@ -364,13 +364,10 @@ export class Player{
         }
     }
 
-    /**
-     * Returns the closest mesh (and its distance) from the camera that visually overlaps the selected object in screen space.
-     */
     getClosestOccludingMesh(
-        scene: Scene,
-        camera: Camera,
-        selectedObject: AbstractMesh
+    scene: Scene,
+    camera: Camera,
+    selectedObject: AbstractMesh
     ): { mesh: AbstractMesh, distance: number } | null {
         if (!selectedObject) return null;
 
@@ -405,6 +402,7 @@ export class Player{
         }
 
         const selectedRect = getScreenRect(selectedObject, scene, camera);
+        const selectedObjectDistance = camera.position.subtract(selectedObject.getBoundingInfo().boundingBox.centerWorld).length();
 
         let closest: { mesh: AbstractMesh, distance: number } | null = null;
 
@@ -418,10 +416,17 @@ export class Player{
 
             const meshRect = getScreenRect(mesh, scene, camera);
             if (rectsOverlap(selectedRect, meshRect)) {
-                const meshCenter = mesh.getBoundingInfo().boundingBox.centerWorld;
-                const distance = camera.position.subtract(meshCenter).length();
-                if (!closest || distance < closest.distance) {
-                    closest = { mesh, distance };
+                const corners = mesh.getBoundingInfo().boundingBox.vectorsWorld;
+                // Find the closest corner that is between camera and selected object and within MAX_DISTANCE
+                for (const corner of corners) {
+                    const distance = camera.position.subtract(corner).length();
+                    if (
+                        distance < selectedObjectDistance &&
+                        distance <= this.MAX_DISTANCE &&
+                        (!closest || distance < closest.distance)
+                    ) {
+                        closest = { mesh, distance };
+                    }
                 }
             }
         }
