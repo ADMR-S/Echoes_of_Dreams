@@ -104,7 +104,7 @@ export class Player{
             
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
-                //this.animateObject(object, scene);
+                this.animateObject(object, scene);
                 this.resizeAndRepositionObject(object3DPickable, scene, xr, selectedObjectBaseOffsetDistance);
             }, 0);
 
@@ -265,6 +265,7 @@ export class Player{
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
                     console.log("No target point provided, using initial distance and scaling.");
+                    //Calculate displacement based on scaleFactor
                     const scaleFactor = objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length()
                     objectPickable.mesh.position = camera.position.add(ray.direction.scale((this.selectedObjectInitialDistance*scaleFactor)/ray.direction.length()));
                 }
