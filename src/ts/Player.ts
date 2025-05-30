@@ -189,6 +189,7 @@ export class Player{
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
                     // If no nearby bounding boxes, break the loop
                     console.log("CORRECT POSITION FOUND");
+                    console.log("CORRECT Distance to target:", distance, "Offset distance:", offsetLen);
                     break;
                 } else {
                     //console.log("MESHES INTERSECTING, REPOSITIONNING");
