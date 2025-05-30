@@ -198,10 +198,10 @@ export class Player{
                         
                         
                         //Use initial positionning :
-                        this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
+                        this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance/ray.direction.length()).length());
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         console.log("Max iterations reached, using initial positioning");
-                        console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-offsetDistance).length());
+                        console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-offsetDistance/ray.direction.length()).length());
                         
 
                         /*
