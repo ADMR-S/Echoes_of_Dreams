@@ -1,5 +1,8 @@
 # Echoes_of_Dreams
 
+Play the game : 
+https://echoes-of-dreams.onrender.com/
+
 to run :
 ```bash
  npm run dev
