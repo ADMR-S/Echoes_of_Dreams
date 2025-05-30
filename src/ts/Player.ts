@@ -208,6 +208,7 @@ export class Player{
                         */
 
                         
+                        
                         // If no valid position found after all attempts, set minimal scale and move close to camera
                         this.resizeObject(objectPickable, distance*0.2, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
@@ -217,6 +218,7 @@ export class Player{
                         if(this.checkNearbyBoundingBoxes(objectPickable)){
                             console.log("Even minimal scale intersects with object" );
                         }
+                        
                     }
                 }
             }
@@ -264,7 +266,7 @@ export class Player{
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
                     console.log("No target point provided, using initial distance and scaling.");
                     const scaleFactor = objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length()
-                    objectPickable.mesh.position = camera.position.add(ray.direction.scale((this.selectedObjectInitialDistance*scaleFactor- offsetDistance)/ray.direction.length()));
+                    objectPickable.mesh.position = camera.position.add(ray.direction.scale((this.selectedObjectInitialDistance*scaleFactor)/ray.direction.length()));
                 }
     }
 
