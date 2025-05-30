@@ -135,27 +135,30 @@ export class Player{
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
             
-            // Use the closest occluding distance if available
-            const closestOccluder = this.getClosestOccludingMesh(scene, camera, this.selectedObject!);
             
             const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh && mesh != this.selectedObject && mesh.isPickable);
 
             var distance = 0;
 
-            if(closestOccluder){
-                distance = closestOccluder?.distance
-                console.log("Closest occluder found:", closestOccluder.mesh.name, "at distance:", distance);
-            }
-            else if (pickResult && pickResult.pickedPoint) {
+            if (pickResult && pickResult.pickedPoint) {
                 distance = camera.position.subtract(pickResult.pickedPoint).length();
             }
             else{
                 distance = this.MAX_DISTANCE;
             }
-            
             if(distance > this.MAX_DISTANCE){
                 distance = this.MAX_DISTANCE;
             }
+
+            // Use the closest occluding distance if available
+            const closestOccluder = this.getClosestOccludingMesh(scene, camera, this.selectedObject!, distance);
+            
+            if(closestOccluder){
+                distance = closestOccluder?.distance
+                console.log("Closest occluder found:", closestOccluder.mesh.name, "at distance:", distance);
+            }
+            
+            
             
 
 
@@ -367,7 +370,8 @@ export class Player{
     getClosestOccludingMesh(
     scene: Scene,
     camera: Camera,
-    selectedObject: AbstractMesh
+    selectedObject: AbstractMesh,
+    maxDistance : number
     ): { mesh: AbstractMesh, distance: number } | null {
         if (!selectedObject) return null;
 
@@ -433,7 +437,7 @@ export class Player{
                     const distance = camera.position.subtract(corner).length();
                     if (
                         //distance < selectedObjectDistance &&
-                        distance <= this.MAX_DISTANCE &&
+                        distance <= maxDistance &&
                         (!closest || distance < closest.distance)
                     ) {
                         closest = { mesh, distance };
