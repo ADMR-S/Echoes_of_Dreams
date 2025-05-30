@@ -413,7 +413,7 @@ export class Player{
         }
 
         const selectedRect = getScreenRect(selectedObject, scene, camera);
-        const selectedObjectDistance = camera.position.subtract(selectedObject.getBoundingInfo().boundingBox.centerWorld).length();
+        //const selectedObjectDistance = camera.position.subtract(selectedObject.getBoundingInfo().boundingBox.centerWorld).length();
 
         let closest: { mesh: AbstractMesh, distance: number } | null = null;
 
