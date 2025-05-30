@@ -7,6 +7,7 @@ import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Object3DPickable } from "./object/Object3DPickable";
+import { BoundingBox } from "@babylonjs/core";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -313,10 +314,14 @@ export class Player{
 
     checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
         const myBoundingInfo = objectPickable.mesh.getBoundingInfo();
-        const myMin = myBoundingInfo.boundingBox.minimumWorld;
-        const myMax = myBoundingInfo.boundingBox.maximumWorld;
+        const myWorldBox = new BoundingBox(
+            myBoundingInfo.boundingBox.minimumWorld,
+            myBoundingInfo.boundingBox.maximumWorld);
+        const myCenter = myWorldBox.centerWorld;
+        const myRadius = myWorldBox.extendSize.length();
 
         const scene = objectPickable.mesh.getScene();
+        // Exclude self, skyBox, laserPointers, rotationCone, and any mesh with "joint" or "jointparent" in the name
         const otherMeshes = scene.meshes.filter(mesh =>
             mesh !== objectPickable.mesh &&
             mesh.name !== "skyBox" &&
@@ -325,26 +330,29 @@ export class Player{
             !mesh.name.toLowerCase().includes("joint") &&
             !mesh.name.toLowerCase().includes("teleportation") &&
             !mesh.name.toLowerCase().includes("hand")
-        );
 
+
+        );
         for (const mesh of otherMeshes) {
+            // Defensive: skip meshes without bounding info (e.g., ground sometimes)
             if (!mesh.getBoundingInfo) continue;
             const otherBoundingInfo = mesh.getBoundingInfo();
             if (!otherBoundingInfo) continue;
-            const otherMin = otherBoundingInfo.boundingBox.minimumWorld;
-            const otherMax = otherBoundingInfo.boundingBox.maximumWorld;
+            const otherWorldBox = new BoundingBox(
+                otherBoundingInfo.boundingBox.minimumWorld,
+                otherBoundingInfo.boundingBox.maximumWorld
+            );
+            const otherCenter = otherWorldBox.centerWorld;
+            const otherRadius = otherWorldBox.extendSize.length();
 
-            // --- AABB vs AABB intersection ---
-            const intersects =
-                myMin.x <= otherMax.x && myMax.x >= otherMin.x &&
-                myMin.y <= otherMax.y && myMax.y >= otherMin.y &&
-                myMin.z <= otherMax.z && myMax.z >= otherMin.z;
+            // --- Sphere radius sum quick check ---
+            const centerDist = myCenter.subtract(otherCenter).length();
+            if (centerDist > myRadius + otherRadius) continue; // Too far, skip expensive check
 
-            if (intersects) {
-                console.log("AABB intersects box:", mesh.name);
+            if (BoundingBox.Intersects(myWorldBox, otherWorldBox)) {
+                console.log("Bounding boxes intersect:", mesh.name);
                 return true;
             }
         }
-        return false;
     }
 }
