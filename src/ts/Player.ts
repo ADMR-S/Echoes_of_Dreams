@@ -326,7 +326,11 @@ export class Player{
             mesh.name !== "skyBox" &&
             mesh.name !== "laserPointer" &&
             mesh.name !== "rotationCone" &&
-            !mesh.name.toLowerCase().includes("joint")
+            !mesh.name.toLowerCase().includes("joint") &&
+            !mesh.name.toLowerCase().includes("teleportation") &&
+            !mesh.name.toLowerCase().includes("hand")
+
+
         );
         for (const mesh of otherMeshes) {
             // Defensive: skip meshes without bounding info (e.g., ground sometimes)
