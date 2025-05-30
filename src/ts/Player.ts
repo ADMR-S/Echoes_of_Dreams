@@ -387,12 +387,23 @@ export class Player{
             const boundingBox = mesh.getBoundingInfo().boundingBox;
             const corners = boundingBox.vectorsWorld;
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            const cameraForward = camera.getForwardRay().direction.normalize();
+
+            let anyInFront = false;
             for (const corner of corners) {
+                // Only consider corners in front of the camera
+                const toCorner = corner.subtract(camera.position).normalize();
+                if (Vector3.Dot(cameraForward, toCorner) < 0.01) continue;
+                anyInFront = true;
                 const screen = projectToScreen(corner, scene, camera);
                 minX = Math.min(minX, screen.x);
                 minY = Math.min(minY, screen.y);
                 maxX = Math.max(maxX, screen.x);
                 maxY = Math.max(maxY, screen.y);
+            }
+            // If no corners are in front, return an impossible rectangle
+            if (!anyInFront) {
+                return { minX: 1, minY: 1, maxX: -1, maxY: -1 };
             }
             return { minX, minY, maxX, maxY };
         }
