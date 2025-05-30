@@ -11,9 +11,6 @@ import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
-
-//Idea to try : Divide each component of the ray.direction vector by the length of the vector to get a vector of length 1 
-
 export class Player{
     
     MAX_DISTANCE = 20; // Maximum distance for object placement
