@@ -257,7 +257,6 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 const xrInput = motionController.getComponent("xr-standard-thumbstick");
                 if (xrInput) {
                     xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
-                        // axisValues.x is usually for left/right rotation
                         rotationInput = axisValues.x;
                     });
                 }
@@ -272,7 +271,8 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
         const camera = xr.baseExperience.camera;
 
         if (Math.abs(rotationInput) > 0.01) {
-            xr.baseExperience.camera.rotation.x -= rotationInput * rotationSpeed;
+            console.log("Rotation input: " + rotationInput);
+            xr.baseExperience.camera.rotation.x += rotationInput * rotationSpeed;
         }
         // Smooth movement relative to camera's facing direction
         if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
