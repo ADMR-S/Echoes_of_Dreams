@@ -34,6 +34,8 @@ import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Object3DPickable } from "../object/Object3DPickable";
 
+import { WebXRFeatureName } from "@babylonjs/core";
+
 
 export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
@@ -95,7 +97,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         var camera=  xr.baseExperience.camera;
 
-        addXRControllersRoutine(scene, xr, eventMask); //eventMask est-il indispensable ?
+        addXRControllersRoutine(scene, xr, eventMask, ground); //eventMask est-il indispensable ?
 
         // Add keyboard controls for movement
         const moveSpeed = 1;
@@ -232,21 +234,49 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 
 
 // Add movement with left joystick
-function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
+function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground : Mesh) {
     // Store rotation state
     var rotationInput = 0;
     var xPositionInput = 0;
     var yPositionInput = 0;
 
+    let teleportationEnabled = true;
+    const featuresManager = xr.baseExperience.featuresManager;
+
     xr.input.onControllerAddedObservable.add((controller: any) => {        
         console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
             controller.onMotionControllerInitObservable.add((motionController: any) => {
-                const xrInput = motionController.getComponent("xr-standard-thumbstick");
-                if (xrInput) {
-                    xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
+                const leftStick = motionController.getComponent("xr-standard-thumbstick");
+                if (leftStick) {
+                    leftStick.onAxisValueChangedObservable.add((axisValues: any) => {
                         xPositionInput = axisValues.x;
                         yPositionInput = axisValues.y;
+                    });
+                }
+
+                const yButton = motionController.getComponent("y-button");
+                if (yButton) {
+                    yButton.onButtonStateChangedObservable.add(() => {
+                        if (yButton.changes.pressed && yButton.pressed) {
+                            teleportationEnabled = !teleportationEnabled;
+                            if (teleportationEnabled) {
+                                // Enable teleportation
+                                featuresManager.enableFeature(
+                                    WebXRFeatureName.TELEPORTATION,
+                                    "stable",
+                                    {
+                                        xrInput: xr.input,
+                                        floorMeshes: [ground],
+                                    }
+                                );
+                                console.log("Teleportation ENABLED");
+                            } else {
+                                // Disable teleportation
+                                featuresManager.disableFeature(WebXRFeatureName.TELEPORTATION);
+                                console.log("Teleportation DISABLED");
+                            }
+                        }
                     });
                 }
             });
