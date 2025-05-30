@@ -7,8 +7,20 @@ niveau 1 composé d énigmes/mini jeux/casse-tête ?
 
 
 Scene 1 :
-Objets sélectionnés : 
-    Snappent au sol
-    Clignotent
-    Ne sont pas parfaitement alignés
-Piste : Mauvais comportement Ray
+Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
+Lisser la rotation de la caméra avec le stick
+La musique boucle mal, changer
+Réparer Skybox
+Ajouter effets de caméra lorsqu'un gros objet tombe au sol
+    + Effets sonores
+Ajouter un corps physique à la caméra pour empêcher de passer à travers les murs
+Permettre de switch entre deplacement au stick et teleportation avec un bouton
+HUD pour décrire les états (TP / deplacement, Télékinésie activée ou non...)
+Permettre de monter sur des objets (les ajouter au "ground" ?)
+Intégrer scène 3D, plus d'objets
+
+Créer sortie du niveau, qui produit une musique
+
+Intégrer puzzle géant au 1er niveau
+
+Parvenir à passer d'un niveau à l'autre
