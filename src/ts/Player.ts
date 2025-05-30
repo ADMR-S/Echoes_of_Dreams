@@ -104,7 +104,7 @@ export class Player{
             
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
-                this.animateObject(object, scene);
+                //this.animateObject(object, scene);
                 this.resizeAndRepositionObject(object3DPickable, scene, xr, selectedObjectBaseOffsetDistance);
             }, 0);
 
@@ -200,7 +200,6 @@ export class Player{
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
-                        objectPickable.mesh.refreshBoundingInfo(true, true); 
                         console.log("Max iterations reached, using initial positioning");
                         console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-offsetDistance).length());
                         
