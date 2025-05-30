@@ -304,11 +304,12 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
             console.log("Rotation input: " + rotationInput);
             console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
             // Rotate around Y axis (yaw)
+            if (Math.abs(rotationInput) > 0.01) {
+            // Rotate around the WORLD Y axis (not local)
             const deltaYaw = rotationInput * rotationSpeed;
             const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
-            camera.rotationQuaternion = camera.rotationQuaternion
-            ? camera.rotationQuaternion.multiply(yawQuaternion)
-            : yawQuaternion;
+            camera.rotationQuaternion = yawQuaternion.multiply(camera.rotationQuaternion!);
+        }
             console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
         }
         // Smooth movement relative to camera's facing direction
