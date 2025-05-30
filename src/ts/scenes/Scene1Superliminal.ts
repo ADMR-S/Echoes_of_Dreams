@@ -234,7 +234,9 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 // Add movement with left joystick
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Store rotation state
-    let rotationInput = 0;
+    var rotationInput = 0;
+    var xPositionInput = 0;
+    var yPositionInput = 0;
 
     xr.input.onControllerAddedObservable.add((controller: any) => {        
         console.log("Ajout d'un controller")
@@ -243,9 +245,8 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 const xrInput = motionController.getComponent("xr-standard-thumbstick");
                 if (xrInput) {
                     xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
-                        const speed = 0.05;
-                        xr.baseExperience.camera.position.x += axisValues.x * speed;
-                        xr.baseExperience.camera.position.z -= axisValues.y * speed;
+                        xPositionInput = axisValues.x;
+                        yPositionInput = axisValues.y;
                     });
                 }
             });
@@ -267,8 +268,27 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     // Smooth rotation in the render loop
     scene.onBeforeRenderObservable.add(() => {
         const rotationSpeed = 0.04; // Adjust for desired sensitivity
+        const movementSpeed = 0.05;
+        const camera = xr.baseExperience.camera;
+
         if (Math.abs(rotationInput) > 0.01) {
-            xr.baseExperience.camera.rotation.y -= rotationInput * rotationSpeed;
+            xr.baseExperience.camera.rotation.x -= rotationInput * rotationSpeed;
+        }
+        // Smooth movement relative to camera's facing direction
+        if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
+            // Calculate forward and right vectors based on camera rotation
+            const forward = new Vector3(
+                Math.sin(camera.rotation.y),
+                0,
+                Math.cos(camera.rotation.y)
+            );
+            const right = new Vector3(
+                Math.sin(camera.rotation.y + Math.PI / 2),
+                0,
+                Math.cos(camera.rotation.y + Math.PI / 2)
+            );
+            camera.position.addInPlace(forward.scale(-yPositionInput * movementSpeed));
+            camera.position.addInPlace(right.scale(xPositionInput * movementSpeed));
         }
     });
 
