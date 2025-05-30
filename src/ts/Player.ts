@@ -205,7 +205,7 @@ export class Player{
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
                         objectPickable.mesh.refreshBoundingInfo(true, true); 
                         console.log("Max iterations reached, using initial positioning");
-                        console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
+                        console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-offsetDistance).length());
                         
 
                         /*
