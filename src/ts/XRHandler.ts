@@ -25,11 +25,17 @@ export class XRHandler{
     private highlightedMesh: AbstractMesh | null = null;
     private highlightingObservable: any;
     private glowLayer: GlowLayer | null = null;
+    private requestSceneSwitch: () => Promise<void>;
 
-    constructor(scene: Scene, xr : WebXRDefaultExperience, player : Player){
-        this.scene = scene;
+    constructor(
+        scene: Scene,
+        xr: WebXRDefaultExperience,
+        player: Player,
+        requestSceneSwitchFn: () => Promise<void>
+    ) {        this.scene = scene;
         this.xr = xr;
         this.player = player;
+        this.requestSceneSwitch = requestSceneSwitchFn;
         this.leftController = null;
         this.rightController = null;
         this.headset = null; //TODO : Get headset
@@ -43,6 +49,7 @@ export class XRHandler{
         this.getLeftAndRightControllers();
         this.setupObjectSelection();
         this.setupHighlighting(); // Add highlighting setup
+        this.setupSceneSwitchControls();
     }
 
     getLeftAndRightControllers(){
@@ -172,6 +179,27 @@ export class XRHandler{
                     this.highlightedMesh = mesh;
                 }
             }
+        });
+    }
+
+    setupSceneSwitchControls() {
+        this.xr.input.onControllerAddedObservable.add((controller) => {
+            controller.onMotionControllerInitObservable.add((motionController) => {
+                // y ou b
+                if (motionController.handedness === 'right') {
+                    const bButton = motionController.getComponent("b-button");
+                    if (bButton) {
+                        bButton.onButtonStateChangedObservable.add((buttonState) => {
+                            if (buttonState.pressed) {
+                                console.log("B button pressed - requesting scene switch.");
+                                this.requestSceneSwitch();
+                            }
+                        });
+                    } else {
+                        console.warn("B-button component not found on right controller.");
+                    }
+                }
+            });
         });
     }
 

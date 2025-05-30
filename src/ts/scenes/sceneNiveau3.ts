@@ -36,6 +36,8 @@ import {CubeTexture} from "@babylonjs/core/Materials/Textures/cubeTexture";
 import {Texture} from "@babylonjs/core/Materials/Textures/texture";
 import {AdvancedDynamicTexture, Control, Rectangle, TextBlock} from "@babylonjs/gui";
 import {Tools} from "@babylonjs/core/Misc/tools";
+import {Player} from "../Player.ts";
+import XRHandler from "../XRHandler.ts";
 
 
 export class SceneNiveau3 implements CreateSceneClass {
@@ -66,7 +68,13 @@ export class SceneNiveau3 implements CreateSceneClass {
     private swords: AbstractMesh[] = [];
 
     // @ts-ignore
-    createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
+    createScene = async (
+        engine: AbstractEngine,
+        canvas: HTMLCanvasElement,
+        audioContext: AudioContext,
+        player: Player,
+        requestSceneSwitchFn: () => Promise<void> 
+    ): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
         scene.metadata = { gameTime: 0 };
 
@@ -281,6 +289,11 @@ export class SceneNiveau3 implements CreateSceneClass {
 
         cameraHitbox.isVisible = false;
         cameraHitbox.isPickable = true;
+
+        console.log("BASE EXPERIENCE Scene1Superliminal");
+        console.log(xr.baseExperience);
+
+        new XRHandler(scene, xr, player, requestSceneSwitchFn);
 
 
         this.hudTexture = AdvancedDynamicTexture.CreateFullscreenUI("HUD_UI", true, scene);

@@ -15,86 +15,128 @@ const audioContext: AudioContext = new AudioContext();
 // @ts-ignore
 let scene: Scene | null = null; //Utile ?
 let sceneToRender: Scene | null = null; //Utile ?
+let engine: AbstractEngine | null = null;
+let currentPlayer: Player | null = null;
+let currentSceneInstance: Scene | null = null;
 
+const SCENE_SUPERLIMINAL = "Scene1Superliminal";
+const SCENE_NIVEAU3 = "SceneNiveau3";
+let currentSceneName: string = SCENE_SUPERLIMINAL;
+
+const loadAndRunScene = async (sceneName: string) => {
+    if (currentSceneInstance) {
+        console.log(`Disposing scene: ${currentSceneInstance.metadata?.sceneName || 'unknown'}`);
+        currentSceneInstance.dispose();
+        currentSceneInstance = null;
+        sceneToRender = null;
+    }
+
+    if (!engine) {
+        console.error("Engine not initialized!");
+        return;
+    }
+    if (!currentPlayer) {
+        console.error("Player not initialized!");
+        return;
+    }
+
+    currentSceneName = sceneName;
+    const createSceneModule = getSceneModule(sceneName);
+
+    await Promise.all(createSceneModule.preTasks || []);
+
+    const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+
+    // Create the scene
+    currentSceneInstance = await createSceneModule.createScene(engine, canvas, audioContext, currentPlayer, requestSceneSwitch);
+    currentSceneInstance.metadata = { ...currentSceneInstance.metadata, sceneName: sceneName };
+
+    sceneToRender = currentSceneInstance;
+
+    Utility.setupInspectorControl(currentSceneInstance);
+    // JUST FOR TESTING. Not needed for anything else
+    (window as any).scene = currentSceneInstance;
+
+    console.log(`Scene ${sceneName} loaded.`);
+};
+
+const requestSceneSwitch = async () => {
+    console.log("Scene switch requested.");
+
+    const nextScene = currentSceneName === SCENE_SUPERLIMINAL ? SCENE_NIVEAU3 : SCENE_SUPERLIMINAL;
+    await loadAndRunScene(nextScene);
+};
 
 export const babylonInit = async (): Promise<Scene> => {
-  const createSceneModule = getSceneModule();
-  // Execute the pretasks, if defined
-  await Promise.all(createSceneModule.preTasks || []);
-  // Get the canvas element
-  const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
-  // Generate the BABYLON 3D engine
-  const engine = await createEngine(canvas);
+    const canvas = document.getElementById("renderCanvas") as HTMLCanvasElement;
+    engine = await createEngine(canvas);
 
-  console.log(engine)
+    console.log(engine);
 
+    currentPlayer = new Player();
+    await loadAndRunScene(currentSceneName);
 
-  const player = new Player();
+    if (!currentSceneInstance) {
+        throw new Error("Scene could not be initialized.");
+    }
 
-  // Create the scene
-  const scene = await createSceneModule.createScene(engine, canvas, audioContext, player);
+    // Register a render loop to repeatedly render the scene
+    startRenderLoop(engine);
 
-  Utility.setupInspectorControl(scene);
-  // JUST FOR TESTING. Not needed for anything else
-  (window as any).scene = scene;
+    // Watch for browser/canvas resize events
+    window.addEventListener("resize", function () {
+        engine?.resize();
+    });
 
-  // Register a render loop to repeatedly render the scene
-  startRenderLoop(engine, canvas);
-
-  // Watch for browser/canvas resize events
-  window.addEventListener("resize", function () {
-      engine.resize();
-  });
-
-  return scene;
+    return currentSceneInstance;
 };
 
 window.onload = () => {
-  babylonInit().then((scene) => {
-    sceneToRender = scene;
-  });
-  
+    babylonInit().then((scene) => {
 
-}
-
-// @ts-ignore
-const startRenderLoop = (engine: AbstractEngine, canvas: HTMLCanvasElement) => { //canvas inutile ?
-  engine.runRenderLoop(() => {
-      if (sceneToRender && sceneToRender.activeCamera) {
-          sceneToRender.render();
-      }
-  });
-}
-
-const createEngine = async (canvas : HTMLCanvasElement): Promise<AbstractEngine> => {
-  const engineType =
-  location.search.split("engine=")[1]?.split("&")[0] || "webgl";
-  let engine: AbstractEngine;
-  //On peut sûrement se contenter du defaultEngine, toute la partie webgpu vient du code original, à voir
-  if (engineType === "webgpu") {
-      const webGPUSupported = await WebGPUEngine.IsSupportedAsync;
-      if (webGPUSupported) {
-          // You can decide which WebGPU extensions to load when creating the engine. I am loading all of them
-          await import("@babylonjs/core/Engines/WebGPU/Extensions/");
-          const webgpu = engine = new WebGPUEngine(canvas, {
-              adaptToDeviceRatio: true,
-              antialias: true,
-          });
-          await webgpu.initAsync();
-          engine = webgpu;
-      } else {
-          engine = createDefaultEngine(canvas);
-      }
-  } else {
-      engine = createDefaultEngine(canvas);
-  }
-  return engine;
+        console.log("Babylon initialized, initial scene loaded.");
+    }).catch(error => {
+        console.error("Error during Babylon initialization:", error);
+    });
 };
 
-const createDefaultEngine = function (canvas : HTMLCanvasElement) { 
-  return new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false }); 
+const startRenderLoop = (engineInstance: AbstractEngine) => {
+    engineInstance.runRenderLoop(() => {
+        if (sceneToRender && sceneToRender.activeCamera) {
+            sceneToRender.render();
+        }
+    });
+};
+
+const createEngine = async (canvas: HTMLCanvasElement): Promise<AbstractEngine> => {
+    const engineType =
+        location.search.split("engine=")[1]?.split("&")[0] || "webgl";
+    let createdEngine: AbstractEngine;
+
+    if (engineType === "webgpu") {
+        const webGPUSupported = await WebGPUEngine.IsSupportedAsync;
+        if (webGPUSupported) {
+            await import("@babylonjs/core/Engines/WebGPU/Extensions/");
+            const webgpu = new WebGPUEngine(canvas, {
+                adaptToDeviceRatio: true,
+                antialias: true,
+            });
+            await webgpu.initAsync();
+            createdEngine = webgpu;
+        } else {
+            createdEngine = createDefaultEngine(canvas);
+        }
+    } else {
+        createdEngine = createDefaultEngine(canvas);
+    }
+    return createdEngine;
+};
+
+const createDefaultEngine = (canvas: HTMLCanvasElement): Engine => {
+    return new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true, disableWebGL2Support: false });
 };
 
 window.onclick = () => {
     audioContext.resume();
 };
+export { requestSceneSwitch };

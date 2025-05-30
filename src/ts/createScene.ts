@@ -16,17 +16,22 @@ import {XRSceneWithHavok4} from "./scenes/SceneTestAlai1.ts";
 import {Scene1Superliminal} from "./scenes/Scene1Superliminal.ts";
 
 export interface CreateSceneClass {
-    createScene: (engine: AbstractEngine, canvas: HTMLCanvasElement, audiocontext : AudioContext, player : Player) => Promise<Scene>;
+    createScene: (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>) => Promise<Scene>;
     preTasks?: Promise<unknown>[];
-
-
 }
 
 export interface CreateSceneModule {
     default: CreateSceneClass;
 }
 
-export const getSceneModule = (): CreateSceneClass => {
-    return new Scene1Superliminal();
-}
-
+export const getSceneModule = (sceneName: string): CreateSceneClass => {
+    switch (sceneName) {
+        case "SceneNiveau3":
+            return new SceneNiveau3();
+        case "Scene1Superliminal":
+            return new Scene1Superliminal();
+        default:
+            console.warn(`Scene module for "${sceneName}" not found. Defaulting to Scene1Superliminal.`);
+            return new Scene1Superliminal();
+    }
+};
