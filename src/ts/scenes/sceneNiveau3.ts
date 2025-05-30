@@ -52,6 +52,7 @@ export class SceneNiveau3 implements CreateSceneClass {
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
+        scene.metadata = { gameTime: 0 };
 
         const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
         light.intensity = 0.7;
@@ -389,12 +390,17 @@ export class SceneNiveau3 implements CreateSceneClass {
 
 
 
-
+        const MAX_METEOR_LIFETIME_MS = 30000;
+        const MAX_STATIONARY_TIME_MS = 4000;
+        const MIN_MOVEMENT_SQ_THRESHOLD = (0.05 * 0.05);
 
         scene.onBeforeRenderObservable.add(() => {
             const dtMs = engine.getDeltaTime();
             const deltaTime = dtMs / 1000;
 
+            if (scene.metadata && typeof scene.metadata.gameTime === 'number') {
+                scene.metadata.gameTime += dtMs;
+            }
             const currentFrameForwardMovement = forwardSpeed * deltaTime;
 
             if (partie == 1) {
@@ -452,7 +458,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                             gameProgressZ -= 15;
                             this.showScoreFeedback("-15", "red");
                         } else if (obstacleType === "star") {
-                            gameProgressZ -= 20;
+                            gameProgressZ += 20;
                             this.showScoreFeedback("+20", "green");
                         }
                         if ((currentObstacle as any).ambientSound) {
@@ -567,19 +573,36 @@ export class SceneNiveau3 implements CreateSceneClass {
                         meteores.push(meteor);
                 }
 
-                const meteorSpeed = 1.5;
+                const meteorSpeed = 2.5;
 
-                // Mise à jour de chaque météore
                 for (let i = meteores.length - 1; i >= 0; i--) {
                     const meteor = meteores[i];
                     if (!meteor || meteor.isDisposed()) {
                         meteores.splice(i,1);
                         continue;
                     }
-
+                    if (scene.metadata.gameTime - meteor.metadata.spawnTime > MAX_METEOR_LIFETIME_MS) {
+                        disposeMeteor(meteor, meteores, i, "lifetime exceeded");
+                        continue;
+                    }
+                    const oldPos = meteor.position.clone();
                     const direction = platform.position.subtract(meteor.position).normalize();
                     meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
+                    const distanceSq = Vector3.DistanceSquared(meteor.position, meteor.metadata.lastPosition);
 
+                    if (distanceSq < MIN_MOVEMENT_SQ_THRESHOLD * deltaTime) {
+                        meteor.metadata.stationaryAccumulator += dtMs;
+                    } else {
+                        meteor.metadata.stationaryAccumulator = 0;
+                        meteor.metadata.lastPosition.copyFrom(meteor.position);
+                    }
+                    if (meteor.metadata.stationaryAccumulator > MAX_STATIONARY_TIME_MS) {
+                        disposeMeteor(meteor, meteores, i, "inactivity"); continue;
+                    }
+                    if (meteor.intersectsMesh(cameraHitbox, false)) {
+                        disposeMeteor(meteor, meteores, i, "hit player (P2)"); continue;
+                    }
+                    /*
                     if (meteor.intersectsMesh(cameraHitbox, false)) {
                         //console.log("Un météore a touché le joueur !");
                         if ((meteor as any).ambientSound) {
@@ -592,36 +615,21 @@ export class SceneNiveau3 implements CreateSceneClass {
                         meteor.dispose(false, true);
                         meteores.splice(i, 1);
                         continue;
-                    }
+                    }*/
 
                     for (let j = projectiles.length - 1; j >= 0; j--) {
                         const projectile = projectiles[j];
                         if (!projectile || projectile.isDisposed()) {
-                            projectiles.splice(j,1);
+                            projectiles.splice(j, 1);
                             continue;
                         }
                         if (meteor.intersectsMesh(projectile, false)) {
-                            projectile.dispose();
-                            projectiles.splice(j, 1);
-
+                            projectile.dispose(); projectiles.splice(j, 1);
                             meteor.metadata.hits = (meteor.metadata.hits || 0) + 1;
-                            console.log(`Météore touché : ${meteor.metadata.hits} fois`);
 
-                            const shrinkFactor = 0.75;
-                            meteor.scaling.scaleInPlace(shrinkFactor);
-
+                            const shrinkFactor = 0.75; meteor.scaling.scaleInPlace(shrinkFactor);
                             if (meteor.metadata.hits >= 3) {
-                                //console.log("Météore explosé !");
-                                //TODO: effet d'explosion ?
-                                if ((meteor as any).ambientSound) {
-                                    (meteor as any).ambientSound.stop();
-                                    (meteor as any).ambientSound.dispose(); }
-                                if ((meteor as any).particleSmokeTrail) {
-                                    (meteor as any).particleSmokeTrail.dispose(true,true);
-                                }
-
-                                meteor.dispose(false, true);
-                                meteores.splice(i, 1);
+                                disposeMeteor(meteor, meteores, i, "destroyed by projectile (P2)");
                                 break;
                             }
                         }
@@ -631,122 +639,78 @@ export class SceneNiveau3 implements CreateSceneClass {
             // Partie 3
             else if (partie == 3) {
                 if (!part3Started) {
-                    part3Started = true;
-                    part3StartTime = Date.now();
-                    console.log("Partie 3 : Attaque à l'épée !");
-                    // Création des épées
+                    part3Started = true; part3StartTime = Date.now(); console.log("Partie 3 : Attaque à l'épée !");
                     xr.input.controllers.forEach((controller) => {
                         if (controller.grip) {
-                            let swordExists = false;
-                            for (const s of swords) {
-                                if (s.parent === controller.grip) {
-                                    swordExists = true;
-                                    break;
-                                }
-                            }
-                            if (!swordExists) {
-                                const sword = createSword(controller, scene);
-                                swords.push(sword);
+                            if (!swords.some(s => s.parent === controller.grip)) {
+                                swords.push(createSword(controller, scene));
                             }
                         }
                     });
                 }
-
                 if (this.distanceText && part3StartTime !== null) {
-                    const elapsed = Date.now() - part3StartTime;
-                    const remainingTime = timerpart3 - elapsed;
-                    if (remainingTime <= 0) {
-                        this.distanceText.text = "Partie 3\nNIVEAU TERMINÉ !";
-                    } else {
-                        this.distanceText.text = `Partie 3\nTemps restant: ${formatTime(remainingTime)}`;
-                    }
+                    const elapsed = Date.now() - part3StartTime; const remainingTime = timerpart3 - elapsed;
+                    this.distanceText.text = remainingTime <= 0 ? "Partie 3\nNIVEAU TERMINÉ !" : `Partie 3\nTemps restant: ${formatTime(remainingTime)}`;
                 }
-
                 const elapsedPart3Check = Date.now() - (part3StartTime as number);
                 if (elapsedPart3Check >= timerpart3) {
-                    console.log("Fin du niveau (Partie 3 terminée)");
-                    meteores.forEach(m => {
-                        //Nettoyage
-                        if ((m as any).ambientSound) {
-                            (m as any).ambientSound.stop();
-                            (m as any).ambientSound.dispose();
-                        }
-                        if ((m as any).particleSmokeTrail) {
-                            (m as any).particleSmokeTrail.dispose(true,true);
-                        }
-                        if (m.material) m.material.dispose();
-                        m.dispose(false, true);
-                    });
-                    meteores.length = 0;
-                    swords.forEach(
-                        s => s.dispose()
-                    );
-                    swords.length = 0;
-                    // TODO: Logique de fin de niveau
+                    console.log("Fin du niveau (Partie 3 terminée)"); partie = 4;
+                    for (let i = meteores.length - 1; i >= 0; i--) { disposeMeteor(meteores[i], meteores, i, "part transition 3->End");}
+                    swords.forEach(s => s.dispose()); swords.length = 0;
                     return;
                 }
-
-                const spawnInterval = 2000 - ((2000 - 500) * (elapsedPart3Check / 180000));
+                const spawnInterval = Math.max(500, 2000 - ((2000 - 500) * (elapsedPart3Check / timerpart3)));
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
                     const meteor = spawnMeteor(scene, platform, obstacleTemplates, this.meteorCounter++);
-                    if (meteor instanceof AbstractMesh) {
-                        meteores.push(meteor);
-                    }
+                    if (meteor) meteores.push(meteor);
                 }
-
-                const meteorSpeed = 1.5;
-
+                const meteorSpeed = 2.0;
                 for (let i = meteores.length - 1; i >= 0; i--) {
                     const meteor = meteores[i];
-                    if (!meteor) { continue; }
+                    if (!meteor || meteor.isDisposed()) { meteores.splice(i, 1); continue; }
+
+                    if (scene.metadata.gameTime - meteor.metadata.spawnTime > MAX_METEOR_LIFETIME_MS) {
+                        disposeMeteor(meteor, meteores, i, "lifetime exceeded"); continue;
+                    }
+
+                    const oldPos = meteor.position.clone();
                     const direction = platform.position.subtract(meteor.position).normalize();
                     meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
 
-                    if (meteor.intersectsMesh(cameraHitbox, false)) {
-                        console.log("Un météore a touché le joueur !");
-                        meteor.dispose();
-                        meteores.splice(i, 1);
-                        continue;
+                    const distanceSq = Vector3.DistanceSquared(meteor.position, meteor.metadata.lastPosition);
+                    if (distanceSq < MIN_MOVEMENT_SQ_THRESHOLD * deltaTime) {
+                        meteor.metadata.stationaryAccumulator += dtMs;
+                    } else {
+                        meteor.metadata.stationaryAccumulator = 0;
+                        meteor.metadata.lastPosition.copyFrom(meteor.position);
+                    }
+                    if (meteor.metadata.stationaryAccumulator > MAX_STATIONARY_TIME_MS) {
+                        disposeMeteor(meteor, meteores, i, "inactivity"); continue;
                     }
 
-                    for (let s = 0; s < swords.length; s++) {
+                    if (meteor.intersectsMesh(cameraHitbox, false)) {
+                        disposeMeteor(meteor, meteores, i, "hit player (P3)"); continue;
+                    }
+                    for (let s = swords.length - 1; s >= 0; s--) {
                         const sword = swords[s];
                         if (meteor.intersectsMesh(sword, false)) {
                             meteor.metadata.hits = (meteor.metadata.hits || 0) + 3;
-                            console.log(`Météore touché par épée : ${meteor.metadata.hits} fois`);
-
-                            const shrinkFactor = 0.50; // Réduit la taille à 50% (plus gros impact visuel avant destruction)
-                            meteor.scaling.scaleInPlace(shrinkFactor);
-
-
+                            // console.log(`Météore touché par épée : ${meteor.metadata.hits} fois`);
+                            meteor.scaling.scaleInPlace(0.50);
                             if (meteor.metadata.hits >= 3) {
-                                console.log("Météore explosé par épée!");
-                                //TODO: effet d'explosion ?
-                                if ((meteor as any).ambientSound) {
-                                    (meteor as any).ambientSound.stop();
-                                    (meteor as any).ambientSound.dispose();
-                                }
-                                if ((meteor as any).particleSmokeTrail) {
-                                    (meteor as any).particleSmokeTrail.dispose(true,true);
-                                }
-                                meteor.dispose(false, true);
-                                meteores.splice(i, 1);
+                                disposeMeteor(meteor, meteores, i, "destroyed by sword (P3)");
                                 break;
                             }
                         }
                     }
                 }
-            } else {
-                if (this.hudBackground && this.hudBackground.isVisible) {
-                    if (this.distanceText && this.distanceText.text !== "Partie 3\nNIVEAU TERMINÉ !") {
-                        this.distanceText.text = "JEU TERMINÉ";
-                    }
+            } else if (partie === 4) {
+                if (this.distanceText && this.distanceText.text !== "NIVEAU TERMINÉ !") {
+                    this.distanceText.text = "NIVEAU TERMINÉ !";
                 }
             }
-
-
         });
 
 
@@ -835,7 +799,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         this.scoreFeedbackText.isVisible = true;
 
         this.scoreFeedbackTimeout = window.setTimeout(() => {
-            if (this.scoreFeedbackText) { // Vérifier si toujours existant (ex: changement de scène)
+            if (this.scoreFeedbackText) {
                 this.scoreFeedbackText.isVisible = false;
             }
             this.scoreFeedbackTimeout = undefined;
@@ -845,70 +809,82 @@ export class SceneNiveau3 implements CreateSceneClass {
 
 export default new SceneNiveau3();
 
+function disposeMeteor(meteor: AbstractMesh, meteorsArray: AbstractMesh[], index: number, reason: string) {
+    if ((meteor as any).ambientSound) {
+        (meteor as any).ambientSound.stop();
+        (meteor as any).ambientSound.dispose();
+    }
+    if ((meteor as any).particleSmokeTrail) {
+        (meteor as any).particleSmokeTrail.dispose(true, true);
+    }
+    if ((meteor as any).particleAura) {
+        (meteor as any).particleAura.dispose(true,true);
+    }
+    meteor.dispose(false, true);
+    if (index >= 0 && index < meteorsArray.length) {
+        meteorsArray.splice(index, 1);
+    } else if (meteorsArray.includes(meteor)) {
+        const idx = meteorsArray.indexOf(meteor);
+        if (idx > -1) meteorsArray.splice(idx, 1);
+    }
+}
+
 
 function spawnMeteor(scene: Scene, platform: Mesh, obstacleTemplates: AbstractMesh[], meteorId: number): AbstractMesh | null {
     if (!obstacleTemplates || obstacleTemplates.length === 0) {
-        console.warn("spawnMeteor: obstacleTemplates est vide ou non fourni. Impossible de créer un météore stylisé.");
-        return null; // Ne pas créer de météore si les templates ne sont pas disponibles
+        console.warn("spawnMeteor: obstacleTemplates vide. Pas de création de météore.");
+        return null;
     }
-
     const randomIndex = Math.floor(Math.random() * obstacleTemplates.length);
     const selectedTemplate = obstacleTemplates[randomIndex];
     if (!selectedTemplate) {
-        console.warn("spawnMeteor: Le template d'obstacle sélectionné est indéfini.");
+        console.warn("spawnMeteor: Template sélectionné indéfini.");
         return null;
     }
 
-    // @ts-ignore // selectedTemplate vient de meshes[1] qui est un AbstractMesh, createInstance est valide.
-    const meteor = selectedTemplate.createInstance("meteorInstance_" + meteorId);
-
+    // @ts-ignore
+    const meteor = selectedTemplate.createInstance("meteorInstance_" + meteorId) as AbstractMesh;
     if (!meteor) {
-        console.warn("spawnMeteor: Échec de la création d'une instance de météore.");
+        console.warn("spawnMeteor: Échec création instance.");
         return null;
     }
-
     meteor.setEnabled(true);
-    // La rotation et la mise à l'échelle initiales sont héritées du template.
-    // Si vous avez besoin d'une mise à l'échelle spécifique pour les météores différente des obstacles de la partie 1:
-    // meteor.scaling.setAll(0.0X); // Par exemple, si la taille doit être ajustée
 
     (meteor as any).particleSmokeTrail = createBlackSmokeTrail(scene, meteor);
-    (meteor as any).obstacleGameType = "penalty"; // Pour la cohérence, bien que non utilisé pour le score ici
-    meteor.metadata = { hits: 0 }; // Important pour la logique de rétrécissement
+    (meteor as any).obstacleGameType = "penalty_meteor";
+
+    meteor.metadata = {
+        hits: 0,
+        spawnTime: scene.metadata.gameTime,
+        lastPosition: meteor.position.clone(),
+        stationaryAccumulator: 0
+    };
 
     const soundFile = "/asset/sounds/boo.mp3";
-    const meteorSound = new Sound(
-        "sound_meteor_" + meteor.uniqueId,
-        soundFile,
-        scene,
+    const meteorSound = new Sound("sound_meteor_" + meteor.uniqueId, soundFile, scene,
         () => {
-            if (meteor && !meteor.isDisposed() && meteorSound) {
-                meteorSound.attachToMesh(meteor);
-                meteorSound.play();
-            }
-        },
-        { loop: true, autoplay: false, volume: 0.2, spatialSound: true, distanceModel: "linear", maxDistance: 50, rolloffFactor: 1.2 }
+        if (meteor && !meteor.isDisposed() && meteorSound) {
+            meteorSound.attachToMesh(meteor);
+            meteorSound.play(); }},
+        {loop: true, autoplay: false, volume: 0.2, spatialSound: true, distanceModel: "linear", maxDistance: 50, rolloffFactor: 1.2}
     );
     (meteor as any).ambientSound = meteorSound;
 
-    // Positionnement du météore (logique existante)
-    //const spawnDistance = 100; // Distance de spawn par rapport au joueur
-    const angleXZ = Math.random() * Math.PI * 2; // Angle aléatoire sur le plan XZ
-    const randomRadius = Math.random() * 30 + 20; // Rayon aléatoire pour la distance horizontale
-
+    const angleXZ = Math.random() * Math.PI * 2;
+    const randomRadius = Math.random() * 40 + 30;
     const xOffset = Math.cos(angleXZ) * randomRadius;
     const zOffset = Math.sin(angleXZ) * randomRadius;
-    const heightOffset = (Math.random() - 0.5) * 30 + 5; // Hauteur au-dessus ou au niveau du joueur
+    const heightOffset = Math.random() * 20 + 15;
 
     meteor.position = new Vector3(
         platform.position.x + xOffset,
-        platform.position.y + heightOffset, // Spawn plus haut
+        platform.position.y + heightOffset,
         platform.position.z + zOffset
     );
-    meteor.isPickable = true; // Nécessaire pour intersectsMesh
-
+    meteor.isPickable = true;
     new PhysicsAggregate(meteor, PhysicsShapeType.BOX, { mass: 0, restitution: 0 }, scene);
 
+    meteor.metadata.lastPosition.copyFrom(meteor.position);
 
     return meteor;
 }
