@@ -1,5 +1,5 @@
 import {Scene} from "@babylonjs/core/scene";
-import {Vector3} from "@babylonjs/core/Maths/math.vector";
+import {Quaternion, Vector3} from "@babylonjs/core/Maths/math.vector";
 import {HemisphericLight} from "@babylonjs/core/Lights/hemisphericLight";
 import 'babylonjs-loaders';
 import {HavokPlugin} from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
@@ -57,6 +57,13 @@ export class SceneNiveau3 implements CreateSceneClass {
     private readonly PROJECTILE_SPEED: number = 50;
     private readonly PROJECTILE_MAX_LIFETIME_MS: number = 3000;
 
+    private swordSwingSounds: Sound[] = [];
+    private lastSwordSwingSoundIndex: number = -1;
+    private readonly SWORD_SWING_ANGULAR_VELOCITY_THRESHOLD: number = 2.5;
+    private readonly SWORD_SWING_COOLDOWN_MS: number = 250;
+    private lastSwingTimes: { [controllerId: string]: number } = {};
+    private previousControllerRotations: { [controllerId: string]: Quaternion } = {};
+    private swords: AbstractMesh[] = [];
 
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
@@ -333,7 +340,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         let part2StartTime: number | null = null;
         let part2Started = false;
         const meteores: AbstractMesh[] = [];
-        const swords: Mesh[] = [];
+      //  const swords: Mesh[] = [];
         let partie = 1;
         let gameProgressZ = 0;
         let part3StartTime: number | null = null;
@@ -345,6 +352,22 @@ export class SceneNiveau3 implements CreateSceneClass {
             loop: false,
             autoplay: false,
             volume: 0.4
+        });
+
+        const swordSoundFiles = [
+            "/asset/sounds/sword_swing_1.wav",
+            "/asset/sounds/sword_swing_2.wav",
+            "/asset/sounds/sword_swing_3.wav",
+            "/asset/sounds/sword_swing_4.wav",
+            "/asset/sounds/sword_swing_5.wav"
+        ];
+        swordSoundFiles.forEach((filePath, index) => {
+            const sound = new Sound(`swordSwing${index}`, filePath, scene, null, {
+                loop: false,
+                autoplay: false,
+                volume: 0.4
+            });
+            this.swordSwingSounds.push(sound);
         });
 
         const spawnObstaclesIfNeeded = (currentProgressZ: number) => {
@@ -364,6 +387,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         //partie 2
         xr.input.onControllerAddedObservable.add((controller) => {
             (controller as any).aimNode = null;
+            (controller as any).hasSword = false;
 
             controller.onMotionControllerInitObservable.add((motionController) => {
                 if (controller.inputSource.handedness === 'right') {
@@ -392,6 +416,10 @@ export class SceneNiveau3 implements CreateSceneClass {
                             }
                         });
                     }
+                }
+                if (controller.grip && controller.grip.rotationQuaternion) {
+                    this.previousControllerRotations[controller.uniqueId] = controller.grip.rotationQuaternion.clone();
+                    this.lastSwingTimes[controller.uniqueId] = 0;
                 }
             });
         });
@@ -697,8 +725,14 @@ export class SceneNiveau3 implements CreateSceneClass {
                     part3Started = true; part3StartTime = Date.now(); console.log("Partie 3 : Attaque à l'épée !");
                     xr.input.controllers.forEach((controller) => {
                         if (controller.grip) {
-                            if (!swords.some(s => s.parent === controller.grip)) {
-                                swords.push(createSword(controller, scene));
+                            const existingSword = this.swords.find(s => s.parent === controller.grip);
+                            if (!existingSword) {
+                                const sword = createSword(controller, scene);
+                                this.swords.push(sword);
+                                (controller as any).hasSword = true;
+                                if (controller.grip.rotationQuaternion) {
+                                    this.previousControllerRotations[controller.uniqueId] = controller.grip.rotationQuaternion.clone();
+                                }
                             }
                         }
                     });
@@ -711,7 +745,8 @@ export class SceneNiveau3 implements CreateSceneClass {
                 if (elapsedPart3Check >= timerpart3) {
                     console.log("Fin du niveau (Partie 3 terminée)"); partie = 4;
                     for (let i = meteores.length - 1; i >= 0; i--) { disposeMeteor(meteores[i], meteores, i, "part transition 3->End");}
-                    swords.forEach(s => s.dispose()); swords.length = 0;
+                    this.swords.forEach(s => s.dispose());
+                    this.swords.length = 0;
                     return;
                 }
                 const spawnInterval = Math.max(500, 2000 - ((2000 - 500) * (elapsedPart3Check / timerpart3)));
@@ -722,16 +757,55 @@ export class SceneNiveau3 implements CreateSceneClass {
                     if (meteor) meteores.push(meteor);
                 }
                 const meteorSpeed = 2.0;
+
+                if (this.swordSwingSounds.length > 0) {
+                    xr.input.controllers.forEach(controller => {
+                        if ((controller as any).hasSword && controller.grip && controller.grip.rotationQuaternion) {
+                            const controllerId = controller.uniqueId;
+                            const currentRotation = controller.grip.rotationQuaternion;
+                            const previousRotation = this.previousControllerRotations[controllerId];
+
+                            if (previousRotation) {
+                                const diffQuaternion = currentRotation.multiply(Quaternion.Inverse(previousRotation));
+                                let angleChange = 2 * Math.acos(Math.min(1, Math.abs(diffQuaternion.w)));
+                                if (angleChange > Math.PI) angleChange = (2 * Math.PI) - angleChange;
+
+                                const angularSpeed = angleChange / deltaTime;
+
+                                if (angularSpeed > this.SWORD_SWING_ANGULAR_VELOCITY_THRESHOLD) {
+                                    const now = Date.now();
+                                    if (now - (this.lastSwingTimes[controllerId] || 0) > this.SWORD_SWING_COOLDOWN_MS) {
+                                        this.lastSwordSwingSoundIndex = (this.lastSwordSwingSoundIndex + 1) % this.swordSwingSounds.length;
+                                        const soundToPlay = this.swordSwingSounds[this.lastSwordSwingSoundIndex];
+
+                                        const swordMesh = this.swords.find(s => s.parent === controller.grip);
+                                        if (swordMesh && soundToPlay) {
+                                            soundToPlay.attachToMesh(swordMesh);
+                                        }
+                                        soundToPlay?.play();
+                                        this.lastSwingTimes[controllerId] = now;
+                                    }
+                                }
+                            }
+                            if(currentRotation) {
+                                this.previousControllerRotations[controllerId] = currentRotation.clone();
+                            }
+                        }
+                    });
+                }
+
                 for (let i = meteores.length - 1; i >= 0; i--) {
                     const meteor = meteores[i];
-                    if (!meteor || meteor.isDisposed()) { meteores.splice(i, 1); continue; }
-
-                    if (scene.metadata.gameTime - meteor.metadata.spawnTime > MAX_METEOR_LIFETIME_MS) {
-                        disposeMeteor(meteor, meteores, i, "lifetime exceeded"); continue;
+                    if (!meteor || meteor.isDisposed()) {
+                        meteores.splice(i, 1);
+                        continue;
                     }
 
-                    // @ts-ignore
-                    const oldPos = meteor.position.clone();
+                    if (scene.metadata.gameTime - meteor.metadata.spawnTime > MAX_METEOR_LIFETIME_MS) {
+                        disposeMeteor(meteor, meteores, i, "lifetime exceeded (P3)");
+                        continue;
+                    }
+
                     const direction = platform.position.subtract(meteor.position).normalize();
                     meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
 
@@ -743,26 +817,36 @@ export class SceneNiveau3 implements CreateSceneClass {
                         meteor.metadata.lastPosition.copyFrom(meteor.position);
                     }
                     if (meteor.metadata.stationaryAccumulator > MAX_STATIONARY_TIME_MS) {
-                        disposeMeteor(meteor, meteores, i, "inactivity"); continue;
+                        disposeMeteor(meteor, meteores, i, "inactivity (P3)");
+                        continue;
                     }
 
                     if (meteor.intersectsMesh(cameraHitbox, false)) {
-                        disposeMeteor(meteor, meteores, i, "hit player (P3)"); continue;
+                        disposeMeteor(meteor, meteores, i, "hit player (P3)");
+                        continue;
                     }
-                    for (let s = swords.length - 1; s >= 0; s--) {
-                        const sword = swords[s];
+
+                    for (let s = this.swords.length - 1; s >= 0; s--) {
+                        const sword = this.swords[s];
+                        if (sword.isDisposed()) {
+                            this.swords.splice(s,1);
+                            continue;
+                        }
                         if (meteor.intersectsMesh(sword, false)) {
                             meteor.metadata.hits = (meteor.metadata.hits || 0) + 3;
-                            // console.log(`Météore touché par épée : ${meteor.metadata.hits} fois`);
                             meteor.scaling.scaleInPlace(0.50);
                             if (meteor.metadata.hits >= 3) {
                                 disposeMeteor(meteor, meteores, i, "destroyed by sword (P3)");
-                                break;
-                            }
+                                //gotoNextMeteorLoopIteration: break;  }
                         }
                     }
+
                 }
-            } else if (partie === 4) {
+
+
+            }
+            }
+            else if (partie === 4) {
                 if (this.distanceText && this.distanceText.text !== "NIVEAU TERMINÉ !") {
                     this.distanceText.text = "NIVEAU TERMINÉ !";
                 }
@@ -1036,6 +1120,7 @@ function createSword(controller: WebXRInputSource, scene: Scene): Mesh {
 
     if (controller.grip) {
         sword.parent = controller.grip;
+        sword.rotation.x = Tools.ToRadians(15);
     }
     sword.isPickable = false;
     return sword;
