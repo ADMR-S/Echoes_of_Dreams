@@ -168,7 +168,7 @@ export class Player{
 
             //this.visualizeRay(cameraRay, scene);
             var currentOffset = distance/20;
-            const maxIterations =3;
+            const maxIterations =5;
             for(let i = 0; i < maxIterations; i++){
                 const offsetLen = ray.direction.scale(-currentOffset/ray.direction.length()).length();
                 this.resizeObject(objectPickable, distance, offsetLen);
@@ -203,6 +203,7 @@ export class Player{
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
+                        objectPickable.mesh.refreshBoundingInfo(true, true); 
                         console.log("Max iterations reached, using initial positioning");
                         console.log("Distance to target:", distance, "Offset distance:",ray.direction.scale(-currentOffset).length());
                         

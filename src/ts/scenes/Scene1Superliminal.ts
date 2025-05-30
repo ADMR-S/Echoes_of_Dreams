@@ -1,12 +1,10 @@
-// IMPLEMENTATION D'ADAM INSPIREE DES EXEMPLES DE BABYLONJS
-
 import { Scene } from "@babylonjs/core/scene";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 //import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
 // If you don't need the standard material you will still need to import it since the scene requires it.
-//import "@babylonjs/core/Materials/standardMaterial";
+import "@babylonjs/core/Materials/standardMaterial";
 import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { havokModule } from "../externals/havok.ts";
