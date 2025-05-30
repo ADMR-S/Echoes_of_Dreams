@@ -260,6 +260,7 @@ export class Player{
                     }
                 }
                 else if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
+                    console.log("No target point provided, using initial distance and scaling.");
                     const scaleFactor = objectPickable.mesh.scaling.clone().length()/this.selectedObjectOriginalScaling.length()
                     objectPickable.mesh.position = camera.position.add(ray.direction.scale((this.selectedObjectInitialDistance*scaleFactor- offsetDistance)/ray.direction.length()));
                 }
