@@ -312,40 +312,39 @@ export class Player{
     }
 
     checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
-    const myBoundingInfo = objectPickable.mesh.getBoundingInfo();
-    const myCenter = myBoundingInfo.boundingBox.centerWorld;
-    const myRadius = myBoundingInfo.boundingBox.extendSize.length();
+        const myBoundingInfo = objectPickable.mesh.getBoundingInfo();
+        const myMin = myBoundingInfo.boundingBox.minimumWorld;
+        const myMax = myBoundingInfo.boundingBox.maximumWorld;
 
-    const scene = objectPickable.mesh.getScene();
-    const otherMeshes = scene.meshes.filter(mesh =>
-        mesh !== objectPickable.mesh &&
-        mesh.name !== "skyBox" &&
-        mesh.name !== "laserPointer" &&
-        mesh.name !== "rotationCone" &&
-        !mesh.name.toLowerCase().includes("joint") &&
-        !mesh.name.toLowerCase().includes("teleportation") &&
-        !mesh.name.toLowerCase().includes("hand")
-    );
-
-    for (const mesh of otherMeshes) {
-        if (!mesh.getBoundingInfo) continue;
-        const otherBoundingInfo = mesh.getBoundingInfo();
-        if (!otherBoundingInfo) continue;
-        const otherBox = otherBoundingInfo.boundingBox;
-
-        // --- Sphere vs Box intersection ---
-        // Clamp sphere center to box
-        const clamped = new Vector3(
-            Math.max(otherBox.minimumWorld.x, Math.min(myCenter.x, otherBox.maximumWorld.x)),
-            Math.max(otherBox.minimumWorld.y, Math.min(myCenter.y, otherBox.maximumWorld.y)),
-            Math.max(otherBox.minimumWorld.z, Math.min(myCenter.z, otherBox.maximumWorld.z))
+        const scene = objectPickable.mesh.getScene();
+        const otherMeshes = scene.meshes.filter(mesh =>
+            mesh !== objectPickable.mesh &&
+            mesh.name !== "skyBox" &&
+            mesh.name !== "laserPointer" &&
+            mesh.name !== "rotationCone" &&
+            !mesh.name.toLowerCase().includes("joint") &&
+            !mesh.name.toLowerCase().includes("teleportation") &&
+            !mesh.name.toLowerCase().includes("hand")
         );
-        const dist = myCenter.subtract(clamped).length();
-        if (dist < myRadius - 0.001) { // Use a small epsilon to avoid floating point issues
-            console.log("Sphere intersects box:", mesh.name);
-            return true;
+
+        for (const mesh of otherMeshes) {
+            if (!mesh.getBoundingInfo) continue;
+            const otherBoundingInfo = mesh.getBoundingInfo();
+            if (!otherBoundingInfo) continue;
+            const otherMin = otherBoundingInfo.boundingBox.minimumWorld;
+            const otherMax = otherBoundingInfo.boundingBox.maximumWorld;
+
+            // --- AABB vs AABB intersection ---
+            const intersects =
+                myMin.x <= otherMax.x && myMax.x >= otherMin.x &&
+                myMin.y <= otherMax.y && myMax.y >= otherMin.y &&
+                myMin.z <= otherMax.z && myMax.z >= otherMin.z;
+
+            if (intersects) {
+                console.log("AABB intersects box:", mesh.name);
+                return true;
+            }
         }
+        return false;
     }
-    return false;
-}
 }
