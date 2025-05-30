@@ -18,7 +18,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, WebXRControllerPhysics } from "@babylonjs/core";
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -39,6 +39,9 @@ import { Object3DPickable } from "../object/Object3DPickable";
 
 export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
+
+    private backgroundMusic: Sound | null = null;
+    
 
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext, player : Player): Promise<Scene> => {
@@ -166,6 +169,23 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         //@ts-ignore
         var lightBulb = createLightBulbPickable(scene, eventMask);
+
+        this.backgroundMusic = new Sound(
+                    "backgroundMusic",
+                    "/asset/sounds/backgroundScene1.ogg",
+                    scene,
+                    () => {
+                        if (this.backgroundMusic) {
+                            this.backgroundMusic.play();
+                            console.log("Musique de fond démarrée.");
+                        }
+                    },
+                    {
+                        loop: true,
+                        autoplay: false,
+                        volume: 0.6
+                    }
+                );
 
         return scene;
     };
