@@ -177,7 +177,7 @@ export class Player{
 
                 
                 // If offset length is greater than distance, break and put object close to camera
-                if (offsetLen > distance) {
+                if (currentOffset > distance) {
                     this.resizeObject(objectPickable, distance*0.2, 0);
                     objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
                     objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
