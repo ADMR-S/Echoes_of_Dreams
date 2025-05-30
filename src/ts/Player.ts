@@ -168,7 +168,7 @@ export class Player{
 
             //this.visualizeRay(cameraRay, scene);
             var currentOffset = distance/20;
-            const maxIterations =35;
+            const maxIterations =3;
             for(let i = 0; i < maxIterations; i++){
                 const offsetLen = ray.direction.scale(-currentOffset/ray.direction.length()).length();
                 this.resizeObject(objectPickable, distance, offsetLen);
@@ -220,7 +220,6 @@ export class Player{
                     }
                 }
             }
-
             
         });
     }
