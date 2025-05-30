@@ -1,15 +1,11 @@
 import {Scene} from "@babylonjs/core/scene";
-import {Quaternion, Vector3} from "@babylonjs/core/Maths/math.vector";
+import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {HemisphericLight} from "@babylonjs/core/Lights/hemisphericLight";
 import 'babylonjs-loaders';
-//import "@babylonjs/core/Physics/physicsEngineComponent";
-// If you don't need the standard material you will still need to import it since the scene requires it.
-//import "@babylonjs/core/Materials/standardMaterial";
 import {PhysicsMotionType} from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import {HavokPlugin} from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import {havokModule} from "../externals/havok";
 import {CreateSceneClass} from "../createScene";
-
 
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
@@ -24,20 +20,17 @@ import {
     Particle,
     ParticleSystem,
     PhysicsAggregate,
-    PhysicsPrestepType,
     PhysicsShapeType,
     PointerDragBehavior,
     Ray,
     Scalar, Sound,
-    StandardMaterial,
-    WebXRControllerPhysics
+    StandardMaterial
 } from "@babylonjs/core";
 
 import {AbstractEngine} from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
 
 import {WebXRInputSource} from "@babylonjs/core/XR/webXRInputSource";
-import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 import {SceneLoader} from "@babylonjs/core/Loading/sceneLoader";
 import {AbstractMesh} from "@babylonjs/core/Meshes/abstractMesh";
 import {CubeTexture} from "@babylonjs/core/Materials/Textures/cubeTexture";
@@ -54,6 +47,7 @@ export class SceneNiveau3 implements CreateSceneClass {
     private scoreFeedbackText: TextBlock | undefined;
     private scoreFeedbackTimeout: number | undefined;
     private backgroundMusic: Sound | null = null;
+    private meteorCounter = 0;
 
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
@@ -168,7 +162,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         const obstacles: AbstractMesh [] = [];
         let nextObstacleSpawnZ = 20;
         const spawnAheadDistance = 100;
-        const maxLevelZ = 700;
+        const maxLevelZ = 100;
         const obstacleSpawnIntervalMin = 4;
         const obstacleSpawnIntervalMax = 8;
         let obstacleCounter = 0;
@@ -204,6 +198,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                 // @ts-ignore
                 obstacle = glbMeshTemplate.createInstance("obstacleStarInstance_" + obstacleCounter);
                 if (obstacle) {
+                    obstacle.setEnabled(true);
                     (obstacle as any).particleAura = createRotatingRedAura(scene, obstacle);
                     (obstacle as any).obstacleGameType = "star";
                     soundFile = "/asset/sounds/starSparkle.mp3";
@@ -326,7 +321,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         let meteorSpawnTimer = 0; // en ms
         let part2StartTime: number | null = null;
         let part2Started = false;
-        const meteores: Mesh[] = [];
+        const meteores: AbstractMesh[] = [];
         const swords: Mesh[] = [];
         let partie = 1;
         let gameProgressZ = 0;
@@ -549,8 +544,15 @@ export class SceneNiveau3 implements CreateSceneClass {
                     projectiles.forEach(p => p.dispose());
                     projectiles.length = 0;
                     meteores.forEach(m => {
-                        if (m.material) m.material.dispose();
-                        m.dispose();
+                        if ((m as any).ambientSound) {
+                            (m as any).ambientSound.stop(); (m as any).ambientSound.dispose();
+                        }
+                        if ((m as any).particleSmokeTrail) {
+                            (m as any).particleSmokeTrail.dispose(true,true);
+                        }
+                        if (m.material)
+                            m.material.dispose();
+                        m.dispose(false, true);
                     });
                     meteores.length = 0;
                     return;
@@ -560,8 +562,9 @@ export class SceneNiveau3 implements CreateSceneClass {
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
-                    const meteor = spawnMeteor(scene, platform);
-                    meteores.push(meteor);
+                    const meteor = spawnMeteor(scene, platform, obstacleTemplates, this.meteorCounter++);
+                    if (meteor)
+                        meteores.push(meteor);
                 }
 
                 const meteorSpeed = 1.5;
@@ -569,20 +572,34 @@ export class SceneNiveau3 implements CreateSceneClass {
                 // Mise à jour de chaque météore
                 for (let i = meteores.length - 1; i >= 0; i--) {
                     const meteor = meteores[i];
-                    if (!meteor) { continue; }
+                    if (!meteor || meteor.isDisposed()) {
+                        meteores.splice(i,1);
+                        continue;
+                    }
+
                     const direction = platform.position.subtract(meteor.position).normalize();
                     meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
 
                     if (meteor.intersectsMesh(cameraHitbox, false)) {
-                        console.log("Un météore a touché le joueur !");
-                        meteor.dispose();
+                        //console.log("Un météore a touché le joueur !");
+                        if ((meteor as any).ambientSound) {
+                            (meteor as any).ambientSound.stop();
+                            (meteor as any).ambientSound.dispose();
+                        }
+                        if ((meteor as any).particleSmokeTrail) {
+                            (meteor as any).particleSmokeTrail.dispose(true,true);
+                        }
+                        meteor.dispose(false, true);
                         meteores.splice(i, 1);
                         continue;
                     }
 
                     for (let j = projectiles.length - 1; j >= 0; j--) {
                         const projectile = projectiles[j];
-                        if (!projectile) { continue; }
+                        if (!projectile || projectile.isDisposed()) {
+                            projectiles.splice(j,1);
+                            continue;
+                        }
                         if (meteor.intersectsMesh(projectile, false)) {
                             projectile.dispose();
                             projectiles.splice(j, 1);
@@ -590,15 +607,20 @@ export class SceneNiveau3 implements CreateSceneClass {
                             meteor.metadata.hits = (meteor.metadata.hits || 0) + 1;
                             console.log(`Météore touché : ${meteor.metadata.hits} fois`);
 
-                            const meteorMat = (meteor.material as StandardMaterial);
-                            if (meteor.metadata.hits === 1) {
-                                meteorMat.diffuseColor = new Color3(1, 0.5, 0.5);
-                            } else if (meteor.metadata.hits === 2) {
-                                meteorMat.diffuseColor = new Color3(1, 0.3, 0.3);
-                            } else if (meteor.metadata.hits >= 3) {
-                                console.log("Météore explosé !");
-                                //TODO: explosion
-                                meteor.dispose();
+                            const shrinkFactor = 0.75;
+                            meteor.scaling.scaleInPlace(shrinkFactor);
+
+                            if (meteor.metadata.hits >= 3) {
+                                //console.log("Météore explosé !");
+                                //TODO: effet d'explosion ?
+                                if ((meteor as any).ambientSound) {
+                                    (meteor as any).ambientSound.stop();
+                                    (meteor as any).ambientSound.dispose(); }
+                                if ((meteor as any).particleSmokeTrail) {
+                                    (meteor as any).particleSmokeTrail.dispose(true,true);
+                                }
+
+                                meteor.dispose(false, true);
                                 meteores.splice(i, 1);
                                 break;
                             }
@@ -606,6 +628,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                     }
                 }
             }
+            // Partie 3
             else if (partie == 3) {
                 if (!part3Started) {
                     part3Started = true;
@@ -642,7 +665,24 @@ export class SceneNiveau3 implements CreateSceneClass {
                 const elapsedPart3Check = Date.now() - (part3StartTime as number);
                 if (elapsedPart3Check >= timerpart3) {
                     console.log("Fin du niveau (Partie 3 terminée)");
-                    //TODO fin
+                    meteores.forEach(m => {
+                        //Nettoyage
+                        if ((m as any).ambientSound) {
+                            (m as any).ambientSound.stop();
+                            (m as any).ambientSound.dispose();
+                        }
+                        if ((m as any).particleSmokeTrail) {
+                            (m as any).particleSmokeTrail.dispose(true,true);
+                        }
+                        if (m.material) m.material.dispose();
+                        m.dispose(false, true);
+                    });
+                    meteores.length = 0;
+                    swords.forEach(
+                        s => s.dispose()
+                    );
+                    swords.length = 0;
+                    // TODO: Logique de fin de niveau
                     return;
                 }
 
@@ -650,8 +690,10 @@ export class SceneNiveau3 implements CreateSceneClass {
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
-                    const meteor = spawnMeteor(scene, platform);
-                    meteores.push(meteor);
+                    const meteor = spawnMeteor(scene, platform, obstacleTemplates, this.meteorCounter++);
+                    if (meteor instanceof AbstractMesh) {
+                        meteores.push(meteor);
+                    }
                 }
 
                 const meteorSpeed = 1.5;
@@ -675,15 +717,21 @@ export class SceneNiveau3 implements CreateSceneClass {
                             meteor.metadata.hits = (meteor.metadata.hits || 0) + 3;
                             console.log(`Météore touché par épée : ${meteor.metadata.hits} fois`);
 
-                            const meteorMat = (meteor.material as StandardMaterial);
-                            if (meteor.metadata.hits === 1) {
-                                meteorMat.diffuseColor = new Color3(1, 0.5, 0.5);
-                            } else if (meteor.metadata.hits === 2) {
-                                meteorMat.diffuseColor = new Color3(1, 0.3, 0.3);
-                            } else if (meteor.metadata.hits >= 3) {
-                                console.log("Météore explosé !");
-                                //TODO: explosion
-                                meteor.dispose();
+                            const shrinkFactor = 0.50; // Réduit la taille à 50% (plus gros impact visuel avant destruction)
+                            meteor.scaling.scaleInPlace(shrinkFactor);
+
+
+                            if (meteor.metadata.hits >= 3) {
+                                console.log("Météore explosé par épée!");
+                                //TODO: effet d'explosion ?
+                                if ((meteor as any).ambientSound) {
+                                    (meteor as any).ambientSound.stop();
+                                    (meteor as any).ambientSound.dispose();
+                                }
+                                if ((meteor as any).particleSmokeTrail) {
+                                    (meteor as any).particleSmokeTrail.dispose(true,true);
+                                }
+                                meteor.dispose(false, true);
                                 meteores.splice(i, 1);
                                 break;
                             }
@@ -798,27 +846,73 @@ export class SceneNiveau3 implements CreateSceneClass {
 export default new SceneNiveau3();
 
 
-function spawnMeteor(scene: Scene, platform: Mesh): Mesh {
+function spawnMeteor(scene: Scene, platform: Mesh, obstacleTemplates: AbstractMesh[], meteorId: number): AbstractMesh | null {
+    if (!obstacleTemplates || obstacleTemplates.length === 0) {
+        console.warn("spawnMeteor: obstacleTemplates est vide ou non fourni. Impossible de créer un météore stylisé.");
+        return null; // Ne pas créer de météore si les templates ne sont pas disponibles
+    }
 
-    const meteor = MeshBuilder.CreateSphere("obstacle", { diameter: 2 }, scene);
-    const meteorMat = new StandardMaterial("meteorMat", scene);
-    meteorMat.diffuseColor = new Color3(1, 1, 0);
-    meteor.material = meteorMat;
+    const randomIndex = Math.floor(Math.random() * obstacleTemplates.length);
+    const selectedTemplate = obstacleTemplates[randomIndex];
+    if (!selectedTemplate) {
+        console.warn("spawnMeteor: Le template d'obstacle sélectionné est indéfini.");
+        return null;
+    }
 
-    meteor.metadata = { hits: 0 };
+    // @ts-ignore // selectedTemplate vient de meshes[1] qui est un AbstractMesh, createInstance est valide.
+    const meteor = selectedTemplate.createInstance("meteorInstance_" + meteorId);
 
-    const spawnDistance = 100;
-    const heightOffset = (Math.random() - 0.5) * 20;
-    const zOffset = (Math.random() - 0.5) * 40;
+    if (!meteor) {
+        console.warn("spawnMeteor: Échec de la création d'une instance de météore.");
+        return null;
+    }
+
+    meteor.setEnabled(true);
+    // La rotation et la mise à l'échelle initiales sont héritées du template.
+    // Si vous avez besoin d'une mise à l'échelle spécifique pour les météores différente des obstacles de la partie 1:
+    // meteor.scaling.setAll(0.0X); // Par exemple, si la taille doit être ajustée
+
+    (meteor as any).particleSmokeTrail = createBlackSmokeTrail(scene, meteor);
+    (meteor as any).obstacleGameType = "penalty"; // Pour la cohérence, bien que non utilisé pour le score ici
+    meteor.metadata = { hits: 0 }; // Important pour la logique de rétrécissement
+
+    const soundFile = "/asset/sounds/boo.mp3";
+    const meteorSound = new Sound(
+        "sound_meteor_" + meteor.uniqueId,
+        soundFile,
+        scene,
+        () => {
+            if (meteor && !meteor.isDisposed() && meteorSound) {
+                meteorSound.attachToMesh(meteor);
+                meteorSound.play();
+            }
+        },
+        { loop: true, autoplay: false, volume: 0.2, spatialSound: true, distanceModel: "linear", maxDistance: 50, rolloffFactor: 1.2 }
+    );
+    (meteor as any).ambientSound = meteorSound;
+
+    // Positionnement du météore (logique existante)
+    //const spawnDistance = 100; // Distance de spawn par rapport au joueur
+    const angleXZ = Math.random() * Math.PI * 2; // Angle aléatoire sur le plan XZ
+    const randomRadius = Math.random() * 30 + 20; // Rayon aléatoire pour la distance horizontale
+
+    const xOffset = Math.cos(angleXZ) * randomRadius;
+    const zOffset = Math.sin(angleXZ) * randomRadius;
+    const heightOffset = (Math.random() - 0.5) * 30 + 5; // Hauteur au-dessus ou au niveau du joueur
 
     meteor.position = new Vector3(
-        platform.position.x - spawnDistance,
-        platform.position.y + heightOffset,
+        platform.position.x + xOffset,
+        platform.position.y + heightOffset, // Spawn plus haut
         platform.position.z + zOffset
     );
+    meteor.isPickable = true; // Nécessaire pour intersectsMesh
+
+    new PhysicsAggregate(meteor, PhysicsShapeType.BOX, { mass: 0, restitution: 0 }, scene);
+
 
     return meteor;
 }
+
 function createSword(controller: WebXRInputSource, scene: Scene): Mesh {
     const sword = MeshBuilder.CreateBox("sword", { height: 1.2, width: 0.1, depth: 0.1 }, scene);
     sword.position = new Vector3(0, -0.3, 0.2);
@@ -863,6 +957,7 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles
 }
 
 // @ts-ignore
+/*
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
@@ -873,8 +968,10 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
         });
     });
 }
+*/
 
 // @ts-ignore
+/*
 function addKeyboardControls(xr: any, moveSpeed: number) {
 
     window.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -901,8 +998,10 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
         }
     });
 }
+*/
 
 // @ts-ignore
+/*
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
     xr.input.onControllerAddedObservable.add((controller: any) => {        console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
@@ -938,8 +1037,6 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 controllerAggregate.body.setCollisionCallbackEnabled(true);
                 controllerAggregate.body.setEventMask(eventMask);
 
-
-
                 controllerMesh.isVisible = false;
                 controllerMesh.isPickable = false;
 
@@ -955,6 +1052,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
         });
     });
 }
+*/
 
 function createRotatingRedAura(scene: Scene, parentObstacle: AbstractMesh): ParticleSystem {
 
@@ -1025,6 +1123,7 @@ function createRotatingRedAura(scene: Scene, parentObstacle: AbstractMesh): Part
     particleSystem.start();
     return particleSystem;
 }
+
 function createBlackSmokeTrail(scene: Scene, emitterMesh: AbstractMesh): ParticleSystem {
     const particleSystem = new ParticleSystem("distinctRearCloud_" + emitterMesh.name, 2000, scene); // Nom pour refléter le changement
 
