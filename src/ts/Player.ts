@@ -137,10 +137,7 @@ export class Player{
             // Pick the first mesh hit by the ray (ignoring the camera itself)
             const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh &&mesh != this.selectedObject && mesh.isPickable);
             
-            if(pickResult?.pickedMesh){
-                // If a mesh is picked, log the details
-                //console.log("Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId);
-            }
+            console.log("Ray picked mesh:", pickResult?.pickedMesh?.name, "uniqueId:", pickResult?.pickedMesh?.uniqueId);
 
 
             var distance = 0;
@@ -227,12 +224,14 @@ export class Player{
 
     resizeObject(objectPickable: Object3DPickable, distance : number, offsetDistance : number) {
         if(this.selectedObjectInitialDistance && this.selectedObjectOriginalScaling){
+
             const scaleFactor = this.calculateScaleFactor(this.selectedObjectInitialDistance, distance, offsetDistance);
             objectPickable.mesh.scaling.copyFrom(this.selectedObjectOriginalScaling.scale(scaleFactor));
             
             //Prevent meshes size to reach 0 : 
             if(objectPickable.mesh.scaling.x < 0.001 || objectPickable.mesh.scaling.y < 0.001 || objectPickable.mesh.scaling.z < 0.001){
                 objectPickable.mesh.scaling = new Vector3(0.001, 0.001, 0.001);
+                console.log("RESIZE : Object scaling too small, setting to minimum size.");
             }
             if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
                 // Clamp intensity to a maximum of 100
