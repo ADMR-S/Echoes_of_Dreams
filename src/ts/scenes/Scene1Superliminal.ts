@@ -230,8 +230,12 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
     });
 }
 
+
 // Add movement with left joystick
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
+    // Store rotation state
+    let rotationInput = 0;
+
     xr.input.onControllerAddedObservable.add((controller: any) => {        
         console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
@@ -240,40 +244,25 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 if (xrInput) {
                     xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
                         const speed = 0.05;
-                        // Move relative to camera orientation
-                        const camera = xr.baseExperience.camera;
-                        const forward = camera.getDirection(new Vector3(0, 0, 1));
-                        const right = camera.getDirection(new Vector3(1, 0, 0));
-                        // Remove y component to keep movement horizontal
-                        forward.y = 0;
-                        right.y = 0;
-                        forward.normalize();
-                        right.normalize();
-                        camera.position.addInPlace(forward.scale(-axisValues.y * speed));
-                        camera.position.addInPlace(right.scale(axisValues.x * speed));
+                        xr.baseExperience.camera.position.x += axisValues.x * speed;
+                        xr.baseExperience.camera.position.z -= axisValues.y * speed;
                     });
                 }
-                // --- Disable teleportation feature for left controller ---
-                const teleportation = xr.baseExperience.featuresManager.getEnabledFeature("xr-teleportation");
-                if (teleportation && teleportation.attachedController && teleportation.attachedController === controller) {
-                    teleportation.detach();
-                }
-
-                // --- Jump on A button press ---
-                const aButton = motionController.getComponent("a-button");
-                if (aButton) {
-                    aButton.onButtonStateChangedObservable.add((button: any) => {
-                        if (button.pressed) {
-                            // Apply jump to camera (simple upward velocity)
-                            const camera = xr.baseExperience.camera;
-                            // If camera has a physics impostor/body, apply velocity, else just move up
-                            if ((camera as any).physicsImpostor) {
-                                (camera as any).physicsImpostor.setLinearVelocity(new Vector3(0, 5, 0));
-                            } else if ((camera as any).body && (camera as any).body.setLinearVelocity) {
-                                (camera as any).body.setLinearVelocity(new Vector3(0, 5, 0));
-                            } else {
-                                camera.position.y += 1; // fallback: move up by 1 unit
-                            }
+            });
+        }
+        // Right controller:
+        if (controller.inputSource.handedness === "right") {
+            controller.onMotionControllerInitObservable.add((motionController: any) => {
+                const xrInput = motionController.getComponent("xr-standard-thumbstick");
+                if (xrInput) {
+                    xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
+                        // axisValues.x is usually for left/right rotation
+                        rotationInput = axisValues.x;
+                    });
+                    // Reset rotation input when released
+                    xrInput.onButtonChangedObservable.add((buttonState: any) => {
+                        if (!buttonState.pressed) {
+                            rotationInput = 0;
                         }
                     });
                 }
@@ -281,6 +270,13 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
         }
     });
 
+    // Smooth rotation in the render loop
+    scene.onBeforeRenderObservable.add(() => {
+        const rotationSpeed = 0.04; // Adjust for desired sensitivity
+        if (Math.abs(rotationInput) > 0.01) {
+            xr.baseExperience.camera.rotation.y -= rotationInput * rotationSpeed;
+        }
+    });
 
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {

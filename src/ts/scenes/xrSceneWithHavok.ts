@@ -168,9 +168,6 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 
 // Add movement with left joystick
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
-    // Store rotation state
-    let rotationInput = 0;
-
     xr.input.onControllerAddedObservable.add((controller: any) => {        
         console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
@@ -184,32 +181,6 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                     });
                 }
             });
-        }
-        // Right controller:
-        if (controller.inputSource.handedness === "right") {
-            controller.onMotionControllerInitObservable.add((motionController: any) => {
-                const xrInput = motionController.getComponent("xr-standard-thumbstick");
-                if (xrInput) {
-                    xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
-                        // axisValues.x is usually for left/right rotation
-                        rotationInput = axisValues.x;
-                    });
-                    // Reset rotation input when released
-                    xrInput.onButtonChangedObservable.add((buttonState: any) => {
-                        if (!buttonState.pressed) {
-                            rotationInput = 0;
-                        }
-                    });
-                }
-            });
-        }
-    });
-
-    // Smooth rotation in the render loop
-    scene.onBeforeRenderObservable.add(() => {
-        const rotationSpeed = 0.04; // Adjust for desired sensitivity
-        if (Math.abs(rotationInput) > 0.01) {
-            xr.baseExperience.camera.rotation.y -= rotationInput * rotationSpeed;
         }
     });
 
