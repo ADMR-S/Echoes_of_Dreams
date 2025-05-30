@@ -10,7 +10,6 @@ Scene 1 :
 Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
 Désactiver rotation par cran de la caméra liée à la téléportation
 La musique boucle mal, changer
-Réparer Skybox
 Ajouter effets de caméra lorsqu'un gros objet tombe au sol
     + Effets sonores
 Ajouter un corps physique à la caméra pour empêcher de passer à travers les murs
