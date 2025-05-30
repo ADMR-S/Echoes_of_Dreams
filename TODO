@@ -24,3 +24,11 @@ Créer sortie du niveau, qui produit une musique
 Intégrer puzzle géant au 1er niveau
 
 Parvenir à passer d'un niveau à l'autre
+
+Instructions :
+Stick gauche : Se déplacer
+Stick droit : Orienter la caméra (gauche/droite)
+Activer/désactiver la téléportation avec Y
+Sélectionner un objet (superliminal) avec X (s'il brille en violet)
+Gachette interne droite : Afficher la console XR pour debug
+Bouton A : Sauter (à venir)

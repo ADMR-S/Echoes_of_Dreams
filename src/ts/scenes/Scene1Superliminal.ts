@@ -302,7 +302,9 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
 
         if (Math.abs(rotationInput) > 0.01) {
             console.log("Rotation input: " + rotationInput);
-            xr.baseExperience.camera.rotation.x += rotationInput * rotationSpeed;
+            console.log("Camera rotation before: " + camera.rotation.x);
+            camera.rotation.x += rotationInput * rotationSpeed;
+            console.log("Camera rotation after: " + camera.rotation.x);
         }
         // Smooth movement relative to camera's facing direction
         if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
