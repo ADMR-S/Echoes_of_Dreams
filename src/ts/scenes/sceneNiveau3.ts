@@ -2,7 +2,6 @@ import {Scene} from "@babylonjs/core/scene";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {HemisphericLight} from "@babylonjs/core/Lights/hemisphericLight";
 import 'babylonjs-loaders';
-import {PhysicsMotionType} from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import {HavokPlugin} from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import {havokModule} from "../externals/havok";
 import {CreateSceneClass} from "../createScene";
@@ -24,7 +23,7 @@ import {
     PointerDragBehavior,
     Ray,
     Scalar, Sound,
-    StandardMaterial
+    StandardMaterial, TransformNode
 } from "@babylonjs/core";
 
 import {AbstractEngine} from "@babylonjs/core/Engines/abstractEngine";
@@ -36,6 +35,7 @@ import {AbstractMesh} from "@babylonjs/core/Meshes/abstractMesh";
 import {CubeTexture} from "@babylonjs/core/Materials/Textures/cubeTexture";
 import {Texture} from "@babylonjs/core/Materials/Textures/texture";
 import {AdvancedDynamicTexture, Control, Rectangle, TextBlock} from "@babylonjs/gui";
+import {Tools} from "@babylonjs/core/Misc/tools";
 
 
 export class SceneNiveau3 implements CreateSceneClass {
@@ -48,6 +48,15 @@ export class SceneNiveau3 implements CreateSceneClass {
     private scoreFeedbackTimeout: number | undefined;
     private backgroundMusic: Sound | null = null;
     private meteorCounter = 0;
+
+    private shootSound: Sound | null = null;
+    private isTriggerPressed: boolean = false;
+    private lastProjectileShotTime: number = 0;
+    private projectileFireRate: number = 120;
+    private projectiles: Mesh[] = [];
+    private readonly PROJECTILE_SPEED: number = 50;
+    private readonly PROJECTILE_MAX_LIFETIME_MS: number = 3000;
+
 
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext): Promise<Scene> => {
@@ -123,27 +132,29 @@ export class SceneNiveau3 implements CreateSceneClass {
         const glbResult = await SceneLoader.ImportMeshAsync("", "/asset/", "test10.glb", scene);
 
         const glbMeshTemplate = glbResult.meshes[1];
-        glbMeshTemplate.scaling.setAll(0.5);
-
-        glbMeshTemplate.setEnabled(false);
+        if (glbMeshTemplate) {
+            glbMeshTemplate.scaling.setAll(0.5);
+            glbMeshTemplate.setEnabled(false);
+        } else {
+            console.warn("erreur test10.glb");
+        }
 
 
         const obstacleAssetNames: string[] = [];
         for (let i = 1; i <= 9; i++) {
-            obstacleAssetNames.push(`obstacle (${i}).glb`); // Attention aux espaces dans les noms de fichiers
+            obstacleAssetNames.push(`obstacle (${i}).glb`);
         }
         const obstacleTemplates: AbstractMesh[] = [];
         for (const assetName of obstacleAssetNames) {
             try {
-                // Assurez-vous que le chemin "/asset/" est correct pour ces obstacles
                 const result = await SceneLoader.ImportMeshAsync("", "/asset/", assetName, scene);
-                const templateMesh = result.meshes[1] as AbstractMesh; // Ou result.meshes[1] selon la structure du GLB
+                const templateMesh = result.meshes[1] as AbstractMesh;
                 if (templateMesh) {
                     templateMesh.setEnabled(false);
                     templateMesh.rotationQuaternion = null;
 
                    // templateMesh.rotation.z = Math.PI;
-                    templateMesh.rotation.x = Math.PI*1.5; // Exemple pour pivoter sur X
+                    templateMesh.rotation.x = Math.PI*1.5;
                     templateMesh.scaling.setAll(0.03);
 
                     // templateMesh.rotation.z = Math.PI;
@@ -163,12 +174,12 @@ export class SceneNiveau3 implements CreateSceneClass {
         const obstacles: AbstractMesh [] = [];
         let nextObstacleSpawnZ = 20;
         const spawnAheadDistance = 100;
-        const maxLevelZ = 100;
+        const maxLevelZ = 700;
         const obstacleSpawnIntervalMin = 4;
         const obstacleSpawnIntervalMax = 8;
         let obstacleCounter = 0;
 
-        // Fonction pour créer un obstacle
+        // Fonction obstacle
         const createSingleObstacle = (spawnZ: number): AbstractMesh | null => {
             obstacleCounter++;
             let obstacle: AbstractMesh | null = null;
@@ -306,20 +317,19 @@ export class SceneNiveau3 implements CreateSceneClass {
 
 
         //timer when shooting
-        let timer = 0;
+       // let timer = 0;
         //interval
-        let interval = 300;
-        let forwardSpeed = 1.5;   // déplacement en z
-        let lateralSpeed = 0;   // sensibilité sur x
-        let verticalSpeed = 0;  // sensibilité sur y
+        let forwardSpeed = 1.5;
+        let lateralSpeed = 0;
+        let verticalSpeed = 0;
         let isDragging = false;
         let deltax = 0;
         let deltaz = 0;
         let currentTiltX = 0;
         let currentTiltZ = 0;
         let initialPosition = handlebar.position.clone();
-        const projectiles: Mesh[] = [];
-        let meteorSpawnTimer = 0; // en ms
+
+        let meteorSpawnTimer = 0;
         let part2StartTime: number | null = null;
         let part2Started = false;
         const meteores: AbstractMesh[] = [];
@@ -330,6 +340,13 @@ export class SceneNiveau3 implements CreateSceneClass {
         let part3Started = false;
         let timerpart2 = 180000;
         let timerpart3 = 180000;
+
+        this.shootSound = new Sound("shootSound", "/asset/sounds/laser_shoot.wav", scene, null, { // Assurez-vous d'avoir un fichier son ici
+            loop: false,
+            autoplay: false,
+            volume: 0.4
+        });
+
         const spawnObstaclesIfNeeded = (currentProgressZ: number) => {
 
             while (nextObstacleSpawnZ < currentProgressZ + spawnAheadDistance && nextObstacleSpawnZ < maxLevelZ) {
@@ -346,29 +363,37 @@ export class SceneNiveau3 implements CreateSceneClass {
         };
         //partie 2
         xr.input.onControllerAddedObservable.add((controller) => {
-            if (controller.inputSource.handedness === 'right') {
-                controller.onMotionControllerInitObservable.add((motionController) => {
+            (controller as any).aimNode = null;
+
+            controller.onMotionControllerInitObservable.add((motionController) => {
+                if (controller.inputSource.handedness === 'right') {
+                    const aimNodeParent = controller.pointer || controller.grip;
+                    if (aimNodeParent) {
+                        const aimNode = new TransformNode(`aimNode_${controller.uniqueId}`, scene);
+                        aimNode.parent = aimNodeParent;
+                        aimNode.rotation.x = Tools.ToRadians(-5);
+
+                        (controller as any).aimNode = aimNode;
+                    } else {
+                        console.warn("Impossible de trouver un parent (pointer ou grip) pour l'aimNode de la manette droite.");
+                    }
+
                     const triggerComponent = motionController.getComponent("xr-standard-trigger");
-                    console.log(triggerComponent);
-                    if (triggerComponent )  {
-                        console.log("test");
-
+                    if (triggerComponent) {
                         triggerComponent.onButtonStateChangedObservable.add((component) => {
-                            if (component.pressed && partie == 2) {
-                                console.log("test");
-                                if (Date.now() - timer < interval) {
-                                    return;
+                            if (partie === 2) {
+                                this.isTriggerPressed = component.pressed;
+                                if (this.isTriggerPressed && (Date.now() - this.lastProjectileShotTime > this.projectileFireRate)) {
+                                    this.shootProjectileInternal(controller, scene);
+                                    this.lastProjectileShotTime = Date.now();
                                 }
-                                else {
-                                    timer = Date.now();
-                                    shootProjectile(controller, scene, projectiles);
-
-                                }
+                            } else {
+                                this.isTriggerPressed = false;
                             }
                         });
                     }
-                });
-            }
+                }
+            });
         });
 
         this.backgroundMusic = new Sound(
@@ -384,7 +409,7 @@ export class SceneNiveau3 implements CreateSceneClass {
             {
                 loop: true,
                 autoplay: false,
-                volume: 0.6
+                volume: 0.5
             }
         );
 
@@ -401,6 +426,41 @@ export class SceneNiveau3 implements CreateSceneClass {
             if (scene.metadata && typeof scene.metadata.gameTime === 'number') {
                 scene.metadata.gameTime += dtMs;
             }
+            if (this.isTriggerPressed && partie === 2) {
+                if (Date.now() - this.lastProjectileShotTime > this.projectileFireRate) {
+                    const rightController = xr.input.controllers.find(c => c.inputSource.handedness === 'right');
+                    if (rightController) {
+                        this.shootProjectileInternal(rightController, scene);
+                        this.lastProjectileShotTime = Date.now();
+                    }
+                }
+            }
+
+            for (let i = this.projectiles.length - 1; i >= 0; i--) {
+                const projectile = this.projectiles[i];
+                if (projectile.isDisposed()) {
+                    this.projectiles.splice(i, 1);
+                    continue;
+                }
+
+                if (projectile.metadata && projectile.metadata.velocity) {
+                    const moveDistance = projectile.metadata.velocity.scale(deltaTime);
+                    projectile.position.addInPlace(moveDistance);
+
+                    const lifetime = scene.metadata.gameTime - projectile.metadata.spawnTime;
+                    const distanceFromOrigin = Vector3.Distance(projectile.position, xr.baseExperience.camera.globalPosition);
+
+                    if (lifetime > this.PROJECTILE_MAX_LIFETIME_MS || distanceFromOrigin > 200) {
+                        if ((projectile as any).projectileTrail) {
+                            (projectile as any).projectileTrail.stop();
+                            setTimeout(() => (projectile as any).projectileTrail?.dispose(true), 500);
+                        }
+                        projectile.dispose();
+                        this.projectiles.splice(i, 1);
+                    }
+                }
+            }
+
             const currentFrameForwardMovement = forwardSpeed * deltaTime;
 
             if (partie == 1) {
@@ -547,8 +607,8 @@ export class SceneNiveau3 implements CreateSceneClass {
                 if (elapsedPart2Check >= timerpart2) {
                     console.log("Fin de la Partie 2, début Partie 3");
                     partie = 3;
-                    projectiles.forEach(p => p.dispose());
-                    projectiles.length = 0;
+                    this.projectiles.forEach(p => p.dispose());
+                    this.projectiles.length = 0;
                     meteores.forEach(m => {
                         if ((m as any).ambientSound) {
                             (m as any).ambientSound.stop(); (m as any).ambientSound.dispose();
@@ -585,6 +645,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                         disposeMeteor(meteor, meteores, i, "lifetime exceeded");
                         continue;
                     }
+                    // @ts-ignore
                     const oldPos = meteor.position.clone();
                     const direction = platform.position.subtract(meteor.position).normalize();
                     meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
@@ -617,21 +678,15 @@ export class SceneNiveau3 implements CreateSceneClass {
                         continue;
                     }*/
 
-                    for (let j = projectiles.length - 1; j >= 0; j--) {
-                        const projectile = projectiles[j];
-                        if (!projectile || projectile.isDisposed()) {
-                            projectiles.splice(j, 1);
-                            continue;
-                        }
+                    for (let j = this.projectiles.length - 1; j >= 0; j--) {
+                        const projectile = this.projectiles[j];
+                        if (!projectile || projectile.isDisposed()) { this.projectiles.splice(j, 1); continue; }
                         if (meteor.intersectsMesh(projectile, false)) {
-                            projectile.dispose(); projectiles.splice(j, 1);
+                            if ((projectile as any).projectileTrail) { (projectile as any).projectileTrail.stop(); setTimeout(()=> (projectile as any).projectileTrail?.dispose(true), 500); }
+                            projectile.dispose(); this.projectiles.splice(j, 1);
                             meteor.metadata.hits = (meteor.metadata.hits || 0) + 1;
-
                             const shrinkFactor = 0.75; meteor.scaling.scaleInPlace(shrinkFactor);
-                            if (meteor.metadata.hits >= 3) {
-                                disposeMeteor(meteor, meteores, i, "destroyed by projectile (P2)");
-                                break;
-                            }
+                            if (meteor.metadata.hits >= 3) { disposeMeteor(meteor, meteores, i, "destroyed by projectile (P2)"); break; }
                         }
                     }
                 }
@@ -675,6 +730,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                         disposeMeteor(meteor, meteores, i, "lifetime exceeded"); continue;
                     }
 
+                    // @ts-ignore
                     const oldPos = meteor.position.clone();
                     const direction = platform.position.subtract(meteor.position).normalize();
                     meteor.position.addInPlace(direction.scale(meteorSpeed * deltaTime));
@@ -788,6 +844,47 @@ export class SceneNiveau3 implements CreateSceneClass {
         return scene;
     };
 
+    private shootProjectileInternal(controller: WebXRInputSource, scene: Scene) {
+        const projectile = MeshBuilder.CreateSphere("projectile_" + this.projectiles.length, { diameter: 0.2 }, scene);
+        const aimNode = (controller as any).aimNode as TransformNode;
+
+        let startPos: Vector3;
+        let fireDirection: Vector3;
+
+        if (aimNode) {
+            startPos = aimNode.getAbsolutePosition();
+            fireDirection = aimNode.forward.normalize();
+        } else {
+            console.warn(`AimNode non trouvé pour la manette ${controller.uniqueId}. Utilisation de la direction par défaut du pointer/grip.`);
+            const fallbackParent = controller.pointer || controller.grip;
+            if (fallbackParent) {
+                startPos = fallbackParent.getAbsolutePosition();
+                const tempRay = new Ray(Vector3.Zero(), Vector3.Forward(), 1);
+                controller.getWorldPointerRayToRef(tempRay, true);
+                fireDirection = tempRay.direction.normalize();
+            } else {
+                startPos = scene.activeCamera!.position.clone();
+                fireDirection = scene.activeCamera!.getDirection(Vector3.Forward());
+            }
+        }
+
+        projectile.position = startPos.clone();
+        projectile.metadata = {
+            velocity: fireDirection.scale(this.PROJECTILE_SPEED),
+            spawnTime: scene.metadata.gameTime
+        };
+
+        (projectile as any).projectileTrail = createPinkProjectileTrail(scene, projectile);
+        this.projectiles.push(projectile);
+
+        if (this.shootSound) {
+            this.shootSound.play();
+        }
+      //  const linePoints = [startPos.clone(), startPos.clone().add(tmpRay.direction.scale(10))];
+       // const lineMesh = MeshBuilder.CreateLines("debugLine", {points: linePoints}, scene);
+        //setTimeout(() => lineMesh.dispose(), 500);
+    }
+
     private showScoreFeedback(text: string, color: string, duration: number = 1500) {
        if (!this.scoreFeedbackText) return;
 
@@ -809,6 +906,8 @@ export class SceneNiveau3 implements CreateSceneClass {
 
 export default new SceneNiveau3();
 
+
+// @ts-ignore
 function disposeMeteor(meteor: AbstractMesh, meteorsArray: AbstractMesh[], index: number, reason: string) {
     if ((meteor as any).ambientSound) {
         (meteor as any).ambientSound.stop();
@@ -889,6 +988,45 @@ function spawnMeteor(scene: Scene, platform: Mesh, obstacleTemplates: AbstractMe
     return meteor;
 }
 
+function createPinkProjectileTrail(scene: Scene, emitterMesh: AbstractMesh): ParticleSystem {
+    const particleSystem = new ParticleSystem("projectileTrail_" + emitterMesh.name, 500, scene);
+    particleSystem.particleTexture = new Texture("https://playground.babylonjs.com/textures/flare.png", scene); // Même texture, couleurs différentes
+
+    particleSystem.emitter = emitterMesh;
+
+    particleSystem.color1 = new Color4(1, 0.4, 0.8, 0.8);
+    particleSystem.color2 = new Color4(0.8, 0.2, 0.6, 0.6);
+    particleSystem.colorDead = new Color4(0.5, 0.1, 0.3, 0.0);
+
+    const baseSize = 0.08;
+    particleSystem.minSize = baseSize * 0.5;
+    particleSystem.maxSize = baseSize * 1.2;
+
+    particleSystem.minLifeTime = 0.1;
+    particleSystem.maxLifeTime = 0.4;
+
+    particleSystem.emitRate = 300;
+
+    particleSystem.minEmitPower = 0.1;
+    particleSystem.maxEmitPower = 0.3;
+    particleSystem.updateSpeed = 0.005;
+
+    particleSystem.direction1 = new Vector3(-0.1, -0.1, -0.1);
+    particleSystem.direction2 = new Vector3(0.1, 0.1, 0.1);
+
+    particleSystem.addVelocityGradient(0, 0.5);
+    particleSystem.addVelocityGradient(1.0, 0.1);
+
+    particleSystem.addSizeGradient(0, 0.2);
+    particleSystem.addSizeGradient(0.5, 1);
+    particleSystem.addSizeGradient(1.0, 0.1);
+
+
+    particleSystem.blendMode = ParticleSystem.BLENDMODE_ADD;
+    particleSystem.start();
+    return particleSystem;
+}
+
 function createSword(controller: WebXRInputSource, scene: Scene): Mesh {
     const sword = MeshBuilder.CreateBox("sword", { height: 1.2, width: 0.1, depth: 0.1 }, scene);
     sword.position = new Vector3(0, -0.3, 0.2);
@@ -902,7 +1040,7 @@ function createSword(controller: WebXRInputSource, scene: Scene): Mesh {
     sword.isPickable = false;
     return sword;
 }
-
+/*
 function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles: Mesh[]) {
     const projectile = MeshBuilder.CreateSphere("projectile", { diameter: 0.2 }, scene);
 
@@ -931,7 +1069,7 @@ function shootProjectile(controller: WebXRInputSource, scene: Scene, projectiles
 
     projectiles.push(projectile);
 }
-
+*/
 // @ts-ignore
 /*
 function switchScene(engine: AbstractEngine, scene : Scene) {
