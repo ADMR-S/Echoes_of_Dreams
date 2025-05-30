@@ -1,6 +1,15 @@
 # Echoes_of_Dreams
 
-https://echoes-of-dreams.onrender.com/
+Embarquez pour un voyage onirique déroutant ! Echoes of Dreams est un jeu en réalité virtuelle mélangeant puzzle et railshooter qui vous immergera dans le rêve de son personnage principal. Les lois de la physique s'y trouvent déformées et les effets de perspectives pourraient bien vous jouer un tour... Vous devrez parvenir à utiliser ces règles à votre avantage pour progresser dans le rêve et espérer parvenir au bout de la nuit.
+
+Pour jouer au jeu, visitez le site sur lequel il est hébergé depuis un navigateur: [https://echoes-of-dreams.onrender.com/](https://echoes-of-dreams.onrender.com/). 
+
+Il est préférable voire nécessaire d'utiliser un casque de réalité virtuelle et des manettes compatibles (le jeu a été développé et testé avec le [Meta Quest 2](https://www.meta.com/fr/en/quest/products/quest-2/)).
+
+- Lien du jeu : https://echoes-of-dreams.onrender.com/
+- [Documentation](./Documentation.md)
+
+## Le Concept du Jeu
 
 Jeu conçu et implémenté par :
 Adam MIR-SADJADI

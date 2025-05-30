@@ -23,6 +23,7 @@ export class XRHandler{
     player : Player;
     headset: WebXRInputSource | null;
     private highlightedMesh: AbstractMesh | null = null;
+    private highlightingObservable: any;
     private glowLayer: GlowLayer | null = null;
 
     constructor(scene: Scene, xr : WebXRDefaultExperience, player : Player){
@@ -100,9 +101,11 @@ export class XRHandler{
                                 if (bestPick) {
                                     this.player.selectObject(bestPick.mesh, bestPick.point, this.xr, this.scene);
                                     const distance = camera.position.subtract(bestPick.point).length();
+                                    this.scene.onBeforeRenderObservable.remove(this.highlightingObservable);
                                     console.log("Distance to target:", distance);
                                 } else if (this.player.selectedObject) {
                                     this.player.deselectObject(this.scene);
+                                    this.setupHighlighting(); // Reset highlighting if no object is selected
                                 }
                             }
                         });
@@ -113,7 +116,7 @@ export class XRHandler{
     }
 
     setupHighlighting() {
-        this.scene.onBeforeRenderObservable.add(() => {
+        this.highlightingObservable = this.scene.onBeforeRenderObservable.add(() => {
             if(!this.player.selectedObject){
                 const camera = this.xr.baseExperience.camera;
                 const ray = camera.getForwardRay();

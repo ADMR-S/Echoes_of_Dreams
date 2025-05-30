@@ -7,8 +7,30 @@ niveau 1 composé d énigmes/mini jeux/casse-tête ?
 
 
 Scene 1 :
-Objets sélectionnés : 
-    Snappent au sol
-    Clignotent
-    Ne sont pas parfaitement alignés
-Piste : Mauvais comportement Ray
+Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
+Désactiver rotation par cran de la caméra liée à la téléportation
+La musique boucle mal, changer
+Réparer Skybox
+Ajouter effets de caméra lorsqu'un gros objet tombe au sol
+    + Effets sonores
+Ajouter un corps physique à la caméra pour empêcher de passer à travers les murs
+Permettre de switch entre deplacement au stick et teleportation avec un bouton
+HUD pour décrire les états (TP / deplacement, Télékinésie activée ou non...)
+Permettre de monter sur des objets (les ajouter au "ground" ?)
+Intégrer scène Blender, plus d'objets, assets...
+
+Créer sortie du niveau, qui produit une musique
+
+Intégrer puzzle géant au 1er niveau
+
+Parvenir à passer d'un niveau à l'autre
+
+Instructions :
+Stick gauche : Se déplacer
+Stick droit : Orienter la caméra (gauche/droite)
+Bouton Y : Activer/désactiver la téléportation
+Bouton X : Sélectionner un objet qui brille en violet (superliminal) 
+Bouton A : Sauter (à venir)
+Gachette droite : NIVEAU 3 (Noé)
+
+(Dev) Gachette interne droite : Afficher la console XR pour debug

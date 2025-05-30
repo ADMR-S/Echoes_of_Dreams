@@ -1,12 +1,10 @@
-// IMPLEMENTATION D'ADAM INSPIREE DES EXEMPLES DE BABYLONJS
-
 import { Scene } from "@babylonjs/core/scene";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 //import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
 // If you don't need the standard material you will still need to import it since the scene requires it.
-//import "@babylonjs/core/Materials/standardMaterial";
+import "@babylonjs/core/Materials/standardMaterial";
 import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { havokModule } from "../externals/havok.ts";
@@ -18,7 +16,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, WebXRControllerPhysics } from "@babylonjs/core";
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -36,9 +34,14 @@ import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Object3DPickable } from "../object/Object3DPickable";
 
+import { WebXRFeatureName } from "@babylonjs/core";
+
 
 export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
+
+    private backgroundMusic: Sound | null = null;
+    
 
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas : HTMLCanvasElement, audioContext : AudioContext, player : Player): Promise<Scene> => {
@@ -94,7 +97,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         var camera=  xr.baseExperience.camera;
 
-        addXRControllersRoutine(scene, xr, eventMask); //eventMask est-il indispensable ?
+        addXRControllersRoutine(scene, xr, eventMask, ground); //eventMask est-il indispensable ?
 
         // Add keyboard controls for movement
         const moveSpeed = 1;
@@ -167,6 +170,23 @@ export class Scene1Superliminal implements CreateSceneClass {
         //@ts-ignore
         var lightBulb = createLightBulbPickable(scene, eventMask);
 
+        this.backgroundMusic = new Sound(
+                    "backgroundMusic",
+                    "/asset/sounds/backgroundScene1.ogg",
+                    scene,
+                    () => {
+                        if (this.backgroundMusic) {
+                            this.backgroundMusic.play();
+                            console.log("Musique de fond démarrée.");
+                        }
+                    },
+                    {
+                        loop: true,
+                        autoplay: false,
+                        volume: 0.6
+                    }
+                );
+
         return scene;
     };
 }
@@ -212,57 +232,100 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
     });
 }
 
+
 // Add movement with left joystick
-function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
+function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground : Mesh) {
+    // Store rotation state
+    var rotationInput = 0;
+    var xPositionInput = 0;
+    var yPositionInput = 0;
+
+    let teleportationEnabled = true;
+    const featuresManager = xr.baseExperience.featuresManager;
+
     xr.input.onControllerAddedObservable.add((controller: any) => {        
         console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
             controller.onMotionControllerInitObservable.add((motionController: any) => {
-                const xrInput = motionController.getComponent("xr-standard-thumbstick");
-                if (xrInput) {
-                    xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
-                        const speed = 0.05;
-                        // Move relative to camera orientation
-                        const camera = xr.baseExperience.camera;
-                        const forward = camera.getDirection(new Vector3(0, 0, 1));
-                        const right = camera.getDirection(new Vector3(1, 0, 0));
-                        // Remove y component to keep movement horizontal
-                        forward.y = 0;
-                        right.y = 0;
-                        forward.normalize();
-                        right.normalize();
-                        camera.position.addInPlace(forward.scale(-axisValues.y * speed));
-                        camera.position.addInPlace(right.scale(axisValues.x * speed));
+                const leftStick = motionController.getComponent("xr-standard-thumbstick");
+                if (leftStick) {
+                    leftStick.onAxisValueChangedObservable.add((axisValues: any) => {
+                        xPositionInput = axisValues.x;
+                        yPositionInput = axisValues.y;
                     });
                 }
-                // --- Disable teleportation feature for left controller ---
-                const teleportation = xr.baseExperience.featuresManager.getEnabledFeature("xr-teleportation");
-                if (teleportation && teleportation.attachedController && teleportation.attachedController === controller) {
-                    teleportation.detach();
-                }
 
-                // --- Jump on A button press ---
-                const aButton = motionController.getComponent("a-button");
-                if (aButton) {
-                    aButton.onButtonStateChangedObservable.add((button: any) => {
-                        if (button.pressed) {
-                            // Apply jump to camera (simple upward velocity)
-                            const camera = xr.baseExperience.camera;
-                            // If camera has a physics impostor/body, apply velocity, else just move up
-                            if ((camera as any).physicsImpostor) {
-                                (camera as any).physicsImpostor.setLinearVelocity(new Vector3(0, 5, 0));
-                            } else if ((camera as any).body && (camera as any).body.setLinearVelocity) {
-                                (camera as any).body.setLinearVelocity(new Vector3(0, 5, 0));
+                const yButton = motionController.getComponent("y-button");
+                if (yButton) {
+                    yButton.onButtonStateChangedObservable.add(() => {
+                        if (yButton.changes.pressed && yButton.pressed) {
+                            teleportationEnabled = !teleportationEnabled;
+                            if (teleportationEnabled) {
+                                // Enable teleportation
+                                featuresManager.enableFeature(
+                                    WebXRFeatureName.TELEPORTATION,
+                                    "stable",
+                                    {
+                                        xrInput: xr.input,
+                                        floorMeshes: [ground],
+                                    }
+                                );
+                                console.log("Teleportation ENABLED");
                             } else {
-                                camera.position.y += 1; // fallback: move up by 1 unit
+                                // Disable teleportation
+                                featuresManager.disableFeature(WebXRFeatureName.TELEPORTATION);
+                                console.log("Teleportation DISABLED");
                             }
                         }
                     });
                 }
             });
         }
+        // Right controller:
+        if (controller.inputSource.handedness === "right") {
+            controller.onMotionControllerInitObservable.add((motionController: any) => {
+                const xrInput = motionController.getComponent("xr-standard-thumbstick");
+                if (xrInput) {
+                    xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
+                        rotationInput = axisValues.x;
+                    });
+                }
+            });
+        }
     });
 
+    // Smooth rotation in the render loop
+    scene.onBeforeRenderObservable.add(() => {
+        const rotationSpeed = 0.04; // Adjust for desired sensitivity
+        const movementSpeed = 0.05;
+        const camera = xr.baseExperience.camera;
+
+        if (Math.abs(rotationInput) > 0.01) {
+            console.log("Rotation input: " + rotationInput);
+            console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
+            // Rotate around Y axis (yaw)
+            if (Math.abs(rotationInput) > 0.01) {
+            // Rotate around the WORLD Y axis (not local)
+            const deltaYaw = rotationInput * rotationSpeed;
+            const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
+            camera.rotationQuaternion = yawQuaternion.multiply(camera.rotationQuaternion!);
+        }
+            console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
+        }
+        // Smooth movement relative to camera's facing direction
+        if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
+            // Calculate forward and right vectors based on camera rotation
+            const forward = camera.getDirection(new Vector3(0, 0, 1));
+                const right = camera.getDirection(new Vector3(1, 0, 0));
+                // Remove y component to keep movement horizontal
+                forward.y = 0;
+                right.y = 0;
+                forward.normalize();
+                right.normalize();
+                camera.position.addInPlace(forward.scale(-yPositionInput * movementSpeed));
+                camera.position.addInPlace(right.scale(xPositionInput * movementSpeed));
+        }
+    });
 
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
