@@ -259,12 +259,6 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                         // axisValues.x is usually for left/right rotation
                         rotationInput = axisValues.x;
                     });
-                    // Reset rotation input when released
-                    xrInput.onButtonChangedObservable.add((buttonState: any) => {
-                        if (!buttonState.pressed) {
-                            rotationInput = 0;
-                        }
-                    });
                 }
             });
         }
