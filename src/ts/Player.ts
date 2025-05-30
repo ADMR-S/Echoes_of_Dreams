@@ -173,6 +173,7 @@ export class Player{
                 } else {
                     this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
+                objectPickable.mesh.computeWorldMatrix(true);
                 objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
 
                 
@@ -180,6 +181,7 @@ export class Player{
                 if (currentOffset > distance) {
                     this.resizeObject(objectPickable, distance*0.2, 0);
                     objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
+                    objectPickable.mesh.computeWorldMatrix(true);
                     objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
                     console.log("Offset length > distance, moving object close to camera.");
                     break;
@@ -208,6 +210,7 @@ export class Player{
                         // If no valid position found after all attempts, set minimal scale and move close to camera
                         this.resizeObject(objectPickable, distance*0.2, 0);
                         objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
+                        objectPickable.mesh.computeWorldMatrix(true);
                         objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
                         console.log("No valid position found: setting minimal scale and moving object close to camera.");
                         if(this.checkNearbyBoundingBoxes(objectPickable)){
