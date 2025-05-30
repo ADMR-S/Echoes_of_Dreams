@@ -169,6 +169,11 @@ export class Player{
             //this.visualizeRay(cameraRay, scene);
             var currentOffset = distance/20;
             const maxIterations = 5;
+
+            // Store last valid position and scaling
+            let lastValidPosition: Vector3 | null = null;
+            let lastValidScaling: Vector3 | null = null;
+
             for(let i = 0; i < maxIterations; i++){
                 const offsetLen = ray.direction.scale(-currentOffset/ray.direction.length()).length();
                 this.resizeObject(objectPickable, distance, offsetLen);
@@ -179,27 +184,25 @@ export class Player{
                 }
                 objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
 
-                
                 // If offset length is greater than distance, break and put object close to camera
                 if (offsetLen > distance) {
-                    this.resizeObject(objectPickable, distance*0.2, 0);
-                    objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
-                    objectPickable.mesh.refreshBoundingInfo(true, true); // <-- Force update bounding box
-                    console.log("Offset length > distance, moving object close to camera.");
+                    // No valid position, fallback
+                    lastValidPosition = null;
                     break;
                 }
-                
 
                 if(!this.checkNearbyBoundingBoxes(objectPickable)){
-                    // If no nearby bounding boxes, break the loop
-                    console.log("CORRECT POSITION FOUND");
+                    // If no nearby bounding boxes, save the valid position and scaling
+                    lastValidPosition = objectPickable.mesh.position.clone();
+                    lastValidScaling = objectPickable.mesh.scaling.clone();
+                    //console.log("CORRECT POSITION FOUND");
                     break;
                 } else {
                     //console.log("MESHES INTERSECTING, REPOSITIONNING");
                     currentOffset *= 2;
                     if(i === maxIterations - 1){
-                        
-                        
+                        // No valid position found after all attempts
+                        lastValidPosition = null;
                         //Use initial positionning :
                         this.resizeObject(objectPickable, distance, ray.direction.scale(-offsetDistance).length());
                         this.displaceObject(objectPickable, ray, offsetDistance, camera, pickResult?.pickedPoint || undefined);
@@ -221,6 +224,18 @@ export class Player{
                 }
             }
 
+            // After the loop, restore last valid position/scaling if found
+            if (lastValidPosition && lastValidScaling) {
+                objectPickable.mesh.position.copyFrom(lastValidPosition);
+                objectPickable.mesh.scaling.copyFrom(lastValidScaling);
+                objectPickable.mesh.refreshBoundingInfo(true, true);
+            } else {
+                // Fallback: use initial positioning or minimal scale close to camera
+                this.resizeObject(objectPickable, distance*0.2, 0);
+                objectPickable.mesh.position = camera.position.add(ray.direction.scale(distance*0.2/ray.direction.length()));
+                objectPickable.mesh.refreshBoundingInfo(true, true);
+                //console.log("No valid position found: setting minimal scale and moving object close to camera.");
+            }
             
         });
     }
