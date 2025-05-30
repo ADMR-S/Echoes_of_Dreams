@@ -7,7 +7,6 @@ import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Object3DPickable } from "./object/Object3DPickable";
-import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -310,48 +309,40 @@ export class Player{
     }
 
     checkNearbyBoundingBoxes(objectPickable: Object3DPickable) {
-        const myBoundingInfo = objectPickable.mesh.getBoundingInfo();
-        const myWorldBox = new BoundingBox(
-            myBoundingInfo.boundingBox.minimumWorld,
-            myBoundingInfo.boundingBox.maximumWorld
+    const myBoundingInfo = objectPickable.mesh.getBoundingInfo();
+    const myCenter = myBoundingInfo.boundingBox.centerWorld;
+    const myRadius = myBoundingInfo.boundingBox.extendSize.length();
+
+    const scene = objectPickable.mesh.getScene();
+    const otherMeshes = scene.meshes.filter(mesh =>
+        mesh !== objectPickable.mesh &&
+        mesh.name !== "skyBox" &&
+        mesh.name !== "laserPointer" &&
+        mesh.name !== "rotationCone" &&
+        !mesh.name.toLowerCase().includes("joint") &&
+        !mesh.name.toLowerCase().includes("teleportation") &&
+        !mesh.name.toLowerCase().includes("hand")
+    );
+
+    for (const mesh of otherMeshes) {
+        if (!mesh.getBoundingInfo) continue;
+        const otherBoundingInfo = mesh.getBoundingInfo();
+        if (!otherBoundingInfo) continue;
+        const otherBox = otherBoundingInfo.boundingBox;
+
+        // --- Sphere vs Box intersection ---
+        // Clamp sphere center to box
+        const clamped = new Vector3(
+            Math.max(otherBox.minimumWorld.x, Math.min(myCenter.x, otherBox.maximumWorld.x)),
+            Math.max(otherBox.minimumWorld.y, Math.min(myCenter.y, otherBox.maximumWorld.y)),
+            Math.max(otherBox.minimumWorld.z, Math.min(myCenter.z, otherBox.maximumWorld.z))
         );
-        const myCenter = myWorldBox.centerWorld;
-        const myRadius = myWorldBox.extendSize.length();
-
-        const scene = objectPickable.mesh.getScene();
-        // Exclude self, skyBox, laserPointers, rotationCone, and any mesh with "joint" or "jointparent" in the name
-        const otherMeshes = scene.meshes.filter(mesh =>
-            mesh !== objectPickable.mesh &&
-            mesh.name !== "skyBox" &&
-            mesh.name !== "laserPointer" &&
-            mesh.name !== "rotationCone" &&
-            !mesh.name.toLowerCase().includes("joint") &&
-            !mesh.name.toLowerCase().includes("teleportation") &&
-            !mesh.name.toLowerCase().includes("hand")
-
-
-        );
-        for (const mesh of otherMeshes) {
-            // Defensive: skip meshes without bounding info (e.g., ground sometimes)
-            if (!mesh.getBoundingInfo) continue;
-            const otherBoundingInfo = mesh.getBoundingInfo();
-            if (!otherBoundingInfo) continue;
-            const otherWorldBox = new BoundingBox(
-                otherBoundingInfo.boundingBox.minimumWorld,
-                otherBoundingInfo.boundingBox.maximumWorld
-            );
-            const otherCenter = otherWorldBox.centerWorld;
-            const otherRadius = otherWorldBox.extendSize.length();
-
-            // --- Sphere radius sum quick check ---
-            const centerDist = myCenter.subtract(otherCenter).length();
-            if (centerDist > myRadius + otherRadius) continue; // Too far, skip expensive check
-
-            if (BoundingBox.Intersects(myWorldBox, otherWorldBox)) {
-                console.log("Bounding boxes intersect:", mesh.name);
-                return true;
-            }
+        const dist = myCenter.subtract(clamped).length();
+        if (dist < myRadius - 0.001) { // Use a small epsilon to avoid floating point issues
+            console.log("Sphere intersects box:", mesh.name);
+            return true;
         }
-        return false; // No intersections found
     }
+    return false;
+}
 }
