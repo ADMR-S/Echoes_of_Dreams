@@ -1,7 +1,7 @@
 import { Camera, MeshBuilder, WebXRDefaultExperience } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
-import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
@@ -134,23 +134,23 @@ export class Player{
         
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
-            // Pick the first mesh hit by the ray (ignoring the camera itself)
-            const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh &&mesh != this.selectedObject && mesh.isPickable);
             
-            console.log("Ray picked mesh:", pickResult?.pickedMesh?.name, "uniqueId:", pickResult?.pickedMesh?.uniqueId);
+            // Use the closest occluding distance if available
+            let distance = this.getClosestOccludingDistance(scene, camera, this.selectedObject!);
+            const occluded = distance !== null;
 
+            const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh && mesh != this.selectedObject && mesh.isPickable);
 
-            var distance = 0;
-            if(pickResult?.pickedPoint && pickResult.pickedMesh){
-                distance = camera.position.subtract(pickResult.pickedPoint).length();
-                //console.log("DISPLACEMENT Picked mesh:", pickResult.pickedMesh.name, "uniqueId:", pickResult.pickedMesh.uniqueId, "Selected object:", this.selectedObject?.name, "uniqueId:", this.selectedObject?.uniqueId);
-
+            // If no occluder, use raycast as fallback
+            if (distance === null) {
+                if (pickResult?.pickedPoint && pickResult.pickedMesh) {
+                    distance = camera.position.subtract(pickResult.pickedPoint).length();
+                }
+                else {
+                    distance = this.MAX_DISTANCE;
+                }
             }
-             //Restrict distance to a maximum value and handle no hit cases
-            else{
-                distance = this.MAX_DISTANCE;
-                //Valeur par défaut si trop loin ou pas de hit
-            }
+            
             if(distance > this.MAX_DISTANCE){
                 distance = this.MAX_DISTANCE;
             }
@@ -171,7 +171,10 @@ export class Player{
                 this.resizeObject(objectPickable, distance, offsetLen);
                 if(distance === this.MAX_DISTANCE){
                     this.displaceObject(objectPickable, ray, currentOffset, camera, undefined);
-                } else {
+                } else if(occluded){
+                    this.displaceObject(objectPickable, ray, currentOffset, camera, undefined);
+                }
+                else{
                     this.displaceObject(objectPickable, ray, currentOffset, camera, pickResult?.pickedPoint || undefined);
                 }
                 objectPickable.mesh.computeWorldMatrix(true);
@@ -358,4 +361,73 @@ export class Player{
             }
         }
     }
+
+    /**
+     * Returns the closest distance from the camera to any mesh that visually overlaps the selected object in screen space.
+     */
+    getClosestOccludingDistance(
+            scene: Scene,
+            camera: Camera,
+            selectedObject: AbstractMesh
+        ): number | null {
+            if (!selectedObject) return null;
+
+            // Helper to project a 3D point to 2D screen space
+            function projectToScreen(point: Vector3, scene: Scene, camera: Camera): Vector3 {
+                return Vector3.Project(
+                    point,
+                    Matrix.Identity(),
+                    scene.getTransformMatrix(),
+                    camera.viewport.toGlobal(
+                        scene.getEngine().getRenderWidth(),
+                        scene.getEngine().getRenderHeight()
+                    )
+                );
+            }
+
+            // Get 2D bounding rectangle for a mesh in screen space
+            function getScreenRect(mesh: AbstractMesh, scene: Scene, camera: Camera) {
+                const boundingBox = mesh.getBoundingInfo().boundingBox;
+                const corners = boundingBox.vectorsWorld;
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                for (const corner of corners) {
+                    const screen = projectToScreen(corner, scene, camera);
+                    minX = Math.min(minX, screen.x);
+                    minY = Math.min(minY, screen.y);
+                    maxX = Math.max(maxX, screen.x);
+                    maxY = Math.max(maxY, screen.y);
+                }
+                return { minX, minY, maxX, maxY };
+            }
+
+            // Check if two rectangles overlap
+            function rectsOverlap(a: any, b: any) {
+                return !(a.maxX < b.minX || a.minX > b.maxX || a.maxY < b.minY || a.minY > b.maxY);
+            }
+
+            const selectedRect = getScreenRect(selectedObject, scene, camera);
+
+            let closestDistance: number | null = null;
+
+            for (const mesh of scene.meshes) {
+                if (
+                    mesh === selectedObject ||
+                    !mesh.isPickable ||
+                    !mesh.isEnabled() ||
+                    !mesh.isVisible
+                ) continue;
+
+                const meshRect = getScreenRect(mesh, scene, camera);
+                if (rectsOverlap(selectedRect, meshRect)) {
+                    // Compute distance from camera to mesh center
+                    const meshCenter = mesh.getBoundingInfo().boundingBox.centerWorld;
+                    const distance = camera.position.subtract(meshCenter).length();
+                    if (closestDistance === null || distance < closestDistance) {
+                        closestDistance = distance;
+                    }
+                }
+            }
+
+            return closestDistance;
+        }
 }
