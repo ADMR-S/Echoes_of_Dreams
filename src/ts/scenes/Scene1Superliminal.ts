@@ -302,25 +302,27 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
 
         if (Math.abs(rotationInput) > 0.01) {
             console.log("Rotation input: " + rotationInput);
-            console.log("Camera rotation before: " + camera.rotation.x);
-            camera.rotation.x += rotationInput * rotationSpeed;
-            console.log("Camera rotation after: " + camera.rotation.x);
+            console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
+            // Rotate around Y axis (yaw)
+            const deltaYaw = rotationInput * rotationSpeed;
+            const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
+            camera.rotationQuaternion = camera.rotationQuaternion
+            ? camera.rotationQuaternion.multiply(yawQuaternion)
+            : yawQuaternion;
+            console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
         }
         // Smooth movement relative to camera's facing direction
         if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
             // Calculate forward and right vectors based on camera rotation
-            const forward = new Vector3(
-                Math.sin(camera.rotation.y),
-                0,
-                Math.cos(camera.rotation.y)
-            );
-            const right = new Vector3(
-                Math.sin(camera.rotation.y + Math.PI / 2),
-                0,
-                Math.cos(camera.rotation.y + Math.PI / 2)
-            );
-            camera.position.addInPlace(forward.scale(-yPositionInput * movementSpeed));
-            camera.position.addInPlace(right.scale(xPositionInput * movementSpeed));
+            const forward = camera.getDirection(new Vector3(0, 0, 1));
+                const right = camera.getDirection(new Vector3(1, 0, 0));
+                // Remove y component to keep movement horizontal
+                forward.y = 0;
+                right.y = 0;
+                forward.normalize();
+                right.normalize();
+                camera.position.addInPlace(forward.scale(-yPositionInput * movementSpeed));
+                camera.position.addInPlace(right.scale(xPositionInput * movementSpeed));
         }
     });
 
