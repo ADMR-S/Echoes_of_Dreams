@@ -150,7 +150,7 @@ export class Player{
                 distance = camera.position.subtract(pickResult.pickedPoint).length();
             }
             else{
-                    distance = this.MAX_DISTANCE;
+                distance = this.MAX_DISTANCE;
             }
             
             if(distance > this.MAX_DISTANCE){
@@ -432,7 +432,7 @@ export class Player{
                 for (const corner of corners) {
                     const distance = camera.position.subtract(corner).length();
                     if (
-                        distance < selectedObjectDistance &&
+                        //distance < selectedObjectDistance &&
                         distance <= this.MAX_DISTANCE &&
                         (!closest || distance < closest.distance)
                     ) {
