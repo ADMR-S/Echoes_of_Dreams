@@ -8,7 +8,7 @@ niveau 1 composé d énigmes/mini jeux/casse-tête ?
 
 Scene 1 :
 Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
-Lisser la rotation de la caméra avec le stick
+Désactiver rotation par cran de la caméra liée à la téléportation
 La musique boucle mal, changer
 Réparer Skybox
 Ajouter effets de caméra lorsqu'un gros objet tombe au sol
