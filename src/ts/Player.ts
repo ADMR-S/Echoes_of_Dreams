@@ -36,7 +36,7 @@ export class Player{
             this.selectedObject.parent = null;
             this.selectedObject.isPickable = true;
             //console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
-            if (this.animationObservable) {
+            if (this.resizeAndRepositionObjectObservable) {
                 scene.onBeforeRenderObservable.remove(this.animationObservable);
                 this.animationObservable = null;
                 scene.onBeforeRenderObservable.remove(this.resizeAndRepositionObjectObservable);
