@@ -44,12 +44,7 @@ export class Scene1Superliminal implements CreateSceneClass {
     
 
     // @ts-ignore
-    createScene = async (
-        engine: AbstractEngine,
-        canvas: HTMLCanvasElement,
-        audioContext: AudioContext,
-        player: Player,
-        requestSceneSwitchFn: () => Promise<void> // Nouveau paramètre
+    createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>
     ): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
         scene.metadata = { sceneName: "Scene1Superliminal" };

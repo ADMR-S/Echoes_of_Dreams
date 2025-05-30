@@ -68,12 +68,7 @@ export class SceneNiveau3 implements CreateSceneClass {
     private swords: AbstractMesh[] = [];
 
     // @ts-ignore
-    createScene = async (
-        engine: AbstractEngine,
-        canvas: HTMLCanvasElement,
-        audioContext: AudioContext,
-        player: Player,
-        requestSceneSwitchFn: () => Promise<void> 
+    createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>
     ): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
         scene.metadata = { gameTime: 0 };

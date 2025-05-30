@@ -92,6 +92,7 @@ export const babylonInit = async (): Promise<Scene> => {
 };
 
 window.onload = () => {
+    // @ts-ignore
     babylonInit().then((scene) => {
 
         console.log("Babylon initialized, initial scene loaded.");
