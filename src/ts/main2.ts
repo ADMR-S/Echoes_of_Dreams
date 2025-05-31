@@ -63,7 +63,7 @@ const loadAndRunScene = async (sceneName: string) => {
 const requestSceneSwitch = async () => {
     console.log("Scene switch requested.");
 
-    const nextScene = SCENE_NIVEAU3;
+    const nextScene = currentSceneName === SCENE_SUPERLIMINAL ? SCENE_NIVEAU3 : SCENE_SUPERLIMINAL;
     await loadAndRunScene(nextScene);
 };
 

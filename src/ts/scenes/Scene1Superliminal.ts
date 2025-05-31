@@ -35,7 +35,7 @@ import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Object3DPickable } from "../object/Object3DPickable";
 
 import { WebXRFeatureName } from "@babylonjs/core";
-
+import * as GUI from "@babylonjs/gui/2D";
 
 export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
@@ -188,6 +188,33 @@ export class Scene1Superliminal implements CreateSceneClass {
                         volume: 0.6
                     }
                 );
+
+        //SWITCH SCENE BUTTON
+
+         const plane = MeshBuilder.CreatePlane("plane", {
+            width: 2,
+            height: 1,
+          });
+          plane.parent = camera;
+          plane.position.z = 5;
+
+        const advancedTexture =
+            GUI.AdvancedDynamicTexture.CreateForMesh(plane);
+
+          const button1 = GUI.Button.CreateSimpleButton(
+            "but1",
+            "Click Me",
+          );
+          button1.width = 2;
+          button1.height = 1;
+          button1.color = "white";
+          button1.fontSize = 200;
+          button1.background = "green";
+          button1.onPointerUpObservable.add(function () {
+            window.location.href = "./index2.html";
+          });
+          advancedTexture.addControl(button1);
+          //FIN SWITCH SCENE BUTTON
 
         return scene;
     };
