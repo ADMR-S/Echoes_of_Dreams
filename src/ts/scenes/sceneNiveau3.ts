@@ -1276,7 +1276,7 @@ function createRotatingRedAura(scene: Scene, parentObstacle: AbstractMesh): Part
 
     const baseSize = 0.1;
     particleSystem.minSize = baseSize;
-    particleSystem.maxSize = baseSize * 2.5;
+    particleSystem.maxSize = baseSize * 1.5;
 
     particleSystem.minLifeTime = 0.8;
     particleSystem.maxLifeTime = 1.5;
@@ -1332,7 +1332,7 @@ function createRotatingRedAura(scene: Scene, parentObstacle: AbstractMesh): Part
 }
 
 function createBlackSmokeTrail(scene: Scene, emitterMesh: AbstractMesh): ParticleSystem {
-    const particleSystem = new ParticleSystem("distinctRearCloud_" + emitterMesh.name, 2000, scene); // Nom pour refléter le changement
+    const particleSystem = new ParticleSystem("distinctRearCloud_" + emitterMesh.name, 300, scene);
 
     particleSystem.particleTexture = new Texture("https://playground.babylonjs.com/textures/flare.png", scene);
 
