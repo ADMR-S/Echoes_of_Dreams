@@ -184,7 +184,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         const obstacles: AbstractMesh [] = [];
         let nextObstacleSpawnZ = 20;
         const spawnAheadDistance = 100;
-        const maxLevelZ = 700;
+        const maxLevelZ = 400;
         const obstacleSpawnIntervalMin = 4;
         const obstacleSpawnIntervalMax = 8;
         let obstacleCounter = 0;
@@ -1061,8 +1061,12 @@ function spawnMeteor(scene: Scene, platform: Mesh, obstacleTemplates: AbstractMe
     );
     (meteor as any).ambientSound = meteorSound;
 
-    const angleXZ = Math.random() * Math.PI * 2;
-    const randomRadius = Math.random() * 40 + 30;
+    const forwardAngle = Math.PI / 2;
+    const spreadAngle = Math.PI / 3; 
+
+    const randomOffsetAngle = (Math.random() - 0.5) * spreadAngle;
+
+    const angleXZ = forwardAngle + randomOffsetAngle;    const randomRadius = Math.random() * 40 + 30;
     const xOffset = Math.cos(angleXZ) * randomRadius;
     const zOffset = Math.sin(angleXZ) * randomRadius;
     const heightOffset = Math.random() * 20 + 15;
@@ -1120,15 +1124,34 @@ function createPinkProjectileTrail(scene: Scene, emitterMesh: AbstractMesh): Par
 }
 
 function createSword(controller: WebXRInputSource, scene: Scene): Mesh {
-    const sword = MeshBuilder.CreateBox("sword", { height: 1.2, width: 0.1, depth: 0.1 }, scene);
+    const lanceHeight = 2.5;
+    const lanceWidth = 0.08;
+    const lanceDepth = 0.08;
+
+    const sword = MeshBuilder.CreateBox("sword", {
+        height: lanceHeight,
+        width: lanceWidth,
+        depth: lanceDepth
+    }, scene);
+
+    sword.position = new Vector3(
+        0,
+        -0.05,
+        lanceHeight / 2
+    );
     sword.position = new Vector3(0, -0.3, 0.2);
     const swordMat = new StandardMaterial("swordMat", scene);
-    swordMat.diffuseColor = new Color3(0.8, 0.8, 0.8);
+    swordMat.diffuseColor = new Color3(0.6, 0.6, 0.7);
     sword.material = swordMat;
 
     if (controller.grip) {
         sword.parent = controller.grip;
-        sword.rotation.x = Tools.ToRadians(15);
+        sword.rotationQuaternion = null;
+        sword.rotation = new Vector3(
+            Tools.ToRadians(-90),
+            0,
+            0
+        );
     }
     sword.isPickable = false;
     return sword;
