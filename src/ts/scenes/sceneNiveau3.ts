@@ -660,7 +660,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                     return;
                 }
 
-                const spawnInterval = 2000 - ((2000 - 500) * (elapsedPart2Check / 180000));
+                const spawnInterval = 5000 - ((2000 - 500) * (elapsedPart2Check / 180000));
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
@@ -757,7 +757,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                     this.swords.length = 0;
                     return;
                 }
-                const spawnInterval = Math.max(500, 2000 - ((2000 - 500) * (elapsedPart3Check / timerpart3)));
+                const spawnInterval = Math.max(500, 5000 - ((2000 - 500) * (elapsedPart3Check / timerpart3)));
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
@@ -1062,7 +1062,7 @@ function spawnMeteor(scene: Scene, platform: Mesh, obstacleTemplates: AbstractMe
     (meteor as any).ambientSound = meteorSound;
 
     const forwardAngle = Math.PI / 2;
-    const spreadAngle = Math.PI / 3; 
+    const spreadAngle = Math.PI / 3;
 
     const randomOffsetAngle = (Math.random() - 0.5) * spreadAngle;
 
@@ -1389,7 +1389,7 @@ function createBlackSmokeTrail(scene: Scene, emitterMesh: AbstractMesh): Particl
     particleSystem.maxSize = baseParticleSize * 1.8;
     particleSystem.minLifeTime = 0.6;
     particleSystem.maxLifeTime = 1.2;
-    particleSystem.emitRate = 850;
+    particleSystem.emitRate = 500;
 
     particleSystem.minEmitPower = 0.0018;
     particleSystem.maxEmitPower = 0.0040;
