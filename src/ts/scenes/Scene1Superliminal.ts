@@ -211,9 +211,11 @@ export class Scene1Superliminal implements CreateSceneClass {
           button1.fontSize = 200;
           button1.background = "green";
           button1.onPointerUpObservable.add(function () {
-            window.location.href = "./index2.html";
-          });
+            window.location.pathname = "/scene3";
+        });
           advancedTexture.addControl(button1);
+
+          
           //FIN SWITCH SCENE BUTTON
 
         return scene;
