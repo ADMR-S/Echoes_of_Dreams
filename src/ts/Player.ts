@@ -58,7 +58,6 @@ export class Player{
                 delete objPickable._savedEventMask;
             }
             // Enable air friction after refreshing aggregate
-            objPickable.enableAirFriction(0.98); // or your preferred damping factor
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
@@ -103,17 +102,7 @@ export class Player{
                 this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
             }
 
-            // --- Set pivot point to bounding box center (in local space) ---
             const boundingInfo = object.getBoundingInfo();
-            const centerWorld = boundingInfo.boundingBox.centerWorld;
-            const centerLocal = centerWorld.subtract(object.getAbsolutePosition());
-            object.setPivotPoint(centerLocal);
-
-            // --- Force bounding info update before using for placement ---
-            object.computeWorldMatrix(true);
-            object.refreshBoundingInfo(true, true);
-
-            // Calculate offset distance based on bounding box
             const min = boundingInfo.boundingBox.minimumWorld;
             const max = boundingInfo.boundingBox.maximumWorld;
             const size = max.subtract(min);

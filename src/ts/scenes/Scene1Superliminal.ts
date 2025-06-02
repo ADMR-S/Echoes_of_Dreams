@@ -240,22 +240,17 @@ export class Scene1Superliminal implements CreateSceneClass {
                 console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
                 return;
             }
-            mesh.position = new Vector3(-4, 0.5, 3);
-            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
-            mesh.isPickable = true;
 
-            // --- Correction du centre de la bounding box à y=0.5 ---
-            mesh.computeWorldMatrix(true);
-            mesh.refreshBoundingInfo(true, true);
-            const bbox = mesh.getBoundingInfo().boundingBox;
-            const center = bbox.centerWorld;
-            // Décale la mesh pour que le centre de la bounding box soit à y=0.5
-            mesh.position.y += (0.5 - center.y);
-
+            
+            console.log("parent : ", mesh.parent);
+            mesh.parent = null
             // --- Ensure the queen has a StandardMaterial for highlight ---
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
                 mesh.material = new StandardMaterial("queenMat", scene);
             }
+            mesh.position = new Vector3(4, 0.5, 3);
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);;
+            mesh.isPickable = true;
 
             // Create Object3DPickable for the queen
             //@ts-ignore
@@ -273,12 +268,16 @@ export class Scene1Superliminal implements CreateSceneClass {
                     // Add physics aggregate (MESH shape for complex mesh)
                     const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
                     aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-                    aggregate.body.setPrestepType(PhysicsPrestepType.ACTION);
+                    aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
                     aggregate.body.setCollisionCallbackEnabled(true);
                     aggregate.body.setEventMask(eventMask);
-                    return { mesh, aggregate };
+                    return { mesh, extra : {}, aggregate };
                 }
+
+                
             );
+
+        
             // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
             (mesh as any).object3DPickable = queenPickable;
 
@@ -504,11 +503,6 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
             aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
             aggregate.body.setCollisionCallbackEnabled(true);
             aggregate.body.setEventMask(eventMask);
-
-            aggregate.body.getCollisionObservable().add((collisionEvent: any) => {
-                if (collisionEvent.type === "COLLISION_STARTED") {
-                }
-            });
 
             // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
             /*
