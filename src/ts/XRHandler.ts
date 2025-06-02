@@ -13,7 +13,6 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { Utility } from "./Utility";
 import XRLogger from "./XRLogger";
 
 export class XRHandler{
