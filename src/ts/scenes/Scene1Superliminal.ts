@@ -275,10 +275,11 @@ export class Scene1Superliminal implements CreateSceneClass {
                 
             );
 
-            
+        
             // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
             (mesh as any).object3DPickable = queenPickable;
 
+            queenPickable.refreshPhysicsAggregate(scene, PhysicsShapeType.MESH, { mass: 1 });
             console.log("Queen chess piece loaded and pickable.");
         };
 

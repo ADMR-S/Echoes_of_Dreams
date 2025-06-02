@@ -45,8 +45,8 @@ export class Object3DPickable implements Object3D{
             this.mesh.setPivotPoint(new Vector3(0, 0, 0));
         }
 
-
         this.enableAirFriction(); // Enable air friction by default
+
 
         // --- Log mesh transform info for debugging ---
         console.log(`[Object3DPickable] Created: ${this.mesh.name}`);
@@ -89,6 +89,9 @@ export class Object3DPickable implements Object3D{
         body.setMotionType(PhysicsMotionType.ANIMATED);
         body.setPrestepType(PhysicsPrestepType.TELEPORT);
         this.aggregate = aggregate;
+
+        this.enableAirFriction(); // Enable air friction by default
+
         return this.aggregate;
     }
 

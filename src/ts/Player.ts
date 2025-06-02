@@ -58,7 +58,6 @@ export class Player{
                 delete objPickable._savedEventMask;
             }
             // Enable air friction after refreshing aggregate
-            objPickable.enableAirFriction(); // or your preferred damping factor
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
