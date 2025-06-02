@@ -247,7 +247,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 mesh.material = new StandardMaterial("queenMat", scene);
             }
             mesh.position = new Vector3(4, 0.5, 3);
-            mesh.scaling.scaleInPlace(0.3);
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);;
             mesh.isPickable = true;
 
             // Create Object3DPickable for the queen
