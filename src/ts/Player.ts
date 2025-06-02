@@ -79,21 +79,10 @@ export class Player{
                 body.setAngularVelocity(Vector3.Zero());
                 // Set motion type to ANIMATED to prevent physics simulation
                 body.setMotionType(PhysicsMotionType.ANIMATED);
-                body.setPrestepType(PhysicsPrestepType.TELEPORT);
+                body.setPrestepType(PhysicsPrestepType.DISABLED);
                 // --- Disable collision callbacks and save event mask ---
                 (object3DPickable as any)._savedEventMask = body.getEventMask?.();
                 body.setCollisionCallbackEnabled(false);
-
-                // --- Add collision logging ---
-                if (!(body as any)._collisionLogger) {
-                    (body as any)._collisionLogger = body.getCollisionObservable().add((collisionEvent: any) => {
-                        const colliderA = collisionEvent.collider?.transformNode?.name || "unknown";
-                        const colliderB = collisionEvent.collidedAgainst?.transformNode?.name || "unknown";
-                        if (collisionEvent.type === "COLLISION_STARTED") {
-                            console.log(`[COLLISION] ${colliderA} <-> ${colliderB}`);
-                        }
-                    });
-                }
             }
             //console.log("ON SELECTIONNE : ");
             //console.log(object);
