@@ -232,13 +232,40 @@ export class Scene1Superliminal implements CreateSceneClass {
         );
 
         queenTask.onSuccess = (task) => {
-            // task.loadedMeshes is an array of loaded meshes
-            task.loadedMeshes.forEach(mesh => {
-                mesh.position = new Vector3(0, 1, 0); // Example position
-                mesh.scaling = new Vector3(1, 1, 1); // Adjust as needed
-                mesh.isPickable = true;
-            });
-            console.log("Queen chess piece loaded.");
+            // Find the first loaded mesh that is a Mesh (not TransformNode or AbstractMesh)
+            const mesh = task.loadedMeshes.find(m => m instanceof Mesh) as Mesh;
+            if (!mesh) {
+                console.error("No Mesh found in loadedMeshes for queen.");
+                return;
+            }
+            mesh.position = new Vector3(-4, 0, 3);
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+            mesh.isPickable = true;
+
+            // Create Object3DPickable for the queen
+            //@ts-ignore
+            const queenPickable = new Object3DPickable(
+                scene,
+                "queenPickable",
+                mesh.material ?? new StandardMaterial("queenMat", scene),
+                PhysicsShapeType.MESH,
+                1,
+                // Custom mesh factory to use the imported mesh and add physics
+                //@ts-ignore
+                (scene, name, material, size) => {
+                    mesh.name = name;
+                    mesh.material = material;
+                    // Add physics aggregate (MESH shape for complex mesh)
+                    const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
+                    aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+                    aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                    aggregate.body.setCollisionCallbackEnabled(true);
+                    aggregate.body.setEventMask(eventMask);
+                    return { mesh, aggregate };
+                }
+            );
+            // Optionally store or use queenPickable as needed
+            console.log("Queen chess piece loaded and pickable.");
         };
 
         //@ts-ignore
