@@ -257,8 +257,15 @@ export class Scene1Superliminal implements CreateSceneClass {
                 mesh.material = new StandardMaterial("queenMat", scene);
             }
             mesh.position = new Vector3(4, 0.5, 3);
-            mesh.scaling = new Vector3(0.3, 0.3, 0.3);;
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
             mesh.isPickable = true;
+
+            // --- Center the pivot point to the mesh's bounding box center ---
+            if (typeof mesh.setPivotPoint === "function" && mesh.getBoundingInfo) {
+                const bbox = mesh.getBoundingInfo().boundingBox;
+                // Move pivot to center
+                mesh.setPivotPoint(bbox.center.clone());
+            }
 
             // Create Object3DPickable for the queen
             //@ts-ignore
