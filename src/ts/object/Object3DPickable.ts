@@ -37,7 +37,7 @@ export class Object3DPickable implements Object3D{
 
         // --- Ensure mesh.isPickable is true for highlight logic ---
         this.mesh.isPickable = true;
-        this.mesh.scaling = new Vector3(Math.abs(this.mesh.scaling.x), this.mesh.scaling.y, this.mesh.scaling.z)
+        this.mesh.scaling = new Vector3(Math.abs(this.mesh.scaling.x), Math.abs(this.mesh.scaling.x), Math.abs(this.mesh.scaling.x))
         
         // --- Fix: Always reset mesh pivot to (0,0,0) on creation ---
         // This avoids unexpected displacement when using setPivotPoint later
@@ -47,7 +47,7 @@ export class Object3DPickable implements Object3D{
 
         this.enableAirFriction(); // Enable air friction by default
 
-
+        this.mesh.parent = null
         // --- Log mesh transform info for debugging ---
         console.log(`[Object3DPickable] Created: ${this.mesh.name}`);
         console.log("  position:", this.mesh.position?.toString());
