@@ -232,7 +232,15 @@ export class Scene1Superliminal implements CreateSceneClass {
         );
 
         queenTask.onSuccess = (task) => {
-            // Find the first loaded mesh that is a Mesh and has geometry
+            // Log all loaded meshes for debugging
+            console.log("Loaded meshes:");
+            task.loadedMeshes.forEach(m => {
+                console.log(
+                    `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
+                );
+            });
+
+            // Find the first loaded mesh that is a Mesh, visible, and has geometry
             const mesh = task.loadedMeshes.find(
                 m => m instanceof Mesh && typeof m.getTotalVertices === "function" && m.getTotalVertices() > 0
             ) as Mesh | undefined;
@@ -340,6 +348,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 
 
 // Add movement with left joystick
+//@ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground : Mesh) {
     // Store rotation state
     var rotationInput = 0;
@@ -433,6 +442,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
         }
     });
 
+    /*
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
@@ -464,6 +474,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
             });
         });
     });
+    */
 }
 
 // Create a light bulb as an Object3DPickable
