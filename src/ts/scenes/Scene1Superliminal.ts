@@ -240,17 +240,6 @@ export class Scene1Superliminal implements CreateSceneClass {
                 console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
                 return;
             }
-            mesh.position = new Vector3(-4, 0.5, 3);
-            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
-            mesh.isPickable = true;
-
-            // --- Correction du centre de la bounding box à y=0.5 ---
-            mesh.computeWorldMatrix(true);
-            mesh.refreshBoundingInfo(true, true);
-            const bbox = mesh.getBoundingInfo().boundingBox;
-            const center = bbox.centerWorld;
-            // Décale la mesh pour que le centre de la bounding box soit à y=0.5
-            mesh.position.y += (0.5 - center.y);
 
             // --- Ensure the queen has a StandardMaterial for highlight ---
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
@@ -281,6 +270,10 @@ export class Scene1Superliminal implements CreateSceneClass {
             );
             // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
             (mesh as any).object3DPickable = queenPickable;
+
+            mesh.position = new Vector3(-4, 0.5, 3);
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+            mesh.isPickable = true;
 
             console.log("Queen chess piece loaded and pickable.");
         };

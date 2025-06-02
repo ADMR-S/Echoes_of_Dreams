@@ -105,8 +105,7 @@ export class Player{
 
             // --- Set pivot point to bounding box center (in local space) ---
             const boundingInfo = object.getBoundingInfo();
-            const centerWorld = boundingInfo.boundingBox.centerWorld;
-            const centerLocal = centerWorld.subtract(object.getAbsolutePosition());
+            const centerLocal = boundingInfo.boundingBox.center.subtract(object.position);
             object.setPivotPoint(centerLocal);
 
             // --- Force bounding info update before using for placement ---
