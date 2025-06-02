@@ -109,6 +109,10 @@ export class Player{
             const centerLocal = centerWorld.subtract(object.getAbsolutePosition());
             object.setPivotPoint(centerLocal);
 
+            // --- Force bounding info update before using for placement ---
+            object.computeWorldMatrix(true);
+            object.refreshBoundingInfo(true, true);
+
             // Calculate offset distance based on bounding box
             const min = boundingInfo.boundingBox.minimumWorld;
             const max = boundingInfo.boundingBox.maximumWorld;
@@ -118,6 +122,8 @@ export class Player{
 
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
+                object.computeWorldMatrix(true);
+                object.refreshBoundingInfo(true, true);
                 this.animateObject(object, scene);
                 this.resizeAndRepositionObject(object3DPickable, scene, xr, selectedObjectBaseOffsetDistance);
             }, 0);
