@@ -244,6 +244,14 @@ export class Scene1Superliminal implements CreateSceneClass {
             mesh.scaling = new Vector3(0.3, 0.3, 0.3);
             mesh.isPickable = true;
 
+            // --- Correction du centre de la bounding box à y=0.5 ---
+            mesh.computeWorldMatrix(true);
+            mesh.refreshBoundingInfo(true, true);
+            const bbox = mesh.getBoundingInfo().boundingBox;
+            const center = bbox.centerWorld;
+            // Décale la mesh pour que le centre de la bounding box soit à y=0.5
+            mesh.position.y += (0.5 - center.y);
+
             // --- Ensure the queen has a StandardMaterial for highlight ---
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
                 mesh.material = new StandardMaterial("queenMat", scene);

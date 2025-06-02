@@ -103,15 +103,19 @@ export class Player{
                 this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
             }
 
-            // Calculate offset distance based on bounding box
+            // --- Set pivot point to bounding box center (in local space) ---
             const boundingInfo = object.getBoundingInfo();
+            const centerWorld = boundingInfo.boundingBox.centerWorld;
+            const centerLocal = centerWorld.subtract(object.getAbsolutePosition());
+            object.setPivotPoint(centerLocal);
+
+            // Calculate offset distance based on bounding box
             const min = boundingInfo.boundingBox.minimumWorld;
             const max = boundingInfo.boundingBox.maximumWorld;
             const size = max.subtract(min);
             const greatestDimension = Math.max(size.x, size.y, size.z);
             const selectedObjectBaseOffsetDistance = greatestDimension / 2 + 0.01; // Add small epsilon
 
-            
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
                 this.animateObject(object, scene);
