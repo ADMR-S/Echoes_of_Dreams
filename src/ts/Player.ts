@@ -79,7 +79,7 @@ export class Player{
                 body.setAngularVelocity(Vector3.Zero());
                 // Set motion type to ANIMATED to prevent physics simulation
                 body.setMotionType(PhysicsMotionType.ANIMATED);
-                body.setPrestepType(PhysicsPrestepType.DISABLED);
+                body.setPrestepType(PhysicsPrestepType.TELEPORT);
                 // --- Disable collision callbacks and save event mask ---
                 (object3DPickable as any)._savedEventMask = body.getEventMask?.();
                 body.setCollisionCallbackEnabled(false);
