@@ -99,8 +99,8 @@ export class Player{
             object.isPickable = false;
             //console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             this.selectedObjectOriginalScaling = object.scaling.clone();
-            if(object3DPickable.extra.pointLight){
-            this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
+            if(object3DPickable.extra?.pointLight){
+                this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
             }
 
             // Calculate offset distance based on bounding box

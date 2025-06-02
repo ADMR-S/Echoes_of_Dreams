@@ -165,7 +165,12 @@ export class XRHandler{
                 // Highlight the new mesh
                 if (bestPick) {
                     const mesh = bestPick.mesh as AbstractMesh;
-                    const mat = mesh.material;
+                    let mat = mesh.material;
+                    // --- Clone material if shared to avoid flickering ---
+                    if (mat && mat instanceof StandardMaterial && mat.getScene().meshes.filter(m => m.material === mat).length > 1) {
+                        mat = mat.clone(mesh.name + "_highlightMat");
+                        mesh.material = mat;
+                    }
                     if (mat && mat instanceof StandardMaterial) {
                         if (!(mat as any)._originalDiffuseColor) {
                             (mat as any)._originalDiffuseColor = mat.diffuseColor.clone();
