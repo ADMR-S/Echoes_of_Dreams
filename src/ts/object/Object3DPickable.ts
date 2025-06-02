@@ -5,6 +5,7 @@ import { Material } from "@babylonjs/core/Materials/material";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 
 export class Object3DPickable implements Object3D{
     mesh: Mesh;
@@ -12,6 +13,7 @@ export class Object3DPickable implements Object3D{
     isSelected: boolean = false;
     aggregate?: PhysicsAggregate; // Store aggregate directly
     extra: any;
+    parentNode: TransformNode;
 
     constructor(
       scene: Scene,
@@ -44,6 +46,12 @@ export class Object3DPickable implements Object3D{
         if (typeof this.mesh.setPivotPoint === "function") {
             this.mesh.setPivotPoint(new Vector3(0, 0, 0));
         }
+
+        // --- Wrap mesh in a parent TransformNode to absorb geometry offset ---
+        this.parentNode = new TransformNode(name + "_parent", scene);
+        this.mesh.parent = this.parentNode;
+        this.parentNode.position.copyFrom(this.mesh.position);
+        this.mesh.position.set(0, 0, 0);
 
         this.enableAirFriction(); // Enable air friction by default
 
@@ -95,7 +103,7 @@ export class Object3DPickable implements Object3D{
      * Enable air friction by damping velocity each frame while the object is moving.
      * @param dampingFactor A value between 0 and 1 (e.g., 0.98 for light friction)
      */
-    enableAirFriction(dampingFactor: number = 0.98) {
+    enableAirFriction(dampingFactor: number = 0.99) {
         if (!this.aggregate || !this.aggregate.body) return;
         const body = this.aggregate.body;
         const scene = this.mesh.getScene();
@@ -112,5 +120,28 @@ export class Object3DPickable implements Object3D{
         });
     }
 
-    
+    // Utility: Log mesh transform info 
+    logMeshTransform(context: string = "") {
+        console.log(`[Object3DPickable] ${context} mesh: ${this.mesh.name}`);
+        console.log("  position:", this.mesh.position?.toString());
+        console.log("  scaling:", this.mesh.scaling?.toString());
+        console.log("  rotation:", this.mesh.rotation?.toString());
+        console.log("  rotationQuaternion:", this.mesh.rotationQuaternion ? this.mesh.rotationQuaternion.toString() : "undefined");
+        console.log("  pivotPoint:", (typeof this.mesh.getPivotPoint === "function") ? this.mesh.getPivotPoint().toString() : "n/a");
+        if (this.mesh.getBoundingInfo) {
+            const bbox = this.mesh.getBoundingInfo().boundingBox;
+            console.log("  boundingBox center:", bbox.center.toString());
+            console.log("  boundingBox centerWorld:", bbox.centerWorld.toString());
+        }
+    }
+
+    onSelect() {
+        this.isSelected = true;
+        this.logMeshTransform("onSelect");
+    }
+
+    onDeselect() {
+        this.isSelected = false;
+        this.logMeshTransform("onDeselect");
+    }
 }
