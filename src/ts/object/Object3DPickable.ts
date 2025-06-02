@@ -4,8 +4,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Material } from "@babylonjs/core/Materials/material";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class Object3DPickable implements Object3D{
     mesh: Mesh;
@@ -13,7 +12,6 @@ export class Object3DPickable implements Object3D{
     isSelected: boolean = false;
     aggregate?: PhysicsAggregate; // Store aggregate directly
     extra: any;
-    parentNode: TransformNode;
 
     constructor(
       scene: Scene,
@@ -47,11 +45,16 @@ export class Object3DPickable implements Object3D{
             this.mesh.setPivotPoint(new Vector3(0, 0, 0));
         }
 
-        // --- Wrap mesh in a parent TransformNode to absorb geometry offset ---
-        this.parentNode = new TransformNode(name + "_parent", scene);
-        this.mesh.parent = this.parentNode;
-        this.parentNode.position.copyFrom(this.mesh.position);
-        this.mesh.position.set(0, 0, 0);
+        // --- Move mesh geometry so bounding box center is at origin ---
+        if (this.mesh.getBoundingInfo) {
+            const bbox = this.mesh.getBoundingInfo().boundingBox;
+            const center = bbox.center.clone();
+            this.mesh.bakeTransformIntoVertices(
+                Matrix.Translation(-center.x, -center.y, -center.z)
+            );
+            // After baking, reset position to where the center should be
+            this.mesh.position.addInPlace(center);
+        }
 
         this.enableAirFriction(); // Enable air friction by default
 
