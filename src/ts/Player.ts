@@ -255,7 +255,7 @@ export class Player{
                 objectPickable.mesh.scaling = new Vector3(0.001, 0.001, 0.001);
                 console.log("RESIZE : Object scaling too small, setting to minimum size.");
             }
-            if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
+            if(objectPickable.extra?.pointLight && this.selectedObjectLightInitialIntensity !== null) {
                 // Clamp intensity to a maximum of 100
                 const newIntensity = Math.min(this.selectedObjectLightInitialIntensity * scaleFactor, 100);
                 objectPickable.extra.pointLight.intensity = newIntensity;
