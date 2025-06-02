@@ -20,7 +20,7 @@ import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
-import XRDrumKit from "../xrDrumKit.ts"
+//import XRDrumKit from "../xrDrumKit.ts"
 
 import XRHandler from "../XRHandler.ts"
 import {Player} from "../Player.ts"
@@ -82,7 +82,7 @@ export class Scene1Superliminal implements CreateSceneClass {
     const eventMask = started | continued | finished;
       
     // @ts-ignore
-    const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
 
     // Skybox
 	var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
