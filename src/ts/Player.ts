@@ -83,6 +83,17 @@ export class Player{
                 // --- Disable collision callbacks and save event mask ---
                 (object3DPickable as any)._savedEventMask = body.getEventMask?.();
                 body.setCollisionCallbackEnabled(false);
+
+                // --- Add collision logging ---
+                if (!(body as any)._collisionLogger) {
+                    (body as any)._collisionLogger = body.getCollisionObservable().add((collisionEvent: any) => {
+                        const colliderA = collisionEvent.collider?.transformNode?.name || "unknown";
+                        const colliderB = collisionEvent.collidedAgainst?.transformNode?.name || "unknown";
+                        if (collisionEvent.type === "COLLISION_STARTED") {
+                            console.log(`[COLLISION] ${colliderA} <-> ${colliderB}`);
+                        }
+                    });
+                }
             }
             //console.log("ON SELECTIONNE : ");
             //console.log(object);
@@ -339,6 +350,9 @@ export class Player{
         // Exclude self, skyBox, laserPointers, rotationCone, and any mesh with "joint" or "jointparent" in the name
         const otherMeshes = scene.meshes.filter(mesh =>
             mesh !== objectPickable.mesh &&
+            mesh.isVisible && // Only visible meshes
+            mesh.isEnabled() && // Only enabled meshes
+            typeof mesh.getTotalVertices === "function" && mesh.getTotalVertices() > 0 && // Only meshes with geometry
             mesh.name !== "skyBox" &&
             mesh.name !== "laserPointer" &&
             mesh.name !== "rotationCone" &&
