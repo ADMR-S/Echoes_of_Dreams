@@ -4,7 +4,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Material } from "@babylonjs/core/Materials/material";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics";
-import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class Object3DPickable implements Object3D{
     mesh: Mesh;
@@ -45,16 +45,6 @@ export class Object3DPickable implements Object3D{
             this.mesh.setPivotPoint(new Vector3(0, 0, 0));
         }
 
-        // --- Move mesh geometry so bounding box center is at origin ---
-        if (this.mesh.getBoundingInfo) {
-            const bbox = this.mesh.getBoundingInfo().boundingBox;
-            const center = bbox.center.clone();
-            this.mesh.bakeTransformIntoVertices(
-                Matrix.Translation(-center.x, -center.y, -center.z)
-            );
-            // After baking, reset position to where the center should be
-            this.mesh.position.addInPlace(center);
-        }
 
         this.enableAirFriction(); // Enable air friction by default
 
