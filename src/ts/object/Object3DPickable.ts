@@ -47,7 +47,7 @@ export class Object3DPickable implements Object3D{
 
         this.enableAirFriction(); // Enable air friction by default
 
-        this.mesh.parent = null
+        
         // --- Log mesh transform info for debugging ---
         console.log(`[Object3DPickable] Created: ${this.mesh.name}`);
         console.log("  position:", this.mesh.position?.toString());
