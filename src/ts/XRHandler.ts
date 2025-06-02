@@ -109,11 +109,13 @@ export class XRHandler{
 
                                 if (bestPick) {
                                     this.player.selectObject(bestPick.mesh, bestPick.point, this.xr, this.scene);
+                                    (bestPick.mesh as any).object3DPickable.onSelect?.();
                                     const distance = camera.position.subtract(bestPick.point).length();
                                     this.scene.onBeforeRenderObservable.remove(this.highlightingObservable);
                                     console.log("Distance to target:", distance);
                                 } else if (this.player.selectedObject) {
                                     this.player.deselectObject(this.scene);
+                                    (this.player.selectedObject as any).object3DPickable.onDeselect?.();
                                     this.setupHighlighting(); // Reset highlighting if no object is selected
                                 }
                             }
