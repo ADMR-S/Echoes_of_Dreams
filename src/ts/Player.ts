@@ -50,7 +50,7 @@ export class Player{
                 { mass: 1 }
             );
             objPickable.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-            objPickable.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            objPickable.aggregate.body.setPrestepType(PhysicsPrestepType.ACTION);
             // Enable collision callbacks and restore event mask
             objPickable.aggregate.body.setCollisionCallbackEnabled(true);
             if (objPickable._savedEventMask !== undefined) {
