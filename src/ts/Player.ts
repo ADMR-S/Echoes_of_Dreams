@@ -103,16 +103,7 @@ export class Player{
                 this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
             }
 
-            // --- Set pivot point to bounding box center (in local space) ---
             const boundingInfo = object.getBoundingInfo();
-            const centerLocal = boundingInfo.boundingBox.center.subtract(object.position);
-            object.setPivotPoint(centerLocal);
-
-            // --- Force bounding info update before using for placement ---
-            object.computeWorldMatrix(true);
-            object.refreshBoundingInfo(true, true);
-
-            // Calculate offset distance based on bounding box
             const min = boundingInfo.boundingBox.minimumWorld;
             const max = boundingInfo.boundingBox.maximumWorld;
             const size = max.subtract(min);
