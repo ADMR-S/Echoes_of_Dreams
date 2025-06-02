@@ -103,6 +103,10 @@ export class Player{
                 this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
             }
 
+            // --- Fix: Reset mesh rotationQuaternion to Quaternion.Identity() before setting pivot ---
+            // This avoids left/right inversion on first selection for imported meshes
+            object.rotationQuaternion = Quaternion.Identity();
+
             const boundingInfo = object.getBoundingInfo();
             const min = boundingInfo.boundingBox.minimumWorld;
             const max = boundingInfo.boundingBox.maximumWorld;
