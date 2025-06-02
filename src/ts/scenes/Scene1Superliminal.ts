@@ -251,8 +251,11 @@ export class Scene1Superliminal implements CreateSceneClass {
 
             
             console.log("parent : ", mesh.parent);
-            mesh.parent?.dispose()
+            const rootNode = mesh.parent;
             mesh.parent = null
+            if(rootNode){
+                rootNode.dispose()
+            }
             // --- Ensure the queen has a StandardMaterial for highlight ---
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
                 mesh.material = new StandardMaterial("queenMat", scene);
