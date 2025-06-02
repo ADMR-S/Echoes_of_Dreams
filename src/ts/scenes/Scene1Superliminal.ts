@@ -36,6 +36,7 @@ import { Object3DPickable } from "../object/Object3DPickable";
 
 import { WebXRFeatureName } from "@babylonjs/core";
 import * as GUI from "@babylonjs/gui/2D";
+import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
@@ -217,6 +218,37 @@ export class Scene1Superliminal implements CreateSceneClass {
 
           
           //FIN SWITCH SCENE BUTTON
+
+        // --- Asset Manager for Chess Pieces ---
+        const assetsManager = new AssetsManager(scene);
+
+        // Example: Load the queen chess piece from asset/chess/queen
+        // Assumes a .glb file named queen.glb in that folder
+        const queenTask = assetsManager.addMeshTask(
+            "loadQueen",
+            "", // mesh names, empty for all
+            "asset/chess/",
+            "queen.glb"
+        );
+
+        queenTask.onSuccess = (task) => {
+            // task.loadedMeshes is an array of loaded meshes
+            task.loadedMeshes.forEach(mesh => {
+                mesh.position = new Vector3(0, 1, 0); // Example position
+                mesh.scaling = new Vector3(1, 1, 1); // Adjust as needed
+                mesh.isPickable = true;
+            });
+            console.log("Queen chess piece loaded.");
+        };
+
+        //@ts-ignore
+        queenTask.onError = (task, message, exception) => {
+            console.error("Failed to load queen chess piece:", message, exception);
+        };
+
+        // You can add more mesh tasks for other pieces here
+
+        assetsManager.load();
 
         return scene;
     };
