@@ -269,7 +269,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
                     aggregate.body.setCollisionCallbackEnabled(true);
                     aggregate.body.setEventMask(eventMask);
-                    return { mesh, aggregate };
+                    return { mesh, extra : {}, aggregate };
                 }
 
                 
@@ -279,7 +279,6 @@ export class Scene1Superliminal implements CreateSceneClass {
             // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
             (mesh as any).object3DPickable = queenPickable;
 
-            queenPickable.refreshPhysicsAggregate(scene, PhysicsShapeType.MESH, { mass: 1 });
             console.log("Queen chess piece loaded and pickable.");
         };
 
@@ -502,11 +501,6 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
             aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
             aggregate.body.setCollisionCallbackEnabled(true);
             aggregate.body.setEventMask(eventMask);
-
-            aggregate.body.getCollisionObservable().add((collisionEvent: any) => {
-                if (collisionEvent.type === "COLLISION_STARTED") {
-                }
-            });
 
             // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
             /*
