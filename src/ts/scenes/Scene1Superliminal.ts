@@ -244,12 +244,17 @@ export class Scene1Superliminal implements CreateSceneClass {
             mesh.scaling = new Vector3(0.3, 0.3, 0.3);
             mesh.isPickable = true;
 
+            // --- Ensure the queen has a StandardMaterial for highlight ---
+            if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
+                mesh.material = new StandardMaterial("queenMat", scene);
+            }
+
             // Create Object3DPickable for the queen
             //@ts-ignore
             const queenPickable = new Object3DPickable(
                 scene,
                 "queenPickable",
-                mesh.material ?? new StandardMaterial("queenMat", scene),
+                mesh.material,
                 PhysicsShapeType.MESH,
                 1,
                 // Custom mesh factory to use the imported mesh and add physics
@@ -260,7 +265,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     // Add physics aggregate (MESH shape for complex mesh)
                     const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
                     aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-                    aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                    aggregate.body.setPrestepType(PhysicsPrestepType.ACTION);
                     aggregate.body.setCollisionCallbackEnabled(true);
                     aggregate.body.setEventMask(eventMask);
                     return { mesh, aggregate };

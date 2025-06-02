@@ -34,6 +34,9 @@ export class Object3DPickable implements Object3D{
         }
         // Store a reference to this Object3DPickable on the mesh
         (this.mesh as any).object3DPickable = this;
+
+        // --- Ensure mesh.isPickable is true for highlight logic ---
+        this.mesh.isPickable = true;
     }
   
     createMesh(scene: Scene, name: string, type: PhysicsShapeType, size: number): Mesh {
