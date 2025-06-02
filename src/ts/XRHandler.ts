@@ -114,8 +114,8 @@ export class XRHandler{
                                     this.scene.onBeforeRenderObservable.remove(this.highlightingObservable);
                                     console.log("Distance to target:", distance);
                                 } else if (this.player.selectedObject) {
-                                    this.player.deselectObject(this.scene);
                                     (this.player.selectedObject as any).object3DPickable.onDeselect?.();
+                                    this.player.deselectObject(this.scene);
                                     this.setupHighlighting(); // Reset highlighting if no object is selected
                                 }
                             }
