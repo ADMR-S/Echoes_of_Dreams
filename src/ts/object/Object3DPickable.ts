@@ -37,6 +37,7 @@ export class Object3DPickable implements Object3D{
 
         // --- Ensure mesh.isPickable is true for highlight logic ---
         this.mesh.isPickable = true;
+        this.mesh.scaling = new Vector3(Math.abs(this.mesh.scaling.x), this.mesh.scaling.y, this.mesh.scaling.z)
         
         // --- Fix: Always reset mesh pivot to (0,0,0) on creation ---
         // This avoids unexpected displacement when using setPivotPoint later
