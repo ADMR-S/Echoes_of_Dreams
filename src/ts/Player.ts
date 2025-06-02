@@ -58,7 +58,7 @@ export class Player{
                 delete objPickable._savedEventMask;
             }
             // Enable air friction after refreshing aggregate
-            objPickable.enableAirFriction(0.98); // or your preferred damping factor
+            objPickable.enableAirFriction(); // or your preferred damping factor
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
@@ -102,10 +102,6 @@ export class Player{
             if(object3DPickable.extra?.pointLight){
                 this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
             }
-
-            // --- Fix: Reset mesh rotationQuaternion to Quaternion.Identity() before setting pivot ---
-            // This avoids left/right inversion on first selection for imported meshes
-            object.rotationQuaternion = Quaternion.Identity();
 
             const boundingInfo = object.getBoundingInfo();
             const min = boundingInfo.boundingBox.minimumWorld;

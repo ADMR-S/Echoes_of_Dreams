@@ -241,10 +241,14 @@ export class Scene1Superliminal implements CreateSceneClass {
                 return;
             }
 
+            
             // --- Ensure the queen has a StandardMaterial for highlight ---
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
                 mesh.material = new StandardMaterial("queenMat", scene);
             }
+            mesh.position = new Vector3(-4, 0.5, 3);
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+            mesh.isPickable = true;
 
             // Create Object3DPickable for the queen
             //@ts-ignore
@@ -270,10 +274,6 @@ export class Scene1Superliminal implements CreateSceneClass {
             );
             // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
             (mesh as any).object3DPickable = queenPickable;
-
-            mesh.position = new Vector3(-4, 0.5, 3);
-            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
-            mesh.isPickable = true;
 
             console.log("Queen chess piece loaded and pickable.");
         };
