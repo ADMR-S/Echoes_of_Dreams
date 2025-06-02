@@ -232,13 +232,15 @@ export class Scene1Superliminal implements CreateSceneClass {
         );
 
         queenTask.onSuccess = (task) => {
-            // Find the first loaded mesh that is a Mesh (not TransformNode or AbstractMesh)
-            const mesh = task.loadedMeshes.find(m => m instanceof Mesh) as Mesh;
+            // Find the first loaded mesh that is a Mesh and has geometry
+            const mesh = task.loadedMeshes.find(
+                m => m instanceof Mesh && typeof m.getTotalVertices === "function" && m.getTotalVertices() > 0
+            ) as Mesh | undefined;
             if (!mesh) {
-                console.error("No Mesh found in loadedMeshes for queen.");
+                console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
                 return;
             }
-            mesh.position = new Vector3(-4, 0, 3);
+            mesh.position = new Vector3(-4, 0.5, 3);
             mesh.scaling = new Vector3(0.3, 0.3, 0.3);
             mesh.isPickable = true;
 
