@@ -246,7 +246,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
                 mesh.material = new StandardMaterial("queenMat", scene);
             }
-            mesh.position = new Vector3(-4, 0.5, 3);
+            mesh.position = new Vector3(4, 0.5, 3);
             mesh.scaling = new Vector3(0.3, 0.3, 0.3);
             mesh.isPickable = true;
 

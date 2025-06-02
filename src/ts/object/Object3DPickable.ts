@@ -46,7 +46,20 @@ export class Object3DPickable implements Object3D{
         }
 
         this.enableAirFriction(); // Enable air friction by default
-         
+
+        // --- Log mesh transform info for debugging ---
+        console.log(`[Object3DPickable] Created: ${this.mesh.name}`);
+        console.log("  position:", this.mesh.position?.toString());
+        console.log("  scaling:", this.mesh.scaling?.toString());
+        console.log("  rotation:", this.mesh.rotation?.toString());
+        console.log("  rotationQuaternion:", this.mesh.rotationQuaternion ? this.mesh.rotationQuaternion.toString() : "undefined");
+        console.log("  pivotPoint:", (typeof this.mesh.getPivotPoint === "function") ? this.mesh.getPivotPoint().toString() : "n/a");
+        // Also log bounding box center
+        if (this.mesh.getBoundingInfo) {
+            const bbox = this.mesh.getBoundingInfo().boundingBox;
+            console.log("  boundingBox center:", bbox.center.toString());
+            console.log("  boundingBox centerWorld:", bbox.centerWorld.toString());
+        }
     }
   
     createMesh(scene: Scene, name: string, type: PhysicsShapeType, size: number): Mesh {
