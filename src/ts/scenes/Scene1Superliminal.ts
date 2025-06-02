@@ -35,7 +35,7 @@ import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Object3DPickable } from "../object/Object3DPickable";
 
 import { WebXRFeatureName } from "@babylonjs/core";
-import * as GUI from "@babylonjs/gui/2D";
+//import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -191,7 +191,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 );
 
         //SWITCH SCENE BUTTON
-
+                /*
          const plane = MeshBuilder.CreatePlane("plane", {
             width: 2,
             height: 1,
@@ -216,7 +216,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         });
           advancedTexture.addControl(button1);
 
-          
+          */
           //FIN SWITCH SCENE BUTTON
 
         // --- Asset Manager for Chess Pieces ---
