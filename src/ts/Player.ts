@@ -52,6 +52,7 @@ export class Player{
                 { mass: 1 },
                 (objPickable as any)._savedEventMask
             );
+            this.physicsViewer.showBody(objPickable.aggregate.body); // Hide physics body if needed
             // Enable collision callbacks and restore event mask
             // Restore eventMask if it was saved
             // Enable air friction after refreshing aggregate
