@@ -43,6 +43,11 @@ export class Player{
                 this.resizeAndRepositionObjectObservable = null;
             }
             const objPickable = (this.selectedObject as any).object3DPickable;
+            // --- Restore event mask on deselect ---
+            if (objPickable.aggregate && objPickable._savedEventMask !== undefined) {
+                objPickable.aggregate.body.setEventMask(objPickable._savedEventMask);
+                delete objPickable._savedEventMask;
+            }
             // --- Refresh physics aggregate on deselect ---
             objPickable.refreshPhysicsAggregate(
                 this.selectedObject.getScene(),
@@ -80,8 +85,11 @@ export class Player{
                 // Set motion type to ANIMATED to prevent physics simulation
                 body.setMotionType(PhysicsMotionType.ANIMATED);
                 body.setPrestepType(PhysicsPrestepType.TELEPORT);
-                // --- Disable collision callbacks and save event mask ---
-                //body.setCollisionCallbackEnabled(false);
+                // --- Save and remove event mask on select ---
+                if (typeof body.getEventMask === "function") {
+                    (object3DPickable as any)._savedEventMask = body.getEventMask();
+                    body.setEventMask(0);
+                }
             }
             //console.log("ON SELECTIONNE : ");
             //console.log(object);
