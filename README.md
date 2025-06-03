@@ -6,8 +6,9 @@ Pour jouer au jeu, visitez le site sur lequel il est hébergé depuis un navigat
 
 Il est préférable voire nécessaire d'utiliser un casque de réalité virtuelle et des manettes compatibles (le jeu a été développé et testé avec le [Meta Quest 2](https://www.meta.com/fr/en/quest/products/quest-2/)).
 
-- Lien du jeu : https://echoes-of-dreams-stable.onrender.com/
+- [Lien du jeu](https://echoes-of-dreams-stable.onrender.com/)
 - [Documentation](./Documentation.md)
+- [Présentation vidéo](https://www.youtube.com/watch?v=Uwqi30tmJPo)
 
 ## Le Concept du Jeu
 
