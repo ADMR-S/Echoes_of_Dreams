@@ -87,8 +87,9 @@ export class Object3DPickable implements Object3D{
         const aggregate = new PhysicsAggregate(this.mesh, shapeType, options, scene);
         const body = aggregate.body;
         // Set motion type to ANIMATED to prevent physics simulation
-        body.setMotionType(PhysicsMotionType.ANIMATED);
+        body.setMotionType(PhysicsMotionType.STATIC);
         body.setPrestepType(PhysicsPrestepType.TELEPORT);
+        
         this.aggregate = aggregate;
 
         this.enableAirFriction(); // Enable air friction by default
