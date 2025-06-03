@@ -50,7 +50,6 @@ export class Player{
                 this.selectedObject.getScene(),
                 objPickable.shapeType,
                 { mass: 1 },
-                (objPickable as any)._savedEventMask
             );
             this.physicsViewer.showBody(objPickable.aggregate.body); // Hide physics body if needed
             // Enable collision callbacks and restore event mask
@@ -82,10 +81,6 @@ export class Player{
                 // Set motion type to ANIMATED to prevent physics simulation
                 body.setMotionType(PhysicsMotionType.STATIC);
                 body.setPrestepType(PhysicsPrestepType.DISABLED);
-                // --- Disable collision callbacks and save event mask ---
-                // Remove eventMask on selection (save it for later restore)
-                (object3DPickable as any)._savedEventMask = body.getEventMask();
-                body.setEventMask(0)
                 //body.setCollisionCallbackEnabled(false);
                 console.log("SAVED Event mask:", (object3DPickable as any)._savedEventMask);
 
