@@ -8,7 +8,7 @@ niveau 1 composé d énigmes/mini jeux/casse-tête ?
 
 Scene 1 :
 Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
-Désactiver rotation par cran de la caméra liée à la téléportation
+Désactiver rotation par cran de la caméra liée à la téléportation + Couper déplacement si TP activée
 La musique boucle mal, changer
 Ajouter effets de caméra lorsqu'un gros objet tombe au sol
     + Effets sonores
