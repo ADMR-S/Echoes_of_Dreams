@@ -105,8 +105,6 @@ export class Player{
 
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
-                object.computeWorldMatrix(true);
-                object.refreshBoundingInfo(true, true);
                 this.animateObject(object, scene);
                 this.resizeAndRepositionObject(object3DPickable, scene, xr, selectedObjectBaseOffsetDistance);
             }, 0);
