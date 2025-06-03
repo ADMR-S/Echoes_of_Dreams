@@ -8,5 +8,6 @@ Pour jouer à Echoes of Dream, vous aurez besoin d'un casque de réalité virtue
 - **Bouton Y** : Activer/désactiver la téléportation
 - **Bouton X** : Activer / Désactiver la télékinésie sur un objet surligné en violet
 - **Bouton A** : Sauter (à venir)
+- **Bouton B** : Changer de scène (nécessite d'entrer à nouveau en VR)
 
 - **Gachette droite** : A DETAILLER (Noé)

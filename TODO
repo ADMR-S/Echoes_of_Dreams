@@ -12,7 +12,8 @@ Désactiver rotation par cran de la caméra liée à la téléportation
 La musique boucle mal, changer
 Ajouter effets de caméra lorsqu'un gros objet tombe au sol
     + Effets sonores
-Ajouter un corps physique à la caméra pour empêcher de passer à travers les murs
+    Switch entre animation de déplacement et rotation manuelle (en appuyant sur la gachette et en tournant la main, déplacement relatif)
+Ajouter un corps physique à la caméra pour empêcher de passer à travers les murs (CharacterController)
 Permettre de switch entre deplacement au stick et teleportation avec un bouton
 HUD pour décrire les états (TP / deplacement, Télékinésie activée ou non...)
 Permettre de monter sur des objets (les ajouter au "ground" ?)
@@ -24,12 +25,17 @@ Intégrer puzzle géant au 1er niveau
 
 Parvenir à passer d'un niveau à l'autre
 
+Tutoriels, dialogues (monologue intérieur), instructions, HUD...
+
+Scene Optimizer pour stabiliser le framerate
+
 Instructions :
 Stick gauche : Se déplacer
 Stick droit : Orienter la caméra (gauche/droite)
 Bouton Y : Activer/désactiver la téléportation
 Bouton X : Sélectionner un objet qui brille en violet (superliminal) 
 Bouton A : Sauter (à venir)
+Bouton B : Changer de scène (nécessite d'entrer à nouveau en VR)
 Gachette droite : NIVEAU 3 (Noé)
 
 (Dev) Gachette interne droite : Afficher la console XR pour debug

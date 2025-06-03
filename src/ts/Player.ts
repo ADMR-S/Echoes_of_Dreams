@@ -5,9 +5,10 @@ import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+//import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Object3DPickable } from "./object/Object3DPickable";
 import { BoundingBox } from "@babylonjs/core";
+import { PhysicsViewer } from "@babylonjs/core";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -21,11 +22,14 @@ export class Player{
     private animationObservable: any;
     private resizeAndRepositionObjectObservable: any;
     private rayHelper: RayHelper | null = null;
+    //@ts-ignore
+    private physicsViewer?: any;
 
     constructor(){
         this.selectedObject = null;
         this.selectedObjectInitialDistance = null;
         this.animationObservable = null;
+        this.physicsViewer = new PhysicsViewer();
     }
 
     deselectObject(scene: Scene){
@@ -47,12 +51,12 @@ export class Player{
             objPickable.refreshPhysicsAggregate(
                 this.selectedObject.getScene(),
                 objPickable.shapeType,
-                { mass: 1 }
+                { mass: 1 },
             );
-            objPickable.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-            objPickable.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            //this.physicsViewer.showBody(objPickable.aggregate.body); // Hide physics body if needed
+            // Enable collision callbacks and restore event mask
+            // Restore eventMask if it was saved
             // Enable air friction after refreshing aggregate
-            objPickable.enableAirFriction(0.98); // or your preferred damping factor
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
             this.selectedObjectOriginalScaling = null;
@@ -76,9 +80,15 @@ export class Player{
                 const body = object3DPickable.aggregate.body;
                 body.setLinearVelocity(Vector3.Zero());
                 body.setAngularVelocity(Vector3.Zero());
-                            // Set motion type to ANIMATED to prevent physics simulation
-                body.setMotionType(PhysicsMotionType.ANIMATED);
-                body.setPrestepType(PhysicsPrestepType.TELEPORT);
+                // Set motion type to ANIMATED to prevent physics simulation
+                // --- Remove air friction observer before disposing aggregate ---
+                if ((object3DPickable as any)._airFrictionObserver) {
+                    scene.onBeforeRenderObservable.remove((object3DPickable as any)._airFrictionObserver);
+                    (object3DPickable as any)._airFrictionObserver = null;
+                }
+                body.dispose();
+
+                //body.setCollisionCallbackEnabled(false);
             }
             //console.log("ON SELECTIONNE : ");
             //console.log(object);
@@ -89,11 +99,10 @@ export class Player{
             object.isPickable = false;
             //console.log("Set isPickable = false for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             this.selectedObjectOriginalScaling = object.scaling.clone();
-            if(object3DPickable.extra.pointLight){
-            this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
+            if(object3DPickable.extra?.pointLight){
+                this.selectedObjectLightInitialIntensity = object3DPickable.extra.pointLight.intensity; // Store original light intensity if needed
             }
 
-            // Calculate offset distance based on bounding box
             const boundingInfo = object.getBoundingInfo();
             const min = boundingInfo.boundingBox.minimumWorld;
             const max = boundingInfo.boundingBox.maximumWorld;
@@ -101,7 +110,6 @@ export class Player{
             const greatestDimension = Math.max(size.x, size.y, size.z);
             const selectedObjectBaseOffsetDistance = greatestDimension / 2 + 0.01; // Add small epsilon
 
-            
             // Delay displacement observable by one frame to ensure isPickable is updated
             setTimeout(() => {
                 this.animateObject(object, scene);
@@ -111,6 +119,7 @@ export class Player{
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
             this.selectedObjectInitialDistance = distance;
             console.log("Distance to target:", distance)
+            // Show physics body using PhysicsViewer
         }
     }
 
@@ -245,7 +254,7 @@ export class Player{
                 objectPickable.mesh.scaling = new Vector3(0.001, 0.001, 0.001);
                 console.log("RESIZE : Object scaling too small, setting to minimum size.");
             }
-            if(objectPickable.extra.pointLight && this.selectedObjectLightInitialIntensity !== null) {
+            if(objectPickable.extra?.pointLight && this.selectedObjectLightInitialIntensity !== null) {
                 // Clamp intensity to a maximum of 100
                 const newIntensity = Math.min(this.selectedObjectLightInitialIntensity * scaleFactor, 100);
                 objectPickable.extra.pointLight.intensity = newIntensity;
@@ -335,6 +344,9 @@ export class Player{
         // Exclude self, skyBox, laserPointers, rotationCone, and any mesh with "joint" or "jointparent" in the name
         const otherMeshes = scene.meshes.filter(mesh =>
             mesh !== objectPickable.mesh &&
+            mesh.isVisible && // Only visible meshes
+            mesh.isEnabled() && // Only enabled meshes
+            typeof mesh.getTotalVertices === "function" && mesh.getTotalVertices() > 0 && // Only meshes with geometry
             mesh.name !== "skyBox" &&
             mesh.name !== "laserPointer" &&
             mesh.name !== "rotationCone" &&

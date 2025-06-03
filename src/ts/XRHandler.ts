@@ -13,6 +13,7 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import XRLogger from "./XRLogger";
 
 export class XRHandler{
 
@@ -50,6 +51,7 @@ export class XRHandler{
         this.setupObjectSelection();
         this.setupHighlighting(); // Add highlighting setup
         this.setupSceneSwitchControls();
+        new XRLogger(xr, scene); // Initialize XRLogger
     }
 
     getLeftAndRightControllers(){
@@ -107,10 +109,12 @@ export class XRHandler{
 
                                 if (bestPick) {
                                     this.player.selectObject(bestPick.mesh, bestPick.point, this.xr, this.scene);
+                                    (bestPick.mesh as any).object3DPickable.onSelect?.();
                                     const distance = camera.position.subtract(bestPick.point).length();
                                     this.scene.onBeforeRenderObservable.remove(this.highlightingObservable);
                                     console.log("Distance to target:", distance);
                                 } else if (this.player.selectedObject) {
+                                    (this.player.selectedObject as any).object3DPickable.onDeselect?.();
                                     this.player.deselectObject(this.scene);
                                     this.setupHighlighting(); // Reset highlighting if no object is selected
                                 }
@@ -165,7 +169,12 @@ export class XRHandler{
                 // Highlight the new mesh
                 if (bestPick) {
                     const mesh = bestPick.mesh as AbstractMesh;
-                    const mat = mesh.material;
+                    let mat = mesh.material;
+                    // --- Clone material if shared to avoid flickering ---
+                    if (mat && mat instanceof StandardMaterial && mat.getScene().meshes.filter(m => m.material === mat).length > 1) {
+                        mat = mat.clone(mesh.name + "_highlightMat");
+                        mesh.material = mat;
+                    }
                     if (mat && mat instanceof StandardMaterial) {
                         if (!(mat as any)._originalDiffuseColor) {
                             (mat as any)._originalDiffuseColor = mat.diffuseColor.clone();

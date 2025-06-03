@@ -184,7 +184,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         const obstacles: AbstractMesh [] = [];
         let nextObstacleSpawnZ = 20;
         const spawnAheadDistance = 100;
-        const maxLevelZ = 700;
+        const maxLevelZ = 400;
         const obstacleSpawnIntervalMin = 4;
         const obstacleSpawnIntervalMax = 8;
         let obstacleCounter = 0;
@@ -660,7 +660,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                     return;
                 }
 
-                const spawnInterval = 2000 - ((2000 - 500) * (elapsedPart2Check / 180000));
+                const spawnInterval = 5000 - ((2000 - 500) * (elapsedPart2Check / 180000));
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
@@ -757,7 +757,7 @@ export class SceneNiveau3 implements CreateSceneClass {
                     this.swords.length = 0;
                     return;
                 }
-                const spawnInterval = Math.max(500, 2000 - ((2000 - 500) * (elapsedPart3Check / timerpart3)));
+                const spawnInterval = Math.max(500, 5000 - ((2000 - 500) * (elapsedPart3Check / timerpart3)));
                 meteorSpawnTimer += dtMs;
                 if (meteorSpawnTimer >= spawnInterval) {
                     meteorSpawnTimer = 0;
@@ -1061,8 +1061,12 @@ function spawnMeteor(scene: Scene, platform: Mesh, obstacleTemplates: AbstractMe
     );
     (meteor as any).ambientSound = meteorSound;
 
-    const angleXZ = Math.random() * Math.PI * 2;
-    const randomRadius = Math.random() * 40 + 30;
+    const forwardAngle = Math.PI / 2;
+    const spreadAngle = Math.PI / 3;
+
+    const randomOffsetAngle = (Math.random() - 0.5) * spreadAngle;
+
+    const angleXZ = forwardAngle + randomOffsetAngle;    const randomRadius = Math.random() * 40 + 30;
     const xOffset = Math.cos(angleXZ) * randomRadius;
     const zOffset = Math.sin(angleXZ) * randomRadius;
     const heightOffset = Math.random() * 20 + 15;
@@ -1120,15 +1124,34 @@ function createPinkProjectileTrail(scene: Scene, emitterMesh: AbstractMesh): Par
 }
 
 function createSword(controller: WebXRInputSource, scene: Scene): Mesh {
-    const sword = MeshBuilder.CreateBox("sword", { height: 1.2, width: 0.1, depth: 0.1 }, scene);
+    const lanceHeight = 2.5;
+    const lanceWidth = 0.08;
+    const lanceDepth = 0.08;
+
+    const sword = MeshBuilder.CreateBox("sword", {
+        height: lanceHeight,
+        width: lanceWidth,
+        depth: lanceDepth
+    }, scene);
+
+    sword.position = new Vector3(
+        0,
+        -0.05,
+        lanceHeight / 2
+    );
     sword.position = new Vector3(0, -0.3, 0.2);
     const swordMat = new StandardMaterial("swordMat", scene);
-    swordMat.diffuseColor = new Color3(0.8, 0.8, 0.8);
+    swordMat.diffuseColor = new Color3(0.6, 0.6, 0.7);
     sword.material = swordMat;
 
     if (controller.grip) {
         sword.parent = controller.grip;
-        sword.rotation.x = Tools.ToRadians(15);
+        sword.rotationQuaternion = null;
+        sword.rotation = new Vector3(
+            Tools.ToRadians(-90),
+            0,
+            0
+        );
     }
     sword.isPickable = false;
     return sword;
@@ -1363,10 +1386,10 @@ function createBlackSmokeTrail(scene: Scene, emitterMesh: AbstractMesh): Particl
 
     const baseParticleSize = 0.008;
     particleSystem.minSize = baseParticleSize * 1.1;
-    particleSystem.maxSize = baseParticleSize * 2.2;
+    particleSystem.maxSize = baseParticleSize * 1.8;
     particleSystem.minLifeTime = 0.6;
     particleSystem.maxLifeTime = 1.2;
-    particleSystem.emitRate = 850;
+    particleSystem.emitRate = 500;
 
     particleSystem.minEmitPower = 0.0018;
     particleSystem.maxEmitPower = 0.0040;

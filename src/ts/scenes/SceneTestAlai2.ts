@@ -1,334 +1,306 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
-// @ts-ignore
-import { Texture } from "@babylonjs/core/Materials/Textures/texture";
-import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
-
+//import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
 // If you don't need the standard material you will still need to import it since the scene requires it.
-//import "@babylonjs/core/Materials/standardMaterial";
-import { PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import "@babylonjs/core/Materials/standardMaterial";
+import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { havokModule } from "../externals/havok.ts";
+import HavokPhysics from "@babylonjs/havok";
 import { CreateSceneClass } from "../createScene.ts";
+
 
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
-import {
-    Mesh,
-    MeshBuilder,
-    PhysicsAggregate,
-    PhysicsShapeType,
-    PhysicsPrestepType,
-    WebXRControllerPhysics, Ray, StandardMaterial, Color3, PointerDragBehavior, Scalar, TransformNode
-} from "@babylonjs/core";
+// @ts-ignore
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
-import HavokPhysics from "@babylonjs/havok";
-import { XRSceneWithHavok2 } from "./a_supprimer/xrSceneWithHavok2.ts";
+import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
-import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
+//import XRDrumKit from "../xrDrumKit.ts"
 
-export class XRSceneWithHavok5 implements CreateSceneClass {
+import XRHandler from "../XRHandler.ts"
+import {Player} from "../Player.ts"
+
+import { CubeTexture } from "@babylonjs/core/Materials/Textures/cubeTexture";
+import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+import { Color3 } from "@babylonjs/core/Maths/math.color";
+import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import "@babylonjs/core/Helpers/sceneHelpers";
+import { PointLight } from "@babylonjs/core/Lights/pointLight";
+import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
+import { Object3DPickable } from "../object/Object3DPickable";
+
+import { WebXRFeatureName } from "@babylonjs/core";
+//import * as GUI from "@babylonjs/gui/2D";
+import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
+
+export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
 
+    private backgroundMusic: Sound | null = null;
+    
+
     // @ts-ignore
-    createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext): Promise<Scene> => {
+    createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>
+    ): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
+        scene.metadata = { sceneName: "Scene1Superliminal" };
 
-        const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-        light.intensity = 0.7;
+        //const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
+        //light.intensity = 0.7;
 
-        const havokInstance = await HavokPhysics();
-        const hk = new HavokPlugin(true, havokInstance);
-
-        scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
-        // @ts-ignore
-        const physicsEngine = scene.getPhysicsEngine();
-
-        const platform = MeshBuilder.CreateGround("ground", { width: 2, height: 5 }, scene);
-
-        const handlebar = MeshBuilder.CreateBox("handlebar", { height: 0.8, width: 0.1, depth: 0.1 }, scene);
-        const neutralLocalPos = new Vector3(0, 1, 0.9);
-        handlebar.parent = platform;
-        handlebar.position = neutralLocalPos.clone();
-        handlebar.isPickable = true;
-
-        const dragBehavior = new PointerDragBehavior({ dragPlaneNormal: new Vector3(0, 1, 0) });
-        dragBehavior.moveAttached = false; // Désactive le déplacement automatique
-        handlebar.addBehavior(dragBehavior);
-
-        const tunnel = MeshBuilder.CreateBox("tunnel", { width: 10, height: 10, depth: 1000 }, scene);
-        const tunnelMat = new StandardMaterial("tunnelMat", scene);
-        tunnelMat.diffuseColor = new Color3(0.2, 0.2, 0.2);
-        tunnelMat.backFaceCulling = false;
-        tunnel.material = tunnelMat;
-        tunnel.position.z = 500;
-
-        const obstacles: Mesh[] = [];
-
-        let positionz = -10;
-        while (positionz < 1000) {
-            const x = Math.random() * 10;
-            const y = Math.random() * 10;
-            positionz = 1 + Math.random() * 3 + positionz;
-            const position = new Vector3(x - 5, y - 5, positionz);
-
-            loadAsteroid(scene, position, obstacles);
-        }
-
-        const target = MeshBuilder.CreateBox("target", { size: 1 }, scene);
-        target.position = new Vector3(0, 1, 5);
-        var targetAggregate = new PhysicsAggregate(platform, PhysicsShapeType.BOX, { mass: 0 }, scene);
-        targetAggregate.body.setCollisionCallbackEnabled(true);
+        // Our built-in 'ground' shape.
+        const ground: Mesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
 
         const xr = await scene.createDefaultXRExperienceAsync({
-            uiOptions: {
-                sessionMode: 'immersive-vr'
-            },
-            optionalFeatures: true
+            floorMeshes: [ground],
+        });
+        console.log("BASE EXPERIENCE")
+        console.log(xr.baseExperience)
+
+        new XRHandler(scene, xr, player, requestSceneSwitchFn);
+
+          //Good way of initializing Havok
+        // initialize plugin
+        const havokInstance = await HavokPhysics();
+        // pass the engine to the plugin
+        const hk = new HavokPlugin(true, havokInstance);
+
+
+        // enable physics in the scene with a gravity
+        scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+
+        var groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+        const started = hk._hknp.EventType.COLLISION_STARTED.value;
+        const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
+        const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
+
+    const eventMask = started | continued | finished;
+      
+    // @ts-ignore
+    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+
+    // Skybox
+    var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+    var skyboxMaterial = new StandardMaterial("skyBox", scene);
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.reflectionTexture = new CubeTexture("asset/texture/skybox_space", scene);
+    skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new Color3(0, 0, 0);
+    skybox.material = skyboxMaterial;			
+        
+
+        //addScaleRoutineToSphere(sphereObservable);
+
+        var camera=  xr.baseExperience.camera;
+
+        addXRControllersRoutine(scene, xr, eventMask, ground); //eventMask est-il indispensable ?
+
+        // Add keyboard controls for movement
+        const moveSpeed = 1;
+        addKeyboardControls(xr, moveSpeed);
+
+
+
+        // Add collision detection for the ground
+        groundAggregate.body.getCollisionObservable().add((collisionEvent: any) => {
+          if (collisionEvent.type === "COLLISION_STARTED") {
+                var collidedBody = null;
+                if(collisionEvent.collider != groundAggregate.body){
+                    collidedBody = collisionEvent.collider;
+                }
+                else{
+                    collidedBody = collisionEvent.collidedAgainst;
+                }
+                const position = collidedBody.transformNode.position;
+                collidedBody.transformNode.position = new Vector3(position.x, ground.position.y + 5, position.z); // Adjust the y-coordinate to be just above the ground
+                collidedBody.setLinearVelocity(Vector3.Zero());
+                collidedBody.setAngularVelocity(Vector3.Zero());
+            }
         });
 
-        var camera = xr.baseExperience.camera;
-        camera.parent = platform;
+        //-------------------------------------------------------------------------------------------------------
+        // Game loop
 
-        // Timer when shooting
-        let timer = 0;
-        // Interval
-        let interval = 500;
+        let sceneAlreadySwitched = false;
 
-        xr.input.onControllerAddedObservable.add((controller) => {
-            if (controller.inputSource.handedness === 'right') {
-                controller.onMotionControllerInitObservable.add((motionController) => {
-                    const triggerComponent = motionController.getComponent("xr-standard-trigger");
-                    if (triggerComponent) {
-                        triggerComponent.onButtonStateChangedObservable.add((component) => {
-                            if (component.pressed) {
-                                if (Date.now() - timer < interval) {
-                                    return;
-                                } else {
-                                    timer = Date.now();
-                                    shootProjectile(controller, scene);
-                                }
-                            }
-                        });
+
+        scene.onBeforeAnimationsObservable.add( ()=> {
+            const isWithinX = camera.position.x > 9 && camera.position.x < 11;
+            const isWithinZ = camera.position.z > 9 && camera.position.z < 11;
+
+            /*
+            console.log(camera.position.x)
+            console.log(camera.position.z)
+            console.log(isWithinX, isWithinZ)
+            */
+
+            if (!sceneAlreadySwitched && isWithinX && isWithinZ) {
+                sceneAlreadySwitched = true;
+                console.log("La caméra est proche de (10, 10). Changement de scène...");
+                console.log("La caméra est proche de (10, 10). Changement de scène...");
+                console.log("La caméra est proche de (10, 10). Changement de scène...");
+
+                switchScene(engine, scene);
+
+            }
+        })
+
+        // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
+        const wallWidth = 0.5;
+        const wallHeight = 5;
+        const wallLength = 10;
+        const wallPosition = new Vector3(5, wallHeight / 2, 0); // y = height/2 to sit on ground
+
+        const wall = MeshBuilder.CreateBox("rightWall", { width: wallWidth, height: wallHeight, depth: wallLength }, scene);
+        wall.position = wallPosition;
+        wall.isPickable = true;
+
+        // Optional: give the wall a material
+        const wallMat = new StandardMaterial("wallMat", scene);
+        wallMat.diffuseColor = new Color3(0.8, 0.8, 0.9);
+        wall.material = wallMat;
+
+        // Optional: add physics to the wall
+        new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+        //@ts-ignore
+        var lightBulb = createLightBulbPickable(scene, eventMask);
+
+        this.backgroundMusic = new Sound(
+                    "backgroundMusic",
+                    "/asset/sounds/backgroundScene1.ogg",
+                    scene,
+                    () => {
+                        if (this.backgroundMusic) {
+                            this.backgroundMusic.play();
+                            console.log("Musique de fond démarrée.");
+                        }
+                    },
+                    {
+                        loop: true,
+                        autoplay: false,
+                        volume: 0.6
                     }
-                });
+                );
+
+        //SWITCH SCENE BUTTON
+                /*
+         const plane = MeshBuilder.CreatePlane("plane", {
+            width: 2,
+            height: 1,
+          });
+          plane.parent = camera;
+          plane.position.z = 5;
+
+        const advancedTexture =
+            GUI.AdvancedDynamicTexture.CreateForMesh(plane);
+
+          const button1 = GUI.Button.CreateSimpleButton(
+            "but1",
+            "Click Me",
+          );
+          button1.width = 2;
+          button1.height = 1;
+          button1.color = "white";
+          button1.fontSize = 200;
+          button1.background = "green";
+          button1.onPointerUpObservable.add(function () {
+            window.location.pathname = "/scene3";
+        });
+          advancedTexture.addControl(button1);
+
+          */
+          //FIN SWITCH SCENE BUTTON
+
+        // --- Asset Manager for Chess Pieces ---
+        const assetsManager = new AssetsManager(scene);
+
+        // Example: Load the queen chess piece from asset/chess/queen
+        // Assumes a .glb file named queen.glb in that folder
+        const queenTask = assetsManager.addMeshTask(
+            "loadQueen",
+            "", // mesh names, empty for all
+            "asset/chess/",
+            "queen.glb"
+        );
+
+        queenTask.onSuccess = (task) => {
+            // Find the first loaded mesh that is a Mesh and has geometry
+            const mesh = task.loadedMeshes.find(
+                m => m instanceof Mesh && typeof m.getTotalVertices === "function" && m.getTotalVertices() > 0
+            ) as Mesh | undefined;
+            if (!mesh) {
+                console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
+                return;
             }
-        });
+            mesh.position = new Vector3(-4, 0.5, 3);
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+            mesh.isPickable = true;
 
-        let forwardSpeed = 1.5;   // déplacement en z
-        let lateralSpeed = 0;   // sensibilité sur x
-        let verticalSpeed = 0;  // sensibilité sur y
-        let isDragging = false;
-        let deltax = 0;
-        let deltaz = 0;
+            // --- Correction du centre de la bounding box à y=0.5 ---
+            mesh.computeWorldMatrix(true);
+            mesh.refreshBoundingInfo(true, true);
+            const bbox = mesh.getBoundingInfo().boundingBox;
+            const center = bbox.centerWorld;
+            // Décale la mesh pour que le centre de la bounding box soit à y=0.5
+            mesh.position.y += (0.5 - center.y);
 
-        scene.onBeforeRenderObservable.add(() => {
-            const deltaTime = engine.getDeltaTime() / 1000; // en secondes
-
-            const forwardMovement = forwardSpeed * deltaTime;
-            const lateralMovement = lateralSpeed * deltaTime;
-            const verticalMovement = verticalSpeed * deltaTime;
-            forwardSpeed += 0.002;
-
-            if (isDragging) {
-                if (deltax > 0) {
-                    lateralSpeed += deltax * 0.1;
-                } else if (deltax < 0) {
-                    lateralSpeed += deltax * 0.1;
-                }
-                if (deltaz > 0) {
-                    verticalSpeed += deltaz * 0.01;
-                } else if (deltaz < 0) {
-                    verticalSpeed += deltaz * 0.3;
-                }
-
-                if (verticalSpeed > 0.5)
-                    verticalSpeed = 0.5;
-                if (verticalSpeed < -0.5)
-                    verticalSpeed = -0.5;
-                if (lateralSpeed > 0.5)
-                    lateralSpeed = 0.5;
-                if (lateralSpeed < -0.5)
-                    lateralSpeed = -0.5;
-            } else {
-                if (lateralSpeed > 0) {
-                    lateralSpeed -= 0.01;
-                } else if (lateralSpeed < 0) {
-                    lateralSpeed += 0.01;
-                }
-                if (verticalSpeed > 0) {
-                    verticalSpeed -= 0.01;
-                } else if (verticalSpeed < 0) {
-                    verticalSpeed += 0.01;
-                }
+            // --- Ensure the queen has a StandardMaterial for highlight ---
+            if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
+                mesh.material = new StandardMaterial("queenMat", scene);
             }
 
-            obstacles.forEach(obstacle => {
-                obstacle.position.z -= forwardMovement;
-            });
-
-            platform.position.y += verticalMovement;
-            platform.position.x += lateralMovement;
-
-            // Temp
-            if (platform.position.y < -1.8)
-                platform.position.y = -1.8;
-
-            if (platform.position.x > 4)
-                platform.position.x = 4;
-            if (platform.position.x < -4)
-                platform.position.x = -4;
-            if (platform.position.y > 3)
-                platform.position.y = 3;
-
-            // Nettoyage des obstacles dépassés
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                if (obstacles[i].position.z < platform.position.z - 10) {
-                    obstacles[i].dispose();
-                    obstacles.splice(i, 1);
-                } else if (platform.intersectsMesh(obstacles[i], false)) {
-                    console.log("Collision détectée !");
-                    obstacles[i].dispose();
-                    obstacles.splice(i, 1);
+            // Create Object3DPickable for the queen
+            //@ts-ignore
+            const queenPickable = new Object3DPickable(
+                scene,
+                "queenPickable",
+                mesh.material,
+                PhysicsShapeType.MESH,
+                1,
+                // Custom mesh factory to use the imported mesh and add physics
+                //@ts-ignore
+                (scene, name, material, size) => {
+                    mesh.name = name;
+                    mesh.material = material;
+                    // Add physics aggregate (MESH shape for complex mesh)
+                    const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
+                    aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+                    aggregate.body.setPrestepType(PhysicsPrestepType.ACTION);
+                    aggregate.body.setCollisionCallbackEnabled(true);
+                    aggregate.body.setEventMask(eventMask);
+                    return { mesh, aggregate };
                 }
-            }
-        });
+            );
+            // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
+            (mesh as any).object3DPickable = queenPickable;
 
-        engine.runRenderLoop(() => {
-            scene.render();
-        });
+            console.log("Queen chess piece loaded and pickable.");
+        };
 
-        window.addEventListener("resize", () => {
-            engine.resize();
-        });
+        //@ts-ignore
+        queenTask.onError = (task, message, exception) => {
+            console.error("Failed to load queen chess piece:", message, exception);
+        };
 
-        hk.onCollisionObservable.add((ev) => {
-            console.log(ev.type);
-        });
+        // You can add more mesh tasks for other pieces here
 
-        hk.onCollisionEndedObservable.add((ev) => {
-            console.log(ev.type);
-        });
-
-        let currentTiltX = 0;
-        let currentTiltZ = 0;
-        let initialPosition = handlebar.position.clone();
-
-        dragBehavior.onDragStartObservable.add((_event) => {
-            isDragging = true;
-            initialPosition = handlebar.position.clone();
-        });
-
-        dragBehavior.onDragObservable.add((event) => {
-            const sensitivity = 0.05;
-            currentTiltX += event.delta.z * sensitivity;
-            currentTiltZ += event.delta.x * sensitivity;
-
-            const maxTilt = Math.PI / 3;
-            currentTiltX = Math.max(-maxTilt, Math.min(maxTilt, currentTiltX));
-            currentTiltZ = Math.max(-maxTilt, Math.min(maxTilt, currentTiltZ));
-
-            handlebar.rotation.x = currentTiltX;
-            handlebar.rotation.z = currentTiltZ;
-
-            handlebar.position.copyFrom(initialPosition);
-
-            deltax = event.delta.x;
-            deltaz = event.delta.z;
-        });
-
-        dragBehavior.onDragEndObservable.add((_event) => {
-            isDragging = false;
-        });
-
-        scene.onBeforeRenderObservable.add(() => {
-            if (!isDragging) {
-                const dt = engine.getDeltaTime() / 1000;
-                const returnSpeed = 1;
-
-                currentTiltX = Scalar.Lerp(currentTiltX, 0, dt * returnSpeed);
-                currentTiltZ = Scalar.Lerp(currentTiltZ, 0, dt * returnSpeed);
-
-                handlebar.rotation.x = currentTiltX;
-                handlebar.rotation.z = currentTiltZ;
-            }
-        });
+        assetsManager.load();
 
         return scene;
     };
 }
 
-export default new XRSceneWithHavok5();
+export default new Scene1Superliminal();
 
-async function loadAsteroid(scene: Scene, position: Vector3, obstacles: Mesh[]) {
-    try {
-        const meshes = await SceneLoader.ImportMeshAsync(
-            "",
-            "public/AZURE Nature/",
-            "asteroid_1.glb",
-            scene
-        );
-        const asteroidNode = scene.getNodeByName("asteroid_1");
-        if (asteroidNode) {
-            console.log("Asteroid trouvé", asteroidNode);
-
-            // Tu peux maintenant travailler avec le nœud, par exemple, le positionner
-            (asteroidNode as Mesh).position = position;
-
-            // Si tu veux ajouter un comportement physique au modèle
-            new PhysicsAggregate(asteroidNode as TransformNode, PhysicsShapeType.MESH, { mass: 0, restitution: 0 }, scene);
-            obstacles.push(asteroidNode as Mesh);
-        } else {
-            console.error("Nœud 'asteroid_1' non trouvé dans la scène !");
-        }
-        meshes.meshes.forEach(mesh => {
-            mesh.position = position;
-            new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 0, restitution: 0 }, scene);
-            obstacles.push(mesh as Mesh);
-        });
-    } catch (error) {
-        // Gestion des erreurs
-        console.error("Erreur lors du chargement du modèle:", error);
-    }
-}
-
-function shootProjectile(controller: WebXRInputSource, scene: Scene) {
-    const projectile = MeshBuilder.CreateSphere("projectile", { diameter: 0.2 }, scene);
-
-    const aggregateProjectile = new PhysicsAggregate(projectile, PhysicsShapeType.SPHERE, { mass: 10 }, scene);
-    aggregateProjectile.body.setMotionType(PhysicsMotionType.DYNAMIC);
-    let startPos: Vector3;
-    if (controller.grip) {
-        startPos = controller.grip.getAbsolutePosition().clone();
-    } else if (controller.pointer) {
-        startPos = controller.pointer.getAbsolutePosition().clone();
-    } else {
-        startPos = scene.activeCamera!.position.clone();
-    }
-    projectile.position = startPos;
-
-    const tmpRay = new Ray(
-        new Vector3(),
-        new Vector3(),
-        Infinity
-    );
-
-    controller.getWorldPointerRayToRef(tmpRay, true);
-
-    tmpRay.direction.normalize();
-    const impulseMagnitude = 100;
-    aggregateProjectile.body.applyImpulse(
-        tmpRay.direction.scale(impulseMagnitude),
-        projectile.absolutePosition
-    );
-}
-
-// @ts-ignore
-function switchScene(engine: AbstractEngine, scene: Scene) {
+function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
     const newSceneInstance = new XRSceneWithHavok2();
@@ -339,9 +311,11 @@ function switchScene(engine: AbstractEngine, scene: Scene) {
     });
 }
 
-// @ts-ignore
+
 function addKeyboardControls(xr: any, moveSpeed: number) {
+
     window.addEventListener("keydown", (event: KeyboardEvent) => {
+
         switch (event.key) {
             case "z":
                 xr.baseExperience.camera.position.z += moveSpeed;
@@ -365,22 +339,98 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
     });
 }
 
+
 // Add movement with left joystick
-// @ts-ignore
-function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
-    xr.input.onControllerAddedObservable.add((controller: any) => {
-        console.log("Ajout d'un controller");
+function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground : Mesh) {
+    // Store rotation state
+    var rotationInput = 0;
+    var xPositionInput = 0;
+    var yPositionInput = 0;
+
+    let teleportationEnabled = true;
+    const featuresManager = xr.baseExperience.featuresManager;
+
+    xr.input.onControllerAddedObservable.add((controller: any) => {        
+        console.log("Ajout d'un controller")
         if (controller.inputSource.handedness === "left") {
+            controller.onMotionControllerInitObservable.add((motionController: any) => {
+                const leftStick = motionController.getComponent("xr-standard-thumbstick");
+                if (leftStick) {
+                    leftStick.onAxisValueChangedObservable.add((axisValues: any) => {
+                        xPositionInput = axisValues.x;
+                        yPositionInput = axisValues.y;
+                    });
+                }
+
+                const yButton = motionController.getComponent("y-button");
+                if (yButton) {
+                    yButton.onButtonStateChangedObservable.add(() => {
+                        if (yButton.changes.pressed && yButton.pressed) {
+                            teleportationEnabled = !teleportationEnabled;
+                            if (teleportationEnabled) {
+                                // Enable teleportation
+                                featuresManager.enableFeature(
+                                    WebXRFeatureName.TELEPORTATION,
+                                    "stable",
+                                    {
+                                        xrInput: xr.input,
+                                        floorMeshes: [ground],
+                                    }
+                                );
+                                console.log("Teleportation ENABLED");
+                            } else {
+                                // Disable teleportation
+                                featuresManager.disableFeature(WebXRFeatureName.TELEPORTATION);
+                                console.log("Teleportation DISABLED");
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        // Right controller:
+        if (controller.inputSource.handedness === "right") {
             controller.onMotionControllerInitObservable.add((motionController: any) => {
                 const xrInput = motionController.getComponent("xr-standard-thumbstick");
                 if (xrInput) {
                     xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
-                        const speed = 0.05;
-                        xr.baseExperience.camera.position.x += axisValues.x * speed;
-                        xr.baseExperience.camera.position.z -= axisValues.y * speed;
+                        rotationInput = axisValues.x;
                     });
                 }
             });
+        }
+    });
+
+    // Smooth rotation in the render loop
+    scene.onBeforeRenderObservable.add(() => {
+        const rotationSpeed = 0.04; // Adjust for desired sensitivity
+        const movementSpeed = 0.05;
+        const camera = xr.baseExperience.camera;
+
+        if (Math.abs(rotationInput) > 0.01) {
+            console.log("Rotation input: " + rotationInput);
+            console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
+            // Rotate around Y axis (yaw)
+            if (Math.abs(rotationInput) > 0.01) {
+            // Rotate around the WORLD Y axis (not local)
+            const deltaYaw = rotationInput * rotationSpeed;
+            const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
+            camera.rotationQuaternion = yawQuaternion.multiply(camera.rotationQuaternion!);
+        }
+            console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
+        }
+        // Smooth movement relative to camera's facing direction
+        if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
+            // Calculate forward and right vectors based on camera rotation
+            const forward = camera.getDirection(new Vector3(0, 0, 1));
+                const right = camera.getDirection(new Vector3(1, 0, 0));
+                // Remove y component to keep movement horizontal
+                forward.y = 0;
+                right.y = 0;
+                forward.normalize();
+                right.normalize();
+                camera.position.addInPlace(forward.scale(-yPositionInput * movementSpeed));
+                camera.position.addInPlace(right.scale(xPositionInput * movementSpeed));
         }
     });
 
@@ -389,6 +439,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
             // @ts-ignore
             motionController.onModelLoadedObservable.add((mc: any) => {
+
                 console.log("Ajout d'un mesh au controller");
 
                 const controllerMesh = MeshBuilder.CreateBox("controllerMesh", { size: 0.1 }, scene);
@@ -402,14 +453,71 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number) {
                 controllerAggregate.body.setCollisionCallbackEnabled(true);
                 controllerAggregate.body.setEventMask(eventMask);
 
+
+
                 // Make the controller mesh invisible and non-pickable
                 controllerMesh.isVisible = false;
                 controllerMesh.isPickable = false;
 
                 // Attach WebXRControllerPhysics to the controller
-                const controllerPhysics = xr.baseExperience.featuresManager.enableFeature(WebXRControllerPhysics.Name, 'latest');
-                controller.physics = controllerPhysics;
+                //const controllerPhysics = xr.baseExperience.featuresManager.enableFeature(WebXRControllerPhysics.Name, 'latest')
+                //controller.physics = controllerPhysics
             });
         });
     });
 }
+
+// Create a light bulb as an Object3DPickable
+function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPickable {
+    // Usage in scene :
+    // const bulbPickable = createLightBulbPickable(scene);
+    // Access mesh: bulbPickable.mesh
+    // Access light: bulbPickable.extra.pointLight
+    // Access physics: bulbPickable.extra.bulbAggregate
+
+    const mat = new StandardMaterial("bulbMat", scene);
+    mat.emissiveColor = new Color3(1, 0.8, 0.2);
+
+    return new Object3DPickable(
+        scene,
+        "lightBulb",
+        mat,
+        PhysicsShapeType.SPHERE, // Use sphere shape for bulb
+        0.2, // Diameter of the bulb
+        (scene, name, material, size) => {
+            const mesh = MeshBuilder.CreateSphere(name, { diameter: size }, scene);
+            mesh.material = material;
+            // Place the bulb on the ground (y = radius)
+            mesh.position = new Vector3(0, size / 2, 2);
+
+            const pointLight = new PointLight("bulbLight", Vector3.Zero(), scene);
+            pointLight.diffuse = new Color3(1, 0.8, 0.2);
+            // Scale intensity with size (tune the multiplier as needed)
+            pointLight.intensity = 0.05;
+            pointLight.parent = mesh;
+
+            new GlowLayer("glow", scene);
+
+            const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
+
+            aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+            aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            aggregate.body.setCollisionCallbackEnabled(true);
+            aggregate.body.setEventMask(eventMask);
+
+            aggregate.body.getCollisionObservable().add((collisionEvent: any) => {
+                if (collisionEvent.type === "COLLISION_STARTED") {
+                }
+            });
+
+            // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
+            /*
+            scene.onBeforeRenderObservable.add(() => {
+                pointLight.position.copyFrom(mesh.position);
+            });
+            */
+            return { mesh, extra: { pointLight }, aggregate }; // store aggregate at top-level
+        }
+    );
+}
+
