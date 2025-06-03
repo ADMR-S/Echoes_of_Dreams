@@ -8,6 +8,7 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Object3DPickable } from "./object/Object3DPickable";
 import { BoundingBox } from "@babylonjs/core";
+import { PhysicsViewer } from "@babylonjs/core";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -21,6 +22,7 @@ export class Player{
     private animationObservable: any;
     private resizeAndRepositionObjectObservable: any;
     private rayHelper: RayHelper | null = null;
+    private physicsViewer?: any;
 
     constructor(){
         this.selectedObject = null;
@@ -116,6 +118,13 @@ export class Player{
             const distance = xr.baseExperience.camera.position.subtract(objectCoordinates).length();
             this.selectedObjectInitialDistance = distance;
             console.log("Distance to target:", distance)
+            // Show physics body using PhysicsViewer
+            if (!this.physicsViewer) {
+                this.physicsViewer = new PhysicsViewer(scene);
+            }
+            if (object3DPickable.aggregate && object3DPickable.aggregate.body) {
+                this.physicsViewer.showBody(object3DPickable.aggregate.body);
+            }
         }
     }
 
