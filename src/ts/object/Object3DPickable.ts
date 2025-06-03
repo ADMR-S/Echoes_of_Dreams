@@ -79,7 +79,7 @@ export class Object3DPickable implements Object3D{
      * @param shapeType The PhysicsShapeType (e.g., PhysicsShapeType.SPHERE)
      * @param options The physics options (e.g., { mass: 1 })
      */
-    refreshPhysicsAggregate(scene: Scene, shapeType: PhysicsShapeType, options: any) {
+    refreshPhysicsAggregate(scene: Scene, shapeType: PhysicsShapeType, options: any, eventMask : number) {
         if (this.aggregate) {
             this.aggregate.body.dispose();
             this.aggregate.dispose();
@@ -87,8 +87,11 @@ export class Object3DPickable implements Object3D{
         const aggregate = new PhysicsAggregate(this.mesh, shapeType, options, scene);
         const body = aggregate.body;
         // Set motion type to ANIMATED to prevent physics simulation
-        body.setMotionType(PhysicsMotionType.STATIC);
-        body.setPrestepType(PhysicsPrestepType.TELEPORT);
+        body.setMotionType(PhysicsMotionType.DYNAMIC);
+        body.setPrestepType(PhysicsPrestepType.DISABLED);
+        body.setEventMask(eventMask); // Set event mask for collision events
+        body.setCollisionCallbackEnabled(true); // Enable collision callbacks
+
         
         this.aggregate = aggregate;
 
