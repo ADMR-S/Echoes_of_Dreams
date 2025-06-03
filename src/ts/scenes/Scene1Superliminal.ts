@@ -274,8 +274,10 @@ export class Scene1Superliminal implements CreateSceneClass {
                 mesh.refreshBoundingInfo(true, true);
                 mesh.computeWorldMatrix(true);
                 mesh.setPivotPoint(mesh.getBoundingInfo().boundingBox.center.clone());
+
+                mesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
+
             }
-            mesh.position = new Vector3(4, 0.5, 3);
             mesh.scaling = new Vector3(0.3, 0.3, 0.3);
             mesh.isPickable = true;
 
@@ -298,8 +300,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                     const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
                     aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
                     aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-                    aggregate.body.setCollisionCallbackEnabled(true);
-                    aggregate.body.setEventMask(eventMask);
+                    //aggregate.body.setCollisionCallbackEnabled(true);
+                    //aggregate.body.setEventMask(eventMask);
                     return { mesh, extra : {}, aggregate };
                 }
 
@@ -499,6 +501,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
 }
 
 // Create a light bulb as an Object3DPickable
+//@ts-ignore
 function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPickable {
     // Usage in scene :
     // const bulbPickable = createLightBulbPickable(scene);
@@ -533,8 +536,8 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
 
             aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
             aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-            aggregate.body.setCollisionCallbackEnabled(true);
-            aggregate.body.setEventMask(eventMask);
+            //aggregate.body.setCollisionCallbackEnabled(true);
+            //aggregate.body.setEventMask(eventMask);
 
             // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
             /*
