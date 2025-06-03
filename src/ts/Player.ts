@@ -22,12 +22,14 @@ export class Player{
     private animationObservable: any;
     private resizeAndRepositionObjectObservable: any;
     private rayHelper: RayHelper | null = null;
+    //@ts-ignore
     private physicsViewer?: any;
 
     constructor(){
         this.selectedObject = null;
         this.selectedObjectInitialDistance = null;
         this.animationObservable = null;
+        this.physicsViewer = new PhysicsViewer();
     }
 
     deselectObject(scene: Scene){
@@ -51,10 +53,7 @@ export class Player{
                 objPickable.shapeType,
                 { mass: 1 },
             );
-            if(!this.physicsViewer){
-                this.physicsViewer = new PhysicsViewer();
-            }
-            this.physicsViewer.showBody(objPickable.aggregate.body); // Hide physics body if needed
+            //this.physicsViewer.showBody(objPickable.aggregate.body); // Hide physics body if needed
             // Enable collision callbacks and restore event mask
             // Restore eventMask if it was saved
             // Enable air friction after refreshing aggregate

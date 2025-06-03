@@ -12,6 +12,7 @@ Désactiver rotation par cran de la caméra liée à la téléportation
 La musique boucle mal, changer
 Ajouter effets de caméra lorsqu'un gros objet tombe au sol
     + Effets sonores
+    Switch entre animation de déplacement et rotation manuelle (en appuyant sur la gachette et en tournant la main, déplacement relatif)
 Ajouter un corps physique à la caméra pour empêcher de passer à travers les murs (CharacterController)
 Permettre de switch entre deplacement au stick et teleportation avec un bouton
 HUD pour décrire les états (TP / deplacement, Télékinésie activée ou non...)
