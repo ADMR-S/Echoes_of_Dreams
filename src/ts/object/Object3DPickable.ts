@@ -87,6 +87,7 @@ export class Object3DPickable implements Object3D{
         body.setMotionType(PhysicsMotionType.DYNAMIC);
         body.setPrestepType(PhysicsPrestepType.DISABLED);
         body.setCollisionCallbackEnabled(true); // Enable collision callbacks
+        console.log("RESTORE Event mask:", eventMask);
         body.setEventMask(eventMask); // Set event mask for collision events
 
         if (this.aggregate) {
