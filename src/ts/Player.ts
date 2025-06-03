@@ -82,6 +82,11 @@ export class Player{
                 body.setLinearVelocity(Vector3.Zero());
                 body.setAngularVelocity(Vector3.Zero());
                 // Set motion type to ANIMATED to prevent physics simulation
+                // --- Remove air friction observer before disposing aggregate ---
+                if ((object3DPickable as any)._airFrictionObserver) {
+                    scene.onBeforeRenderObservable.remove((object3DPickable as any)._airFrictionObserver);
+                    (object3DPickable as any)._airFrictionObserver = null;
+                }
                 body.dispose();
 
                 //body.setCollisionCallbackEnabled(false);
