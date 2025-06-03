@@ -86,8 +86,8 @@ export class Object3DPickable implements Object3D{
         // Set motion type to ANIMATED to prevent physics simulation
         body.setMotionType(PhysicsMotionType.DYNAMIC);
         body.setPrestepType(PhysicsPrestepType.DISABLED);
-        body.setEventMask(eventMask); // Set event mask for collision events
         body.setCollisionCallbackEnabled(true); // Enable collision callbacks
+        body.setEventMask(eventMask); // Set event mask for collision events
 
         if (this.aggregate) {
             this.aggregate.body.dispose();
