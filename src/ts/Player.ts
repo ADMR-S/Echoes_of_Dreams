@@ -5,7 +5,7 @@ import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Ray } from "@babylonjs/core/Culling/ray";
 import { RayHelper } from "@babylonjs/core/Debug/rayHelper";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+//import { PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Object3DPickable } from "./object/Object3DPickable";
 import { BoundingBox } from "@babylonjs/core";
 import { PhysicsViewer } from "@babylonjs/core";
@@ -51,6 +51,9 @@ export class Player{
                 objPickable.shapeType,
                 { mass: 1 },
             );
+            if(!this.physicsViewer){
+                this.physicsViewer = new PhysicsViewer();
+            }
             this.physicsViewer.showBody(objPickable.aggregate.body); // Hide physics body if needed
             // Enable collision callbacks and restore event mask
             // Restore eventMask if it was saved
@@ -79,11 +82,9 @@ export class Player{
                 body.setLinearVelocity(Vector3.Zero());
                 body.setAngularVelocity(Vector3.Zero());
                 // Set motion type to ANIMATED to prevent physics simulation
-                body.setMotionType(PhysicsMotionType.STATIC);
-                body.setPrestepType(PhysicsPrestepType.DISABLED);
-                //body.setCollisionCallbackEnabled(false);
-                console.log("SAVED Event mask:", (object3DPickable as any)._savedEventMask);
+                body.dispose();
 
+                //body.setCollisionCallbackEnabled(false);
             }
             //console.log("ON SELECTIONNE : ");
             //console.log(object);
@@ -115,12 +116,6 @@ export class Player{
             this.selectedObjectInitialDistance = distance;
             console.log("Distance to target:", distance)
             // Show physics body using PhysicsViewer
-            if (!this.physicsViewer) {
-                this.physicsViewer = new PhysicsViewer(scene);
-            }
-            if (object3DPickable.aggregate && object3DPickable.aggregate.body) {
-                this.physicsViewer.showBody(object3DPickable.aggregate.body);
-            }
         }
     }
 
