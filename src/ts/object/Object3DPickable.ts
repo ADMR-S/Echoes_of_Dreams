@@ -4,7 +4,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Material } from "@babylonjs/core/Materials/material";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+//import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class Object3DPickable implements Object3D{
     mesh: Mesh;
@@ -37,13 +37,14 @@ export class Object3DPickable implements Object3D{
 
         // --- Ensure mesh.isPickable is true for highlight logic ---
         this.mesh.isPickable = true;
-        this.mesh.scaling = new Vector3(Math.abs(this.mesh.scaling.x), Math.abs(this.mesh.scaling.x), Math.abs(this.mesh.scaling.x))
         
+        /*
         // --- Fix: Always reset mesh pivot to (0,0,0) on creation ---
         // This avoids unexpected displacement when using setPivotPoint later
         if (typeof this.mesh.setPivotPoint === "function") {
             this.mesh.setPivotPoint(new Vector3(0, 0, 0));
         }
+            */
 
         this.enableAirFriction(); // Enable air friction by default
 

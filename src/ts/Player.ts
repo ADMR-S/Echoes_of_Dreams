@@ -81,7 +81,6 @@ export class Player{
                 body.setMotionType(PhysicsMotionType.ANIMATED);
                 body.setPrestepType(PhysicsPrestepType.TELEPORT);
                 // --- Disable collision callbacks and save event mask ---
-                (object3DPickable as any)._savedEventMask = body.getEventMask?.();
                 body.setCollisionCallbackEnabled(false);
             }
             //console.log("ON SELECTIONNE : ");
