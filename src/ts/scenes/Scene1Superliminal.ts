@@ -277,7 +277,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 mesh.position.addInPlace(center);
                 mesh.refreshBoundingInfo(true, true);
                 mesh.computeWorldMatrix(true);
-                mesh.setPivotPoint(bbox.center.clone());
+                mesh.setPivotPoint(mesh.getBoundingInfo().boundingBox.center.clone());
             }
 
             // Create Object3DPickable for the queen
