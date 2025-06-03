@@ -85,7 +85,7 @@ export class Object3DPickable implements Object3D{
         const body = aggregate.body;
         // Set motion type to ANIMATED to prevent physics simulation
         body.setMotionType(PhysicsMotionType.DYNAMIC);
-        body.setPrestepType(PhysicsPrestepType.DISABLED);
+        body.setPrestepType(PhysicsPrestepType.ACTION);
 
         if (this.aggregate) {
             this.aggregate.body.dispose();

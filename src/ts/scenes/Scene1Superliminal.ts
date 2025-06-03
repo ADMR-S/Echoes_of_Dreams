@@ -524,7 +524,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
             const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
 
             aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-            aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+            aggregate.body.setPrestepType(PhysicsPrestepType.ACTION);
             aggregate.body.setCollisionCallbackEnabled(true);
             aggregate.body.setEventMask(eventMask);
 
