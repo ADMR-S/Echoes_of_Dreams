@@ -1,5 +1,5 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 //import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
@@ -266,10 +266,17 @@ export class Scene1Superliminal implements CreateSceneClass {
             mesh.scaling = new Vector3(0.3, 0.3, 0.3);
             mesh.isPickable = true;
 
-            // --- Center the pivot point to the mesh's bounding box center ---
-            if (typeof mesh.setPivotPoint === "function" && mesh.getBoundingInfo) {
+            // --- Center geometry so bounding box center is at the origin ---
+            if (mesh.getBoundingInfo && typeof mesh.setPivotPoint === "function") {
                 const bbox = mesh.getBoundingInfo().boundingBox;
-                // Move pivot to center
+                const center = bbox.center.clone();
+                mesh.bakeTransformIntoVertices(
+                    Matrix.Translation(-center.x, -center.y, -center.z)
+                );
+                // After baking, move mesh to where the center should be
+                mesh.position.addInPlace(center);
+                mesh.refreshBoundingInfo(true, true);
+                mesh.computeWorldMatrix(true);
                 mesh.setPivotPoint(bbox.center.clone());
             }
 
@@ -524,7 +531,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
             const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
 
             aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-            aggregate.body.setPrestepType(PhysicsPrestepType.ACTION);
+            aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
             aggregate.body.setCollisionCallbackEnabled(true);
             aggregate.body.setEventMask(eventMask);
 
