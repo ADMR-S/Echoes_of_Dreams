@@ -52,7 +52,7 @@ export class Player{
             objPickable.aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
             objPickable.aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
             // Enable collision callbacks and restore event mask
-            objPickable.aggregate.body.setCollisionCallbackEnabled(true);
+            //objPickable.aggregate.body.setCollisionCallbackEnabled(true);
             // Enable air friction after refreshing aggregate
             this.selectedObject = null;
             this.selectedObjectInitialDistance = null;
@@ -81,7 +81,7 @@ export class Player{
                 body.setMotionType(PhysicsMotionType.ANIMATED);
                 body.setPrestepType(PhysicsPrestepType.TELEPORT);
                 // --- Disable collision callbacks and save event mask ---
-                body.setCollisionCallbackEnabled(false);
+                //body.setCollisionCallbackEnabled(false);
             }
             //console.log("ON SELECTIONNE : ");
             //console.log(object);
