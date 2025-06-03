@@ -78,12 +78,12 @@ export class Player{
                 body.setAngularVelocity(Vector3.Zero());
                 // Set motion type to ANIMATED to prevent physics simulation
                 body.setMotionType(PhysicsMotionType.ANIMATED);
-                body.setPrestepType(PhysicsPrestepType.TELEPORT);
+                body.setPrestepType(PhysicsPrestepType.DISABLED);
                 // --- Disable collision callbacks and save event mask ---
                 // Remove eventMask on selection (save it for later restore)
                 (object3DPickable as any)._savedEventMask = body.getEventMask();
                 body.setEventMask(0)
-                body.setCollisionCallbackEnabled(false);
+                //body.setCollisionCallbackEnabled(false);
 
             }
             //console.log("ON SELECTIONNE : ");
