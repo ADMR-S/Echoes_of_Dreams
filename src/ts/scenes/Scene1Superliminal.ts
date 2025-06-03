@@ -262,10 +262,6 @@ export class Scene1Superliminal implements CreateSceneClass {
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
                 mesh.material = new StandardMaterial("queenMat", scene);
             }
-            mesh.position = new Vector3(4, 0.5, 3);
-            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
-            mesh.isPickable = true;
-
             // --- Center geometry so bounding box center is at the origin ---
             if (mesh.getBoundingInfo && typeof mesh.setPivotPoint === "function") {
                 const bbox = mesh.getBoundingInfo().boundingBox;
@@ -279,6 +275,11 @@ export class Scene1Superliminal implements CreateSceneClass {
                 mesh.computeWorldMatrix(true);
                 mesh.setPivotPoint(mesh.getBoundingInfo().boundingBox.center.clone());
             }
+            mesh.position = new Vector3(4, 0.5, 3);
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+            mesh.isPickable = true;
+
+            
 
             // Create Object3DPickable for the queen
             //@ts-ignore
