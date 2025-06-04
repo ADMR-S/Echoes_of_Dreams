@@ -29,7 +29,7 @@ Nous sommes parvenu à créer 2 scènes, l'une pour la partie Puzzle et l'autre 
 La mécanique de perspective "Superliminal" a pu être développée avec succès pour la partie Puzzle, non sans mal et moyennant un débuggage minutieux, particulièrement après avoir intégré le moteur physique Havok à nos scènes pour pouvoir rapidement proposer au joueur un environnement "Bac à sable" dans lequel s'amuser avec cette mécanique. Nous travaillons encore sur l'intégration des puzzles et d'une scène Blender plus fournie pour enrichir l'expérience (obstacles, fossés, nouveaux angles de vue...), qui propose pour le moment simplement une boule de lumière et un pion d'échec manipulables en les sélectionnant/ déselectionnant avec le bouton X, ainsi qu'un mur pour tester les jeux de perspective.
 
 La séquence Railshooter "à dos de lit" est plus fournie et est divisée en 3 phases : 
-- Évitement d'obstacles : Il faut éviter les ennemis en pivotant le lit en saisissant le levier qui s'y trouve avec la gâchette droite et en inclinant la manette.
+- Évitement d'obstacles : Il faut éviter les ennemis en pilotant le lit à l'aide du levier qui s'y trouve avec la gâchette droite et en inclinant la manette.
 - Phase de tir : Détruisez les ennemis qui vous foncent dessus en leur tirant dessus avec votre gâchette
 - Phase à l'épée : Découpez les ennemis qui vous attaquent pour finalement parvenir au bout de la nuit.
 
