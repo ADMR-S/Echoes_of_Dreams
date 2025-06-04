@@ -15,4 +15,6 @@ Le jeu est divisé en 2 niveaux, le premier est un jeu de Puzzle (pour le moment
 - **Bouton X** : Saisir / Lâcher un objet surligné en violet
 
 ### Niveau 2 :
-- **Gachette droite** : Saisir le levier
+- **Gachette droite** :
+  - Phase 1 : Saisir le levier pour piloter le lit
+  - Phase 2 : Tirer
