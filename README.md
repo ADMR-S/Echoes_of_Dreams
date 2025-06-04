@@ -10,70 +10,41 @@ Il est préférable voire nécessaire d'utiliser un casque de réalité virtuell
 - [Documentation](./Documentation.md)
 - [Présentation vidéo](https://www.youtube.com/watch?v=Uwqi30tmJPo)
 
-## Le Concept du Jeu
-
 Jeu conçu et implémenté par :
 Adam MIR-SADJADI
 Noé FLORENCE
 Allah-Eddine CHERIGUI
 
-to run :
-```bash
+## Démarche 
+
+Notre projet consiste à réaliser un jeu en Réalité Virtuelle comportant plusieurs scènes et phases de gameplay indépendantes. Le joueur s'y retrouve immergé dans un rêve décousu, où se succèdent différentes séquences allant de l'étrange au merveilleux. Le but de chaque niveau est d'atteindre la sortie, qui permet de passer au monde suivant. Une musique émanera de la sortie des niveaux, dont le design graphique reste à déterminer, et deviendra plus forte à mesure que l'on s'en rapproche. Une mort/défaite équivaudra au réveil du personnage que le joueur incarne au milieu de la nuit. Une animation le montrera se rendormir, ce qui aura pour effet de recommencer le rêve depuis le début (ou depuis la dernière séquence atteinte selon la difficulté et la durée du jeu).
+Le but du jeu est de terminer toutes les séquences de jeu à la suite, équivalant à une bonne nuit de sommeil pour le personnage (nous espérions aussi pouvoir intégrer une cinématique en fin de jeu).
+
+L'idée principale consistait à utiliser le contexte du rêve pour proposer durant les premiers niveaux plusieurs séquences de puzzle jouant sur la perspective forcée, inspirées du jeu [Superliminal](https://youtu.be/kl5qbQQsV3I?si=2YzUdbAHoxBdny6Z). L'une des motivations principales étant de mettre ce jeu de perspective à l'épreuve de la VR, considérant la différence existante entre un rendu 2D classique et un rendu de réalité virtuelle qui crée 2 images distinctes (une pour chaque oeil). Nous souhaitions d'abord relever le défi de parvenir à recréer cet effet à partir de nos observations et des informations récoltées quant à son fonctionnement, mais également voir si l'effet fonctionnait aussi bien en VR que dans Superliminal. À l'issue des ces phases de puzzle, le joueur est récompensé par une séquence entraînante type Railshooter où il pilote un lit volant avec lequel il doit éviter puis détruire des monstruosités en se dirigeant vers le soleil du petit matin.
+
+## Résultat
+
+Nous sommes parvenu à créer 2 scènes, l'une pour la partie Puzzle et l'autre pour la partie Railshooter. Nous travaillons encore à lier les deux scènes pour passer de l'une à l'autre fluidement (actuellement il faut appuyer sur le bouton B depuis l'une des scènes puis relancer l'expérience comme montré dans la vidéo de présentation du jeu).
+
+La mécanique de perspective "Superliminal" a pu être développée avec succès pour la partie Puzzle, non sans mal et moyennant un débuggage minutieux, particulièrement après avoir intégré le moteur physique Havok à nos scènes pour pouvoir rapidement proposer au joueur un environnement "Bac à sable" dans lequel s'amuser avec cette mécanique. Nous travaillons encore sur l'intégration des puzzles et d'une scène Blender plus fournie pour enrichir l'expérience (obstacles, fossés, nouveaux angles de vue...), qui propose pour le moment simplement une boule de lumière et un pion d'échec manipulables en les sélectionnant/ déselectionnant avec le bouton X, ainsi qu'un mur pour tester les jeux de perspective.
+
+La séquence Railshooter "à dos de lit" est plus fournie et est divisée en 3 phases : 
+- Évitement d'obstacles : Il faut éviter les ennemis en pivotant le lit en saisissant le levier qui s'y trouve avec la gâchette droite et en inclinant la manette.
+- Phase de tir : Détruisez les ennemis qui vous foncent dessus en leur tirant dessus avec votre gâchette
+- Phase à l'épée : Découpez les ennemis qui vous attaquent pour finalement parvenir au bout de la nuit.
+
+Merci à CGI France, l'équipe de Babylon JS et Michel BUFFA pour l'organisation de ce concours, l'opportunité qu'elle a représenté d'expérimenter dans un contexte ludique, et l'aide apportée durant le développement.
+
+## Déploiement local : 
+
+Installer les modules nécessaires : 
+
+```
+npm i
+```
+
+Déployer : 
+
+```
  npm run dev
 ```
-
-modules to install :
-```
-npm install --save-dev @babylonjs/havok
-npm install --save-dev @babylonjs/inspector
-npm install --save-dev @babylonjs/core 
-
-OR 
-
-npm i
-``` 
-
-
-Pour changer de scène initiale, changer la scène créée dans createScene.ts. 
-Ex :
-```
-export const getSceneModule = (): CreateSceneClass => {
-    return new SceneNiveau3();
-}
-```
-Remplacé par 
-```
-export const getSceneModule = (): CreateSceneClass => {
-    return new Scene1Superliminal();
-}
-```
-
-
-
------------------------------------------
-
-DEMARCHE :
-
-Notre projet est de réaliser un jeu en Réalité Virtuelle comportant plusieurs scènes et phases de gameplay indépendantes. Le joueur serait immergé dans un rêve décousu, où se succèdent différentes séquences allant de l'horrifique au merveilleux. Le but de chaque niveau est d'atteindre la sortie, qui permet de passer au monde suivant. Une musique émanera de la sortie, dont le design graphique reste à déterminer, et deviendra plus forte à mesure que l'on s'en rapproche.
-Une mort/défaite (si implémentée) équivaudra au réveil du personnage que le joueur incarne au milieu de la nuit. Une cinématique pourrait le montrer se rendormir, ce qui aura pour effet de recommencer le rêve depuis le début (ou depuis la dernière séquence atteinte selon la difficulté du jeu).
-Le but du jeu est de terminer toutes les séquences de jeu à la suite, équivalant à une bonne nuit de sommeil pour le personnage (nous espérons aussi pouvoir intégrer une cinématique en fin de jeu).
-
-Nous travaillons actuellement sur deux phases distinctes (le jeu peut être amené à subir des changements majeurs en fonction des résultats des premières phases de développement): 
-- Des séquences de Puzzle, inspirées du jeu Superliminal, dont la difficulté est de gérer les effets de grossissements et de perspective des objets. 
-Nous développerons en priorité une séquence dans un monde féérique inspiré d'Alice au Pays des Merveilles, avec des sucreries dans le décor et un système d'îles flottantes qu'il faut traverser à l'aide de la mécanique de Puzzle. 
-Si le temps le permet, nous développerons également une autre séquence dans une atmosphère de donjon, où le joueur commence dans la pénombre et doit allumer des lumières à l'aide de la mécanique de puzzle implémentée.
-
-- Une séquence de railshooter en 2 phases, où le joueur contrôle un lit flottant dans l'espace qu'il contrôle à l'aide d'un levier. Il doit d'abord esquiver puis détruire des météorites qui foncent sur lui (nous testons actuellement un canon et une épée pour ces phases).
-
-
------------------------------------------
-
-TRAVAIL REALISE :
-
-Pour le moment : 
-- L'architecture globale du code a été posée pour un développement en TypeScript et fonctionne en déploiement grâce à Vite. La conception va être revue à la lumière des réultats des premiers tests effectués par chaque membre du groupe au sein des différentes scènes pour que le code soit maintenable et compréhensible par chaque membre. Il reste à mettre en place un build automatique pour héberger le jeu sur les pages github.
-- Le moteur de physique Havok a été importé et activé dans nos scènes.
-- Les mécaniques d'aggrandissement/rétrécissement des objets sont en train d'être développées pour la séquence de Puzzle Superliminal dans la scène Scene1Superliminal. Nous testons également des possibilités pour le changement entre deux scènes dans le fichier TS correspondant. Le déplacement du joueur est actuellement réalisé à l'aide du joystick mais sera remplacé par une mécanique de téléportation. Un test avec une skybox a également été effectué pour voir le rendu en VR.
-- La séquence de railshooter est développée dans la scène SceneNiveau3. Le chargement des météorites en tant qu'Asset en est à ses balbutiements et doit être revu car il fait chuter drastiquement les performances du jeu. Des screenshots ont été pris pour la partie graphique du travail réalisé et se trouvent dans un répertoire "Screenshots" à la racine du projet
-
-Nous devrons effectuer des tests approfondis concernant les effets de Motion Sickness qui pourraient apparaître et la difficulté pour le joueur à comprendre le but de chaque phase de gameplay. Nous porterons donc une attention particulière à ces points lors du développement.
