@@ -1,4 +1,4 @@
-# Echoes_of_Dreams
+# Echoes of Dreams
 
 Embarquez pour un voyage onirique déroutant ! Echoes of Dreams est un jeu en réalité virtuelle mélangeant puzzle et railshooter qui vous immergera dans le rêve de son personnage principal. Les lois de la physique s'y trouvent déformées et les effets de perspectives pourraient bien vous jouer un tour... Vous devrez parvenir à utiliser ces règles à votre avantage pour progresser dans le rêve et espérer parvenir au bout de la nuit.
 
