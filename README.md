@@ -11,9 +11,9 @@ Il est préférable voire nécessaire d'utiliser un casque de réalité virtuell
 - [Présentation vidéo](https://www.youtube.com/watch?v=Uwqi30tmJPo)
 
 Jeu conçu et implémenté par :
-Adam MIR-SADJADI
-Noé FLORENCE
-Allah-Eddine CHERIGUI
+- Adam MIR-SADJADI
+- Noé FLORENCE
+- Allah-Eddine CHERIGUI
 
 ## Démarche 
 
