@@ -1,5 +1,5 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 //import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
@@ -34,7 +34,6 @@ import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Object3DPickable } from "../object/Object3DPickable";
 
-import { WebXRFeatureName } from "@babylonjs/core";
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
@@ -62,8 +61,6 @@ export class Scene1Superliminal implements CreateSceneClass {
         console.log("BASE EXPERIENCE")
         console.log(xr.baseExperience)
 
-        new XRHandler(scene, xr, player, requestSceneSwitchFn);
-
           //Good way of initializing Havok
         // initialize plugin
         const havokInstance = await HavokPhysics();
@@ -81,6 +78,8 @@ export class Scene1Superliminal implements CreateSceneClass {
         const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
 
     const eventMask = started | continued | finished;
+
+    new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, ground);
       
     // @ts-ignore
     //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
@@ -100,7 +99,9 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         var camera=  xr.baseExperience.camera;
 
-        addXRControllersRoutine(scene, xr, eventMask, ground); //eventMask est-il indispensable ?
+        // Setup CharacterController for Player
+        player.setupCharacterController(scene, camera, ground);
+
 
         // Add keyboard controls for movement
         const moveSpeed = 1;
@@ -367,140 +368,6 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
                 break;
         }
     });
-}
-
-
-// Add movement with left joystick
-//@ts-ignore
-function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground : Mesh) {
-    // Store rotation state
-    var rotationInput = 0;
-    var xPositionInput = 0;
-    var yPositionInput = 0;
-
-    let teleportationEnabled = true;
-    const featuresManager = xr.baseExperience.featuresManager;
-
-    xr.input.onControllerAddedObservable.add((controller: any) => {        
-        console.log("Ajout d'un controller")
-        if (controller.inputSource.handedness === "left") {
-            controller.onMotionControllerInitObservable.add((motionController: any) => {
-                const leftStick = motionController.getComponent("xr-standard-thumbstick");
-                if (leftStick) {
-                    leftStick.onAxisValueChangedObservable.add((axisValues: any) => {
-                        xPositionInput = axisValues.x;
-                        yPositionInput = axisValues.y;
-                    });
-                }
-
-                const yButton = motionController.getComponent("y-button");
-                if (yButton) {
-                    yButton.onButtonStateChangedObservable.add(() => {
-                        if (yButton.changes.pressed && yButton.pressed) {
-                            teleportationEnabled = !teleportationEnabled;
-                            if (teleportationEnabled) {
-                                // Enable teleportation
-                                featuresManager.enableFeature(
-                                    WebXRFeatureName.TELEPORTATION,
-                                    "stable",
-                                    {
-                                        xrInput: xr.input,
-                                        floorMeshes: [ground],
-                                    }
-                                );
-                                console.log("Teleportation ENABLED");
-                            } else {
-                                // Disable teleportation
-                                featuresManager.disableFeature(WebXRFeatureName.TELEPORTATION);
-                                console.log("Teleportation DISABLED");
-                            }
-                        }
-                    });
-                }
-            });
-        }
-        // Right controller:
-        if (controller.inputSource.handedness === "right") {
-            controller.onMotionControllerInitObservable.add((motionController: any) => {
-                const xrInput = motionController.getComponent("xr-standard-thumbstick");
-                if (xrInput) {
-                    xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
-                        rotationInput = axisValues.x;
-                    });
-                }
-            });
-        }
-    });
-
-    // Smooth rotation in the render loop
-    scene.onBeforeRenderObservable.add(() => {
-        // --- Disable movement and rotation if teleportation is enabled ---
-        if (!teleportationEnabled) {
-            const rotationSpeed = 0.04; // Adjust for desired sensitivity
-            const movementSpeed = 0.05;
-            const camera = xr.baseExperience.camera;
-
-            if (Math.abs(rotationInput) > 0.01) {
-                console.log("Rotation input: " + rotationInput);
-                console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
-                // Rotate around Y axis (yaw)
-                if (Math.abs(rotationInput) > 0.01) {
-                    // Rotate around the WORLD Y axis (not local)
-                    const deltaYaw = rotationInput * rotationSpeed;
-                    const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
-                    camera.rotationQuaternion = yawQuaternion.multiply(camera.rotationQuaternion!);
-                }
-                console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
-            }
-            // Smooth movement relative to camera's facing direction
-            if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
-                // Calculate forward and right vectors based on camera rotation
-                const forward = camera.getDirection(new Vector3(0, 0, 1));
-                const right = camera.getDirection(new Vector3(1, 0, 0));
-                // Remove y component to keep movement horizontal
-                forward.y = 0;
-                right.y = 0;
-                forward.normalize();
-                right.normalize();
-                camera.position.addInPlace(forward.scale(-yPositionInput * movementSpeed));
-                camera.position.addInPlace(right.scale(xPositionInput * movementSpeed));
-            }
-        }
-    });
-
-    /*
-    // Add physics to controllers when the mesh is loaded
-    xr.input.onControllerAddedObservable.add((controller: any) => {
-        controller.onMotionControllerInitObservable.add((motionController: any) => {
-            // @ts-ignore
-            motionController.onModelLoadedObservable.add((mc: any) => {
-
-                console.log("Ajout d'un mesh au controller");
-
-                const controllerMesh = MeshBuilder.CreateBox("controllerMesh", { size: 0.1 }, scene);
-                controllerMesh.parent = controller.grip;
-                controllerMesh.position = Vector3.ZeroReadOnly;
-                controllerMesh.rotationQuaternion = Quaternion.Identity();
-
-                const controllerAggregate = new PhysicsAggregate(controllerMesh, PhysicsShapeType.BOX, { mass: 1 }, scene);
-                controllerAggregate.body.setMotionType(PhysicsMotionType.ANIMATED); // Set motion type to ANIMATED
-                controllerAggregate.body.setPrestepType(PhysicsPrestepType.TELEPORT);
-                controllerAggregate.body.setCollisionCallbackEnabled(true);
-                controllerAggregate.body.setEventMask(eventMask);
-
-
-
-                // Make the controller mesh invisible and non-pickable
-                controllerMesh.isVisible = false;
-                controllerMesh.isPickable = false;
-
-                // Attach WebXRControllerPhysics to the controller
-                //const controllerPhysics = xr.baseExperience.featuresManager.enableFeature(WebXRControllerPhysics.Name, 'latest')
-                //controller.physics = controllerPhysics
-            });
-        });
-    });
-    */
 }
 
 // Create a light bulb as an Object3DPickable

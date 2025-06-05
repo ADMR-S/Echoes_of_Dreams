@@ -37,7 +37,7 @@ import {Texture} from "@babylonjs/core/Materials/Textures/texture";
 import {AdvancedDynamicTexture, Control, Rectangle, TextBlock} from "@babylonjs/gui";
 import {Tools} from "@babylonjs/core/Misc/tools";
 import {Player} from "../Player.ts";
-import XRHandler from "../XRHandler.ts";
+//import XRHandler from "../XRHandler.ts";
 
 
 export class SceneNiveau3 implements CreateSceneClass {
@@ -288,7 +288,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         console.log("BASE EXPERIENCE Scene1Superliminal");
         console.log(xr.baseExperience);
 
-        new XRHandler(scene, xr, player, requestSceneSwitchFn);
+        //new XRHandler(scene, xr, player, requestSceneSwitchFn);
 
 
         this.hudTexture = AdvancedDynamicTexture.CreateFullscreenUI("HUD_UI", true, scene);

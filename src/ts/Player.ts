@@ -9,6 +9,7 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Object3DPickable } from "./object/Object3DPickable";
 import { BoundingBox } from "@babylonjs/core";
 import { PhysicsViewer } from "@babylonjs/core";
+import { PhysicsCharacterController } from "@babylonjs/core";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -24,6 +25,9 @@ export class Player{
     private rayHelper: RayHelper | null = null;
     //@ts-ignore
     private physicsViewer?: any;
+    public characterController: PhysicsCharacterController | null = null;
+    public playerCapsule: AbstractMesh | null = null;
+    private _desiredVelocity: Vector3 = Vector3.Zero();
 
     constructor(){
         this.selectedObject = null;
@@ -459,5 +463,82 @@ export class Player{
         }
 
         return closest;
+    }
+
+    /**
+     * Call this after XR/camera and ground are created.
+     * @param scene The Babylon.js scene
+     * @param camera The XR camera
+     * @param ground The ground mesh
+     */
+    setupCharacterController(scene: Scene, camera: Camera, ground: AbstractMesh) {
+        const h = 1.7; // Capsule height
+        const r = 0.6; // Capsule radius
+        this.playerCapsule = MeshBuilder.CreateCapsule("playerCapsule", {
+            height: h,
+            radius: r,
+            capSubdivisions: 6,
+            tessellation: 12
+        }, scene);
+        this.playerCapsule.isVisible = false;
+        this.playerCapsule.position = camera.position.clone();
+        this.playerCapsule.checkCollisions = true;
+
+        camera.parent = this.playerCapsule;
+        camera.position = new Vector3(0, 0.8, 0);
+
+        ground.checkCollisions = true;
+
+        const characterPosition = this.playerCapsule.position.clone();
+
+        const characterController = new PhysicsCharacterController(characterPosition, { capsuleHeight: h, capsuleRadius: r }, scene);
+        this.characterController = characterController;
+
+        // Prevent moving where there's no ground (stick to ground)
+        scene.onBeforeRenderObservable.add(() => {
+            // Integrate character controller with current desired velocity
+            const dt = scene.getEngine().getDeltaTime() / 1000;
+            const oldPos = this.playerCapsule?.position.clone();
+
+            // Optionally, clamp to ground if falling off (safety)
+            if (!this.playerCapsule) return;
+            const ray = new Ray(this.playerCapsule.position, new Vector3(0, -1, 0), 2);
+            const pick = scene.pickWithRay(ray, mesh => mesh === ground);
+            if (!pick || !pick.hit) {
+                if(oldPos){
+                    this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
+                }
+            }
+        });
+    }
+
+    // Called by XRHandler to update the desired velocity from thumbstick input and camera orientation
+    setDesiredVelocityFromInput(xAxis: number, yAxis: number, camera: Camera) {
+        // Calculate movement vector in world space based on camera orientation
+        const forward = camera.getDirection(new Vector3(0, 0, 1));
+        const right = camera.getDirection(new Vector3(1, 0, 0));
+        forward.y = 0;
+        right.y = 0;
+        forward.normalize();
+        right.normalize();
+        // yAxis is forward/back, xAxis is left/right
+        this._desiredVelocity = forward.scale(-yAxis).add(right.scale(xAxis));
+    }
+
+    // Call this in the scene loop to apply the desired velocity to the character controller
+    updateCharacterController(dt: number) {
+        if (!this.characterController) return;
+        // Set the velocity (scale as needed for speed)
+        const velocity = this._desiredVelocity;
+        const down = new Vector3(0, -1, 0); // Gravity direction
+        const support = this.characterController.checkSupport(dt, down);
+
+        this.characterController.setVelocity(velocity);
+
+        const characterGravity = new Vector3(0, 0, 0); // Gravity vector
+        this.characterController.integrate(dt, support, characterGravity);
+        const newPosition = this.characterController.getPosition();
+        // Integrate movement (gravity is handled by the controller)
+        return newPosition
     }
 }
