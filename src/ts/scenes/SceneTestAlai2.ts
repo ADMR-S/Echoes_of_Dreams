@@ -41,304 +41,312 @@ import {Game} from './Echoes_of_Dreams/puzzle_3d/src/game.ts';
 
 
 export class Scene1TestAlai2 implements CreateSceneClass {
-    preTasks = [havokModule];
-
-    private backgroundMusic: Sound | null = null;
+        preTasks = [havokModule];
     
-
-    // @ts-ignore
-    createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>
-    ): Promise<Scene> => {
-        const scene: Scene = new Scene(engine);
-        scene.metadata = { sceneName: "SceneTestAlai2" };
-        let puzzleCanvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-        if (!puzzleCanvas) {
-            puzzleCanvas = document.createElement('canvas');
-            puzzleCanvas.id = 'gameCanvas';
-            puzzleCanvas.width = 512;
-            puzzleCanvas.height = 512;
-            puzzleCanvas.style.display = 'none'; 
-            document.body.appendChild(puzzleCanvas);
-        }
-
-        const puzzle = new Game('gameCanvas', 2, 2);
-        puzzle.run();
-
-        const puzzlePanel = MeshBuilder.CreatePlane("puzzlePanel", { width: 2, height: 2 }, scene);
-        puzzlePanel.position = new Vector3(0, 2, 3); // Place-le où tu veux
-
-        //const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-        //light.intensity = 0.7;
-
-        // Our built-in 'ground' shape.
-        const ground: Mesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
-
-        const xr = await scene.createDefaultXRExperienceAsync({
-            floorMeshes: [ground],
-        });
-        console.log("BASE EXPERIENCE")
-        console.log(xr.baseExperience)
-
-        new XRHandler(scene, xr, player, requestSceneSwitchFn);
-        const havokInstance = await HavokPhysics();
-        const hk = new HavokPlugin(true, havokInstance);
-
-
-        // enable physics in the scene with a gravity
-        scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
-
-        var groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 }, scene);
-
-        const started = hk._hknp.EventType.COLLISION_STARTED.value;
-        const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
-        const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
-
-    const eventMask = started | continued | finished;
-      
-    // @ts-ignore
-    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
-
-    // Skybox
-    var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
-    var skyboxMaterial = new StandardMaterial("skyBox", scene);
-    skyboxMaterial.backFaceCulling = false;
-    skyboxMaterial.reflectionTexture = new CubeTexture("asset/texture/skybox_space", scene);
-    skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-    skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
-    skyboxMaterial.specularColor = new Color3(0, 0, 0);
-    skybox.material = skyboxMaterial;			
+        private backgroundMusic: Sound | null = null;
         
-
-        //addScaleRoutineToSphere(sphereObservable);
-
-        var camera=  xr.baseExperience.camera;
-
-        addXRControllersRoutine(scene, xr, eventMask, ground); //eventMask est-il indispensable ?
-
-        // Add keyboard controls for movement
-        const moveSpeed = 1;
-        addKeyboardControls(xr, moveSpeed);
-
-
-
-        // Add collision detection for the ground
-        groundAggregate.body.getCollisionObservable().add((collisionEvent: any) => {
-          if (collisionEvent.type === "COLLISION_STARTED") {
-                var collidedBody = null;
-                if(collisionEvent.collider != groundAggregate.body){
-                    collidedBody = collisionEvent.collider;
-                }
-                else{
-                    collidedBody = collisionEvent.collidedAgainst;
-                }
-                const position = collidedBody.transformNode.position;
-                collidedBody.transformNode.position = new Vector3(position.x, ground.position.y + 5, position.z); // Adjust the y-coordinate to be just above the ground
-                collidedBody.setLinearVelocity(Vector3.Zero());
-                collidedBody.setAngularVelocity(Vector3.Zero());
+    
+        // @ts-ignore
+        createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>
+        ): Promise<Scene> => {
+            const scene: Scene = new Scene(engine);
+            scene.metadata = { sceneName: "SceneTestAlai2" };
+            let puzzleCanvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+            if (!puzzleCanvas) {
+                puzzleCanvas = document.createElement('canvas');
+                puzzleCanvas.id = 'gameCanvas';
+                puzzleCanvas.width = 512;
+                puzzleCanvas.height = 512;
+                puzzleCanvas.style.display = 'none'; 
+                document.body.appendChild(puzzleCanvas);
             }
-        });
 
-        //-------------------------------------------------------------------------------------------------------
-        // Game loop
+            const puzzle = new Game('gameCanvas', 2, 2);
+            puzzle.run();
 
-        let sceneAlreadySwitched = false;
+            const puzzlePanel = MeshBuilder.CreatePlane("puzzlePanel", { width: 2, height: 2 }, scene);
+            puzzlePanel.position = new Vector3(0, 2, 3); // Place-le où tu veux
 
-
-        scene.onBeforeAnimationsObservable.add( ()=> {
-            const isWithinX = camera.position.x > 9 && camera.position.x < 11;
-            const isWithinZ = camera.position.z > 9 && camera.position.z < 11;
-
-            /*
-            console.log(camera.position.x)
-            console.log(camera.position.z)
-            console.log(isWithinX, isWithinZ)
-            */
-
-            if (!sceneAlreadySwitched && isWithinX && isWithinZ) {
-                sceneAlreadySwitched = true;
-                console.log("La caméra est proche de (10, 10). Changement de scène...");
-                console.log("La caméra est proche de (10, 10). Changement de scène...");
-                console.log("La caméra est proche de (10, 10). Changement de scène...");
-
-                switchScene(engine, scene);
-
-            }
-        })
-
-        // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
-        const wallWidth = 0.5;
-        const wallHeight = 5;
-        const wallLength = 10;
-        const wallPosition = new Vector3(5, wallHeight / 2, 0); // y = height/2 to sit on ground
-
-        const wall = MeshBuilder.CreateBox("rightWall", { width: wallWidth, height: wallHeight, depth: wallLength }, scene);
-        wall.position = wallPosition;
-        wall.isPickable = true;
-
-        // Optional: give the wall a material
-        const wallMat = new StandardMaterial("wallMat", scene);
-        wallMat.diffuseColor = new Color3(0.8, 0.8, 0.9);
-        wall.material = wallMat;
-
-        // Optional: add physics to the wall
-        new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
-
-        //@ts-ignore
-        var lightBulb = createLightBulbPickable(scene, eventMask);
-
-        this.backgroundMusic = new Sound(
-                    "backgroundMusic",
-                    "/asset/sounds/backgroundScene1.ogg",
-                    scene,
-                    () => {
-                        if (this.backgroundMusic) {
-                            this.backgroundMusic.play();
-                            console.log("Musique de fond démarrée.");
-                        }
-                    },
-                    {
-                        loop: true,
-                        autoplay: false,
-                        volume: 0.6
-                    }
-                );
-
-        //SWITCH SCENE BUTTON
-                /*
-         const plane = MeshBuilder.CreatePlane("plane", {
-            width: 2,
-            height: 1,
-          });
-          plane.parent = camera;
-          plane.position.z = 5;
-
-        const advancedTexture =
-            GUI.AdvancedDynamicTexture.CreateForMesh(plane);
-
-          const button1 = GUI.Button.CreateSimpleButton(
-            "but1",
-            "Click Me",
-          );
-          button1.width = 2;
-          button1.height = 1;
-          button1.color = "white";
-          button1.fontSize = 200;
-          button1.background = "green";
-          button1.onPointerUpObservable.add(function () {
-            window.location.pathname = "/scene3";
-        });
-          advancedTexture.addControl(button1);
-
-          */
-          //FIN SWITCH SCENE BUTTON
-
-          
-        // --- Asset Manager for Chess Pieces ---
-        const assetsManager = new AssetsManager(scene);
-
-        
-        // Example: Load the queen chess piece from asset/chess/queen
-        // Assumes a .glb file named queen.glb in that folder
-        const queenTask = assetsManager.addMeshTask(
-            "loadQueen",
-            "", // mesh names, empty for all
-            "asset/chess/",
-            "queen.glb"
-        );
-
-        queenTask.onSuccess = (task) => {
-            // Log all loaded meshes for debugging
-            console.log("Loaded meshes:");
-            task.loadedMeshes.forEach(m => {
-                console.log(
-                    `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
-                );
+    
+            //const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
+            //light.intensity = 0.7;
+    
+            // Our built-in 'ground' shape.
+            const ground: Mesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+    
+            const xr = await scene.createDefaultXRExperienceAsync({
+                floorMeshes: [ground],
             });
-
-            // Find the first loaded mesh that is a Mesh, visible, and has geometry
-            const mesh = task.loadedMeshes.find(
-                m => m instanceof Mesh && typeof m.getTotalVertices === "function" && m.getTotalVertices() > 0
-            ) as Mesh | undefined;
-            if (!mesh) {
-                console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
-                return;
-            }
-
+            console.log("BASE EXPERIENCE")
+            console.log(xr.baseExperience)
+    
+              //Good way of initializing Havok
+            // initialize plugin
+            const havokInstance = await HavokPhysics();
+            // pass the engine to the plugin
+            const hk = new HavokPlugin(true, havokInstance);
+    
+    
+            // enable physics in the scene with a gravity
+            scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+    
+            var groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 }, scene);
+    
+            const started = hk._hknp.EventType.COLLISION_STARTED.value;
+            const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
+            const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
+    
+        const eventMask = started | continued | finished;
+    
+        new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, ground);
+          
+        // @ts-ignore
+        //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+    
+        // Skybox
+        var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+        var skyboxMaterial = new StandardMaterial("skyBox", scene);
+        skyboxMaterial.backFaceCulling = false;
+        skyboxMaterial.reflectionTexture = new CubeTexture("asset/texture/skybox_space", scene);
+        skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+        skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+        skyboxMaterial.specularColor = new Color3(0, 0, 0);
+        skybox.material = skyboxMaterial;			
             
-            console.log("parent : ", mesh.parent);
-            const rootNode = mesh.parent;
-            mesh.parent = null
-            if(rootNode){
-                rootNode.dispose()
-            }
-            // --- Ensure the queen has a StandardMaterial for highlight ---
-            if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
-                mesh.material = new StandardMaterial("queenMat", scene);
-            }
-            // --- Center geometry so bounding box center is at the origin ---
-            if (mesh.getBoundingInfo && typeof mesh.setPivotPoint === "function") {
-                const bbox = mesh.getBoundingInfo().boundingBox;
-                const center = bbox.center.clone();
-                mesh.bakeTransformIntoVertices(
-                    Matrix.Translation(-center.x, -center.y, -center.z)
-                );
-                // After baking, move mesh to where the center should be
-                mesh.position.addInPlace(center);
-                mesh.refreshBoundingInfo(true, true);
-                mesh.computeWorldMatrix(true);
-                mesh.setPivotPoint(mesh.getBoundingInfo().boundingBox.center.clone());
-
-                mesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
-
-            }
-            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
-            mesh.isPickable = true;
-
-            
-
-            // Create Object3DPickable for the queen
-            //@ts-ignore
-            const queenPickable = new Object3DPickable(
-                scene,
-                "queenPickable",
-                mesh.material,
-                PhysicsShapeType.MESH,
-                1,
-                // Custom mesh factory to use the imported mesh and add physics
-                //@ts-ignore
-                (scene, name, material, size) => {
-                    mesh.name = name;
-                    mesh.material = material;
-                    // Add physics aggregate (MESH shape for complex mesh)
-                    const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
-                    aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-                    aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-                    //aggregate.body.setCollisionCallbackEnabled(true);
-                    //aggregate.body.setEventMask(eventMask);
-                    return { mesh, extra : {}, aggregate };
+    
+            //addScaleRoutineToSphere(sphereObservable);
+    
+            var camera=  xr.baseExperience.camera;
+    
+            // Setup CharacterController for Player
+            player.setupCharacterController(scene, camera, ground);
+    
+    
+            // Add keyboard controls for movement
+            const moveSpeed = 1;
+            addKeyboardControls(xr, moveSpeed);
+    
+    
+    
+            // Add collision detection for the ground
+            groundAggregate.body.getCollisionObservable().add((collisionEvent: any) => {
+              if (collisionEvent.type === "COLLISION_STARTED") {
+                    var collidedBody = null;
+                    if(collisionEvent.collider != groundAggregate.body){
+                        collidedBody = collisionEvent.collider;
+                    }
+                    else{
+                        collidedBody = collisionEvent.collidedAgainst;
+                    }
+                    const position = collidedBody.transformNode.position;
+                    collidedBody.transformNode.position = new Vector3(position.x, ground.position.y + 5, position.z); // Adjust the y-coordinate to be just above the ground
+                    collidedBody.setLinearVelocity(Vector3.Zero());
+                    collidedBody.setAngularVelocity(Vector3.Zero());
                 }
-
-                
+            });
+    
+            //-------------------------------------------------------------------------------------------------------
+            // Game loop
+    
+            let sceneAlreadySwitched = false;
+    
+    
+            scene.onBeforeAnimationsObservable.add( ()=> {
+                const isWithinX = camera.position.x > 9 && camera.position.x < 11;
+                const isWithinZ = camera.position.z > 9 && camera.position.z < 11;
+    
+                /*
+                console.log(camera.position.x)
+                console.log(camera.position.z)
+                console.log(isWithinX, isWithinZ)
+                */
+    
+                if (!sceneAlreadySwitched && isWithinX && isWithinZ) {
+                    sceneAlreadySwitched = true;
+                    console.log("La caméra est proche de (10, 10). Changement de scène...");
+                    console.log("La caméra est proche de (10, 10). Changement de scène...");
+                    console.log("La caméra est proche de (10, 10). Changement de scène...");
+    
+                    switchScene(engine, scene);
+    
+                }
+            })
+    
+            // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
+            const wallWidth = 0.5;
+            const wallHeight = 5;
+            const wallLength = 10;
+            const wallPosition = new Vector3(5, wallHeight / 2, 0); // y = height/2 to sit on ground
+    
+            const wall = MeshBuilder.CreateBox("rightWall", { width: wallWidth, height: wallHeight, depth: wallLength }, scene);
+            wall.position = wallPosition;
+            wall.isPickable = true;
+    
+            // Optional: give the wall a material
+            const wallMat = new StandardMaterial("wallMat", scene);
+            wallMat.diffuseColor = new Color3(0.8, 0.8, 0.9);
+            wall.material = wallMat;
+    
+            // Optional: add physics to the wall
+            new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
+    
+            //@ts-ignore
+            var lightBulb = createLightBulbPickable(scene, eventMask);
+    
+            this.backgroundMusic = new Sound(
+                        "backgroundMusic",
+                        "/asset/sounds/backgroundScene1.ogg",
+                        scene,
+                        () => {
+                            if (this.backgroundMusic) {
+                                this.backgroundMusic.play();
+                                console.log("Musique de fond démarrée.");
+                            }
+                        },
+                        {
+                            loop: true,
+                            autoplay: false,
+                            volume: 0.6
+                        }
+                    );
+    
+            //SWITCH SCENE BUTTON
+                    /*
+             const plane = MeshBuilder.CreatePlane("plane", {
+                width: 2,
+                height: 1,
+              });
+              plane.parent = camera;
+              plane.position.z = 5;
+    
+            const advancedTexture =
+                GUI.AdvancedDynamicTexture.CreateForMesh(plane);
+    
+              const button1 = GUI.Button.CreateSimpleButton(
+                "but1",
+                "Click Me",
+              );
+              button1.width = 2;
+              button1.height = 1;
+              button1.color = "white";
+              button1.fontSize = 200;
+              button1.background = "green";
+              button1.onPointerUpObservable.add(function () {
+                window.location.pathname = "/scene3";
+            });
+              advancedTexture.addControl(button1);
+    
+              */
+              //FIN SWITCH SCENE BUTTON
+    
+              
+            // --- Asset Manager for Chess Pieces ---
+            const assetsManager = new AssetsManager(scene);
+    
+            
+            // Example: Load the queen chess piece from asset/chess/queen
+            // Assumes a .glb file named queen.glb in that folder
+            const queenTask = assetsManager.addMeshTask(
+                "loadQueen",
+                "", // mesh names, empty for all
+                "asset/chess/",
+                "queen.glb"
             );
-
-        
-            // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
-            (mesh as any).object3DPickable = queenPickable;
-
-            console.log("Queen chess piece loaded and pickable.");
-        };
-
-        //@ts-ignore
-        queenTask.onError = (task, message, exception) => {
-            console.error("Failed to load queen chess piece:", message, exception);
-        };
-
-        // You can add more mesh tasks for other pieces here
-
-        assetsManager.load();
+    
+            queenTask.onSuccess = (task) => {
+                // Log all loaded meshes for debugging
+                console.log("Loaded meshes:");
+                task.loadedMeshes.forEach(m => {
+                    console.log(
+                        `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
+                    );
+                });
+    
+                // Find the first loaded mesh that is a Mesh, visible, and has geometry
+                const mesh = task.loadedMeshes.find(
+                    m => m instanceof Mesh && typeof m.getTotalVertices === "function" && m.getTotalVertices() > 0
+                ) as Mesh | undefined;
+                if (!mesh) {
+                    console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
+                    return;
+                }
+    
                 
-        return scene;
-    };
+                console.log("parent : ", mesh.parent);
+                const rootNode = mesh.parent;
+                mesh.parent = null
+                if(rootNode){
+                    rootNode.dispose()
+                }
+                // --- Ensure the queen has a StandardMaterial for highlight ---
+                if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
+                    mesh.material = new StandardMaterial("queenMat", scene);
+                }
+                // --- Center geometry so bounding box center is at the origin ---
+                if (mesh.getBoundingInfo && typeof mesh.setPivotPoint === "function") {
+                    const bbox = mesh.getBoundingInfo().boundingBox;
+                    const center = bbox.center.clone();
+                    mesh.bakeTransformIntoVertices(
+                        Matrix.Translation(-center.x, -center.y, -center.z)
+                    );
+                    // After baking, move mesh to where the center should be
+                    mesh.position.addInPlace(center);
+                    mesh.refreshBoundingInfo(true, true);
+                    mesh.computeWorldMatrix(true);
+                    mesh.setPivotPoint(mesh.getBoundingInfo().boundingBox.center.clone());
+    
+                    mesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
+    
+                }
+                mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+                mesh.isPickable = true;
+    
+                
+    
+                // Create Object3DPickable for the queen
+                //@ts-ignore
+                const queenPickable = new Object3DPickable(
+                    scene,
+                    "queenPickable",
+                    mesh.material,
+                    PhysicsShapeType.MESH,
+                    1,
+                    // Custom mesh factory to use the imported mesh and add physics
+                    //@ts-ignore
+                    (scene, name, material, size) => {
+                        mesh.name = name;
+                        mesh.material = material;
+                        // Add physics aggregate (MESH shape for complex mesh)
+                        const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
+                        aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+                        aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                        //aggregate.body.setCollisionCallbackEnabled(true);
+                        //aggregate.body.setEventMask(eventMask);
+                        return { mesh, extra : {}, aggregate };
+                    }
+    
+                    
+                );
+    
+            
+                // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
+                (mesh as any).object3DPickable = queenPickable;
+    
+                console.log("Queen chess piece loaded and pickable.");
+            };
+    
+            //@ts-ignore
+            queenTask.onError = (task, message, exception) => {
+                console.error("Failed to load queen chess piece:", message, exception);
+            };
+    
+            // You can add more mesh tasks for other pieces here
+    
+            assetsManager.load();
+                    
+            return scene;
+        };
+
 }
 
 export default new Scene1TestAlai2();
