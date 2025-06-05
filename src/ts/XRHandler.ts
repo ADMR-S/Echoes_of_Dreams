@@ -15,6 +15,8 @@ import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Mesh, WebXRFeatureName } from "@babylonjs/core";
 import XRLogger from "./XRLogger";
+//@ts-ignore
+import { WebXRMotionControllerTeleportation } from "@babylonjs/core/XR/features/WebXRControllerTeleportation";
 
 export class XRHandler{
 
@@ -332,6 +334,37 @@ export class XRHandler{
         */
     }
     
+    syncCapsuleWithCameraOnTeleport(xr: WebXRDefaultExperience, player: Player) {
+        const teleportationFeature = xr.baseExperience.featuresManager.getEnabledFeature("xr-teleportation");
+        const teleportation = teleportationFeature as any; // fallback to any for compatibility
+        // Try both possible observable names for different BabylonJS versions
+        let observable = null;
+        let observableName = "";
+        if (teleportation?.onAfterTeleportObservable) {
+            observable = teleportation.onAfterTeleportObservable;
+            observableName = "onAfterTeleportObservable";
+        } else if (teleportation?.onTeleportationCompletedObservable) {
+            observable = teleportation.onTeleportationCompletedObservable;
+            observableName = "onTeleportationCompletedObservable";
+        } else if (teleportation?.onTeleportObservable) {
+            observable = teleportation.onTeleportObservable;
+            observableName = "onTeleportObservable";
+        }
+        if (observable) {
+            console.log("[XRHandler] Using teleport observable:", observableName);
+            observable.add(() => {
+                if (player.playerCapsule && xr.baseExperience.camera) {
+                    const camera = xr.baseExperience.camera;
+                    // Temporarily unparent camera to avoid offset
+                    const oldParent = camera.parent;
+                    camera.parent = null;
+                    player.playerCapsule.position.copyFrom(camera.position);
+                    player.playerCapsule.position.y = player.playerCapsule.getBoundingInfo().boundingBox.extendSize.y;
+                    camera.parent = oldParent;;
+                }
+            });
+        }
+    }
 
 }
 export default XRHandler;
