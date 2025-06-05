@@ -336,35 +336,22 @@ export class XRHandler{
     }
     
     syncCapsuleWithCameraOnTeleport(xr: WebXRDefaultExperience, player: Player) {
-        const teleportationFeature = xr.baseExperience.featuresManager.getEnabledFeature("xr-teleportation");
-        const teleportation = teleportationFeature as any; // fallback to any for compatibility
-        // Try both possible observable names for different BabylonJS versions
-        let observable = null;
-        let observableName = "";
-        if (teleportation?.onAfterTeleportObservable) {
-            observable = teleportation.onAfterTeleportObservable;
-            observableName = "onAfterTeleportObservable";
-        } else if (teleportation?.onTeleportationCompletedObservable) {
-            observable = teleportation.onTeleportationCompletedObservable;
-            observableName = "onTeleportationCompletedObservable";
-        } else if (teleportation?.onTeleportObservable) {
-            observable = teleportation.onTeleportObservable;
-            observableName = "onTeleportObservable";
-        }
-        if (observable) {
-            console.log("[XRHandler] Using teleport observable:", observableName);
-            observable.add(() => {
-                if (player.playerCapsule && xr.baseExperience.camera) {
-                    const camera = xr.baseExperience.camera;
-                    // Temporarily unparent camera to avoid offset
-                    const oldParent = camera.parent;
-                    camera.parent = null;
-                    player.playerCapsule.position.copyFrom(camera.position);
-                    player.playerCapsule.position.y = player.playerCapsule.getBoundingInfo().boundingBox.extendSize.y;
-                    camera.parent = oldParent;;
-                }
-            });
-        }
+        // Listen for reference space changes (teleport events)
+        const sessionManager = xr.baseExperience.sessionManager;
+        sessionManager.onXRReferenceSpaceChanged.add(() => {
+            if (player.playerCapsule && xr.baseExperience.camera) {
+                const camera = xr.baseExperience.camera;
+                // Log capsule position before teleport
+                console.log("[XRHandler] Capsule position BEFORE teleport:", player.playerCapsule.position.toString());
+                // Temporarily unparent camera to avoid offset
+                const oldParent = camera.parent;
+                camera.parent = null;
+                player.playerCapsule.position.copyFrom(camera.position);
+                camera.parent = oldParent;
+                // Log capsule position after teleport
+                console.log("[XRHandler] Capsule position AFTER teleport:", player.playerCapsule.position.toString());
+            }
+        });
     }
 
 }
