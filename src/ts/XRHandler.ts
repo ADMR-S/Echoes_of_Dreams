@@ -346,8 +346,7 @@ export class XRHandler{
                 // Temporarily unparent camera to avoid offset
                 const oldParent = camera.parent;
                 camera.parent = null;
-                //@ts-ignore
-                player.characterController?.setPosition(camera.position);
+                (player.characterController as any)._position = camera.position.clone();
                 camera.parent = oldParent;
                 // Log capsule position after teleport
                 console.log("Character controller position AFTER teleport:", player.characterController.getPosition().toString());       
