@@ -62,7 +62,6 @@ export class Scene1Superliminal implements CreateSceneClass {
         console.log("BASE EXPERIENCE")
         console.log(xr.baseExperience)
 
-        new XRHandler(scene, xr, player, requestSceneSwitchFn);
 
           //Good way of initializing Havok
         // initialize plugin
@@ -82,6 +81,8 @@ export class Scene1Superliminal implements CreateSceneClass {
 
     const eventMask = started | continued | finished;
       
+    new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, ground);
+
     // @ts-ignore
     //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
 
