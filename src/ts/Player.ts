@@ -531,8 +531,8 @@ export class Player{
         forward.normalize();
         right.normalize();
         // yAxis is forward/back, xAxis is left/right
-        const speed = 0.05; // meters per second
-        this._desiredVelocity = forward.scale(-yAxis * dt).add(right.scale(xAxis * speed * dt));
+        const speed = 0.05 * dt; // meters per second
+        this._desiredVelocity = forward.scale(-yAxis * speed).add(right.scale(xAxis * speed));
 
         // Rotation: accumulate yaw from rotationInput (right stick X)
         const rotationSpeed = 0.04; // radians per frame per unit input
@@ -554,7 +554,12 @@ export class Player{
 
         // Apply rotation to the camera's parent (the capsule)
         if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001) {
-            this.playerCapsule.rotate(Vector3.Up(), this._desiredYaw);
+            // Use quaternion multiplication for yaw rotation
+            if (!this.playerCapsule.rotationQuaternion) {
+                this.playerCapsule.rotationQuaternion = Quaternion.FromEulerAngles(0, 0, 0);
+            }
+            const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
+            this.playerCapsule.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
         }
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
