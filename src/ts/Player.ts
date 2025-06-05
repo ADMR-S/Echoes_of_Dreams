@@ -492,6 +492,7 @@ export class Player{
         this.playerCapsule.checkCollisions = true;
 
         camera.parent = this.playerCapsule;
+        this.playerCapsule.position.y = h / 2; // Position capsule so bottom is at ground level
 
         const characterPosition = this.playerCapsule.position.clone();
 
