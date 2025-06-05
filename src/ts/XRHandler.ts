@@ -353,6 +353,13 @@ export class XRHandler{
                 console.log("camera local position before parenting : ", camera.position.toString());
                 camera.parent = player.playerCapsule;
                 console.log("camera local position after parenting : ", camera.position.toString());
+
+                // Log absolute/world positions for debugging
+                const cameraWorld = camera.getWorldMatrix().getTranslation();
+                const capsuleWorld = player.playerCapsule.getAbsolutePosition();
+                console.log("camera world position: ", cameraWorld.toString());
+                console.log("capsule world position: ", capsuleWorld.toString());
+
                 // Log capsule position after teleport
                 console.log("Character controller position AFTER teleport:", player.characterController.getPosition().toString());  
                 console.log("Capsule position after update : ", player.playerCapsule.position.toString());
