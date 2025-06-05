@@ -478,7 +478,7 @@ export class Player{
      * @param camera The XR camera
      * @param ground The ground mesh
      */
-    setupCharacterController(scene: Scene, camera: Camera, ground: AbstractMesh) {
+    setupCharacterController(scene: Scene, camera: Camera, ground: AbstractMesh,) {
         const h = 1.7; // Capsule height
         const r = 0.6; // Capsule radius
         this.playerCapsule = MeshBuilder.CreateCapsule("playerCapsule", {
@@ -487,14 +487,11 @@ export class Player{
             capSubdivisions: 6,
             tessellation: 12
         }, scene);
-        this.playerCapsule.isVisible = false;
+        this.playerCapsule.isVisible = true;
         this.playerCapsule.position = camera.position.clone();
         this.playerCapsule.checkCollisions = true;
 
         camera.parent = this.playerCapsule;
-        camera.position = new Vector3(0, 0.8, 0);
-
-        ground.checkCollisions = true;
 
         const characterPosition = this.playerCapsule.position.clone();
 
@@ -522,7 +519,7 @@ export class Player{
     }
 
     // Called by XRHandler to update the desired velocity and rotation from thumbstick input and camera orientation
-    setDesiredVelocityAndRotationFromInput(xAxis: number, yAxis: number, rotationInput: number, camera: Camera, dt: number) {
+    setDesiredVelocityAndRotationFromInput(xAxis: number, yAxis: number, rotationInput: number, camera: Camera) {
         // Calculate movement vector in world space based on camera orientation
         const forward = camera.getDirection(new Vector3(0, 0, 1));
         const right = camera.getDirection(new Vector3(1, 0, 0));
@@ -531,7 +528,7 @@ export class Player{
         forward.normalize();
         right.normalize();
         // yAxis is forward/back, xAxis is left/right
-        const speed = 0.05 * dt; // meters per second
+        const speed = 3.0; // meters per second (adjust as needed)
         this._desiredVelocity = forward.scale(-yAxis * speed).add(right.scale(xAxis * speed));
 
         // Rotation: accumulate yaw from rotationInput (right stick X)

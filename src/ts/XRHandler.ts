@@ -283,19 +283,17 @@ export class XRHandler{
             // --- Disable movement and rotation if teleportation is enabled ---
             if (!teleportationEnabled) {
                 const camera = xr.baseExperience.camera;
-                const dt = scene.getEngine().getDeltaTime() / 1000;
 
                 // Pass all inputs to Player (including rotationInput)
                 player.setDesiredVelocityAndRotationFromInput(
                     xPositionInput,
                     yPositionInput,
                     rotationInput,
-                    camera,
-                    dt
+                    camera
                 );
             } else {
                 // If teleportation is enabled, stop movement and rotation
-                player.setDesiredVelocityAndRotationFromInput(0, 0, 0, xr.baseExperience.camera, scene.getEngine().getDeltaTime() / 1000);
+                player.setDesiredVelocityAndRotationFromInput(0, 0, 0, xr.baseExperience.camera);
             }
         });
     
