@@ -1,5 +1,5 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 //import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 //import "@babylonjs/core/Physics/physicsEngineComponent";
 
@@ -37,8 +37,10 @@ import { Object3DPickable } from "../object/Object3DPickable";
 import { WebXRFeatureName } from "@babylonjs/core";
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
+import {Game} from './Echoes_of_Dreams/puzzle_3d/src/game.ts';
 
-export class Scene1Superliminal implements CreateSceneClass {
+
+export class Scene1TestAlai2 implements CreateSceneClass {
     preTasks = [havokModule];
 
     private backgroundMusic: Sound | null = null;
@@ -48,7 +50,22 @@ export class Scene1Superliminal implements CreateSceneClass {
     createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>
     ): Promise<Scene> => {
         const scene: Scene = new Scene(engine);
-        scene.metadata = { sceneName: "Scene1Superliminal" };
+        scene.metadata = { sceneName: "SceneTestAlai2" };
+        let puzzleCanvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
+        if (!puzzleCanvas) {
+            puzzleCanvas = document.createElement('canvas');
+            puzzleCanvas.id = 'gameCanvas';
+            puzzleCanvas.width = 512;
+            puzzleCanvas.height = 512;
+            puzzleCanvas.style.display = 'none'; 
+            document.body.appendChild(puzzleCanvas);
+        }
+
+        const puzzle = new Game('gameCanvas', 2, 2);
+        puzzle.run();
+
+        const puzzlePanel = MeshBuilder.CreatePlane("puzzlePanel", { width: 2, height: 2 }, scene);
+        puzzlePanel.position = new Vector3(0, 2, 3); // Place-le où tu veux
 
         //const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
         //light.intensity = 0.7;
@@ -63,11 +80,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         console.log(xr.baseExperience)
 
         new XRHandler(scene, xr, player, requestSceneSwitchFn);
-
-          //Good way of initializing Havok
-        // initialize plugin
         const havokInstance = await HavokPhysics();
-        // pass the engine to the plugin
         const hk = new HavokPlugin(true, havokInstance);
 
 
@@ -219,9 +232,11 @@ export class Scene1Superliminal implements CreateSceneClass {
           */
           //FIN SWITCH SCENE BUTTON
 
+          
         // --- Asset Manager for Chess Pieces ---
         const assetsManager = new AssetsManager(scene);
 
+        
         // Example: Load the queen chess piece from asset/chess/queen
         // Assumes a .glb file named queen.glb in that folder
         const queenTask = assetsManager.addMeshTask(
@@ -232,7 +247,15 @@ export class Scene1Superliminal implements CreateSceneClass {
         );
 
         queenTask.onSuccess = (task) => {
-            // Find the first loaded mesh that is a Mesh and has geometry
+            // Log all loaded meshes for debugging
+            console.log("Loaded meshes:");
+            task.loadedMeshes.forEach(m => {
+                console.log(
+                    `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
+                );
+            });
+
+            // Find the first loaded mesh that is a Mesh, visible, and has geometry
             const mesh = task.loadedMeshes.find(
                 m => m instanceof Mesh && typeof m.getTotalVertices === "function" && m.getTotalVertices() > 0
             ) as Mesh | undefined;
@@ -240,22 +263,38 @@ export class Scene1Superliminal implements CreateSceneClass {
                 console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
                 return;
             }
-            mesh.position = new Vector3(-4, 0.5, 3);
-            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
-            mesh.isPickable = true;
 
-            // --- Correction du centre de la bounding box à y=0.5 ---
-            mesh.computeWorldMatrix(true);
-            mesh.refreshBoundingInfo(true, true);
-            const bbox = mesh.getBoundingInfo().boundingBox;
-            const center = bbox.centerWorld;
-            // Décale la mesh pour que le centre de la bounding box soit à y=0.5
-            mesh.position.y += (0.5 - center.y);
-
+            
+            console.log("parent : ", mesh.parent);
+            const rootNode = mesh.parent;
+            mesh.parent = null
+            if(rootNode){
+                rootNode.dispose()
+            }
             // --- Ensure the queen has a StandardMaterial for highlight ---
             if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
                 mesh.material = new StandardMaterial("queenMat", scene);
             }
+            // --- Center geometry so bounding box center is at the origin ---
+            if (mesh.getBoundingInfo && typeof mesh.setPivotPoint === "function") {
+                const bbox = mesh.getBoundingInfo().boundingBox;
+                const center = bbox.center.clone();
+                mesh.bakeTransformIntoVertices(
+                    Matrix.Translation(-center.x, -center.y, -center.z)
+                );
+                // After baking, move mesh to where the center should be
+                mesh.position.addInPlace(center);
+                mesh.refreshBoundingInfo(true, true);
+                mesh.computeWorldMatrix(true);
+                mesh.setPivotPoint(mesh.getBoundingInfo().boundingBox.center.clone());
+
+                mesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
+
+            }
+            mesh.scaling = new Vector3(0.3, 0.3, 0.3);
+            mesh.isPickable = true;
+
+            
 
             // Create Object3DPickable for the queen
             //@ts-ignore
@@ -273,12 +312,16 @@ export class Scene1Superliminal implements CreateSceneClass {
                     // Add physics aggregate (MESH shape for complex mesh)
                     const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
                     aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-                    aggregate.body.setPrestepType(PhysicsPrestepType.ACTION);
-                    aggregate.body.setCollisionCallbackEnabled(true);
-                    aggregate.body.setEventMask(eventMask);
-                    return { mesh, aggregate };
+                    aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                    //aggregate.body.setCollisionCallbackEnabled(true);
+                    //aggregate.body.setEventMask(eventMask);
+                    return { mesh, extra : {}, aggregate };
                 }
+
+                
             );
+
+        
             // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
             (mesh as any).object3DPickable = queenPickable;
 
@@ -293,12 +336,12 @@ export class Scene1Superliminal implements CreateSceneClass {
         // You can add more mesh tasks for other pieces here
 
         assetsManager.load();
-
+                
         return scene;
     };
 }
 
-export default new Scene1Superliminal();
+export default new Scene1TestAlai2();
 
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
@@ -341,6 +384,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 
 
 // Add movement with left joystick
+//@ts-ignore
 function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground : Mesh) {
     // Store rotation state
     var rotationInput = 0;
@@ -434,6 +478,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
         }
     });
 
+    /*
     // Add physics to controllers when the mesh is loaded
     xr.input.onControllerAddedObservable.add((controller: any) => {
         controller.onMotionControllerInitObservable.add((motionController: any) => {
@@ -465,9 +510,11 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
             });
         });
     });
+    */
 }
 
 // Create a light bulb as an Object3DPickable
+//@ts-ignore
 function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPickable {
     // Usage in scene :
     // const bulbPickable = createLightBulbPickable(scene);
@@ -502,13 +549,8 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
 
             aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
             aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-            aggregate.body.setCollisionCallbackEnabled(true);
-            aggregate.body.setEventMask(eventMask);
-
-            aggregate.body.getCollisionObservable().add((collisionEvent: any) => {
-                if (collisionEvent.type === "COLLISION_STARTED") {
-                }
-            });
+            //aggregate.body.setCollisionCallbackEnabled(true);
+            //aggregate.body.setEventMask(eventMask);
 
             // --- Ensure the light always snaps to the bulb's position (in case parenting is lost) ---
             /*
