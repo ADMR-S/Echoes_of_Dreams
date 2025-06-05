@@ -346,13 +346,16 @@ export class XRHandler{
                 // Temporarily unparent camera to avoid offset
                 const oldParent = camera.parent;
                 camera.parent = null;
+                console.log("Capsule position before update : ", player.playerCapsule.position.toString());
                 console.log("character controller _position before update : ", (player.characterController as any)._position.toString());
                 (player.characterController as any)._position = camera.position.clone();
                 player.playerCapsule.position.copyFrom(player.characterController.getPosition());
                 (player.characterController as any)._position = camera.position.clone();
                 camera.parent = oldParent;
                 // Log capsule position after teleport
-                console.log("Character controller position AFTER teleport:", player.characterController.getPosition().toString());       
+                console.log("Character controller position AFTER teleport:", player.characterController.getPosition().toString());  
+                console.log("Capsule position after update : ", player.playerCapsule.position.toString());
+     
             }
         });
     }
