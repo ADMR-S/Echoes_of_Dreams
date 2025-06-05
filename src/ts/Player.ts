@@ -546,6 +546,7 @@ export class Player{
         const down = new Vector3(0, -1, 0); // Gravity direction
         const support = this.characterController.checkSupport(dt, down);
 
+        console.log("Character support:", support ? "Yes" : "No", "details :", support);
         console.log("Player desired velocity:", velocity.toString());
 
         this.characterController.setVelocity(velocity);
