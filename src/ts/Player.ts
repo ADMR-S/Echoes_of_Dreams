@@ -513,6 +513,7 @@ export class Player{
             const pick = scene.pickWithRay(ray, mesh => mesh === ground);
             if (!pick || !pick.hit) {
                 if(oldPos){
+                    console.log("No ground hit, resetting position to old position.");
                     this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
                 }
             }
