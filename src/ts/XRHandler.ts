@@ -347,9 +347,8 @@ export class XRHandler{
                 camera.parent = null;
                 console.log("Capsule position before update : ", player.playerCapsule.position.toString());
                 console.log("character controller _position before update : ", (player.characterController as any)._position.toString());
-                (player.characterController as any)._position = camera.position.clone();
+                (player.characterController as any)._position = camera.getWorldMatrix().getTranslation().clone();
                 player.playerCapsule.position.copyFrom(player.characterController.getPosition());
-                (player.characterController as any)._position = camera.position.clone();
                 console.log("camera local position before parenting : ", camera.position.toString());
                 camera.parent = player.playerCapsule;
                 console.log("camera local position after parenting : ", camera.position.toString());
