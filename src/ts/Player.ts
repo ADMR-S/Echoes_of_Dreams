@@ -42,7 +42,6 @@ export class Player{
             //console.log("Un objet est déjà sélectionné !");
             //console.log("On déselectionne : ");
             //console.log(this.selectedObject);
-            this.selectedObject.parent = null;
             this.selectedObject.isPickable = true;
             //console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             if (this.resizeAndRepositionObjectObservable) {
@@ -545,7 +544,7 @@ export class Player{
         const velocity = this._desiredVelocity;
         const down = new Vector3(0, -1, 0); // Gravity direction
         const support = this.characterController.checkSupport(dt, down);
-        
+
         this.characterController.setVelocity(velocity);
 
         const characterGravity = new Vector3(0, 0, 0); // Gravity vector
