@@ -554,6 +554,8 @@ export class Player{
         const characterGravity = new Vector3(0, 0, 0); // Gravity vector
         this.characterController.integrate(dt, support, characterGravity);
 
+        this.playerCapsule?.position.copyFrom(this.characterController.getPosition());
+
         // Apply rotation to the camera's parent (the capsule)
         if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001) {
             // Use quaternion multiplication for yaw rotation
