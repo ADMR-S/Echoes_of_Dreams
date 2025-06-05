@@ -339,10 +339,10 @@ export class XRHandler{
         // Listen for reference space changes (teleport events)
         const sessionManager = xr.baseExperience.sessionManager;
         sessionManager.onXRReferenceSpaceChanged.add(() => {
-            if (player.playerCapsule && xr.baseExperience.camera) {
+            if (player.characterController && xr.baseExperience.camera) {
                 const camera = xr.baseExperience.camera;
                 // Log capsule position before teleport
-                console.log("[XRHandler] Capsule position BEFORE teleport:", player.playerCapsule.position.toString());
+                console.log("Character controller position BEFORE teleport:", player.characterController.getPosition().toString());
                 // Temporarily unparent camera to avoid offset
                 const oldParent = camera.parent;
                 camera.parent = null;
@@ -350,7 +350,7 @@ export class XRHandler{
                 player.characterController?.setPosition(camera.position);
                 camera.parent = oldParent;
                 // Log capsule position after teleport
-                console.log("[XRHandler] Capsule position AFTER teleport:", player.playerCapsule.position.toString());
+                console.log("Character controller position AFTER teleport:", player.characterController.getPosition().toString());       
             }
         });
     }
