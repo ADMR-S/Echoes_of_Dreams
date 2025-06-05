@@ -341,21 +341,20 @@ export class XRHandler{
         sessionManager.onXRReferenceSpaceChanged.add(() => {
             if (player.characterController && player.playerCapsule && xr.baseExperience.camera) {
                 const camera = xr.baseExperience.camera;
-                // Get camera's world position before reference space change
-                const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
-
-                // After reference space change, set capsule/controller to world position
-                (player.characterController as any)._position = cameraWorldPos;
+                // Log capsule position before teleport
+                console.log("Character controller position BEFORE teleport:", player.characterController.getPosition().toString());
+                // Temporarily unparent camera to avoid offset
+                camera.parent = null;
+                console.log("Capsule position before update : ", player.playerCapsule.position.toString());
+                console.log("character controller _position before update : ", (player.characterController as any)._position.toString());
+                (player.characterController as any)._position = camera.position.clone();
                 player.playerCapsule.position.copyFrom(player.characterController.getPosition());
-
-                // If camera has a parent, reset its local position
-                if (camera.parent) {
-                    camera.position.set(0, 0, 0);
-                }
-
-                // Log for debugging
-                console.log("Character controller position AFTER reference space change:", player.characterController.getPosition().toString());
-                console.log("Capsule position after update:", player.playerCapsule.position.toString());
+                (player.characterController as any)._position = camera.position.clone();
+                camera.parent = player.playerCapsule;
+                // Log capsule position after teleport
+                console.log("Character controller position AFTER teleport:", player.characterController.getPosition().toString());  
+                console.log("Capsule position after update : ", player.playerCapsule.position.toString());
+     
             }
         });
     }
