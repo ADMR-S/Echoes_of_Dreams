@@ -343,10 +343,18 @@ export class XRHandler{
                 const camera = xr.baseExperience.camera;
                 // Log capsule position before teleport
                 console.log("Character controller position BEFORE teleport:", player.characterController.getPosition().toString());
+                // Compute camera world position manually (since getAbsolutePosition is not available)
+                let worldPos: Vector3;
+                if (camera.parent) {
+                    worldPos = Vector3.TransformCoordinates(camera.position, camera.parent.getWorldMatrix());
+                } else {
+                    worldPos = camera.position.clone();
+                }
                 // Temporarily unparent camera to avoid offset
                 const oldParent = camera.parent;
                 camera.parent = null;
-                (player.characterController as any)._position = camera.position.clone();
+                // Set controller position to camera's world position
+                (player.characterController as any)._position = worldPos;
                 player.playerCapsule.position = player.characterController.getPosition();
                 camera.parent = oldParent;
                 // Log capsule position after teleport
