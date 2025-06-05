@@ -286,7 +286,6 @@ export class XRHandler{
             if (!teleportationEnabled) {
                 const camera = xr.baseExperience.camera;
 
-                console.log("Left stick x:", xPositionInput, "y:", yPositionInput, "rotation:", rotationInput);
 
                 player.setDesiredVelocityAndRotationFromInput(
                     xPositionInput,
