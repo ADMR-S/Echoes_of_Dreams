@@ -57,6 +57,7 @@ export class XRHandler{
         this.setupObjectSelection();
         this.setupHighlighting(); // Add highlighting setup
         this.setupSceneSwitchControls();
+        this.syncCapsuleWithCameraOnTeleport(xr, player);
         new XRLogger(xr, scene); // Initialize XRLogger
     }
 
