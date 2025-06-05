@@ -149,9 +149,15 @@ export class Player{
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
             
-            
+            // --- Log what the displacement ray picks ---
             const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh && mesh != this.selectedObject && mesh.isPickable);
-
+            if (pickResult) {
+                if (pickResult.pickedMesh) {
+                    console.log("[Player] Displacement ray picked mesh:", pickResult.pickedMesh.name, pickResult.pickedMesh);
+                } else {
+                    console.log("[Player] Displacement ray did not hit any mesh.");
+                }
+            }
             var distance = 0;
 
             if (pickResult && pickResult.pickedPoint) {
