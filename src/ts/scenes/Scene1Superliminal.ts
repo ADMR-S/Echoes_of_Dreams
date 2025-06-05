@@ -434,26 +434,28 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
 
     // Smooth rotation in the render loop
     scene.onBeforeRenderObservable.add(() => {
-        const rotationSpeed = 0.04; // Adjust for desired sensitivity
-        const movementSpeed = 0.05;
-        const camera = xr.baseExperience.camera;
+        // --- Disable movement and rotation if teleportation is enabled ---
+        if (!teleportationEnabled) {
+            const rotationSpeed = 0.04; // Adjust for desired sensitivity
+            const movementSpeed = 0.05;
+            const camera = xr.baseExperience.camera;
 
-        if (Math.abs(rotationInput) > 0.01) {
-            console.log("Rotation input: " + rotationInput);
-            console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
-            // Rotate around Y axis (yaw)
             if (Math.abs(rotationInput) > 0.01) {
-            // Rotate around the WORLD Y axis (not local)
-            const deltaYaw = rotationInput * rotationSpeed;
-            const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
-            camera.rotationQuaternion = yawQuaternion.multiply(camera.rotationQuaternion!);
-        }
-            console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
-        }
-        // Smooth movement relative to camera's facing direction
-        if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
-            // Calculate forward and right vectors based on camera rotation
-            const forward = camera.getDirection(new Vector3(0, 0, 1));
+                console.log("Rotation input: " + rotationInput);
+                console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
+                // Rotate around Y axis (yaw)
+                if (Math.abs(rotationInput) > 0.01) {
+                    // Rotate around the WORLD Y axis (not local)
+                    const deltaYaw = rotationInput * rotationSpeed;
+                    const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
+                    camera.rotationQuaternion = yawQuaternion.multiply(camera.rotationQuaternion!);
+                }
+                console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
+            }
+            // Smooth movement relative to camera's facing direction
+            if (Math.abs(xPositionInput) > 0.01 || Math.abs(yPositionInput) > 0.01) {
+                // Calculate forward and right vectors based on camera rotation
+                const forward = camera.getDirection(new Vector3(0, 0, 1));
                 const right = camera.getDirection(new Vector3(1, 0, 0));
                 // Remove y component to keep movement horizontal
                 forward.y = 0;
@@ -462,6 +464,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
                 right.normalize();
                 camera.position.addInPlace(forward.scale(-yPositionInput * movementSpeed));
                 camera.position.addInPlace(right.scale(xPositionInput * movementSpeed));
+            }
         }
     });
 
