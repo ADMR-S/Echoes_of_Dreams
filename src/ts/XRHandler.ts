@@ -12,7 +12,7 @@ import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
-import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Mesh, WebXRFeatureName } from "@babylonjs/core";
 import XRLogger from "./XRLogger";
 
@@ -282,27 +282,20 @@ export class XRHandler{
         scene.onBeforeRenderObservable.add(() => {
             // --- Disable movement and rotation if teleportation is enabled ---
             if (!teleportationEnabled) {
-                const rotationSpeed = 0.04; // Adjust for desired sensitivity
-                const movementSpeed = 0.05;
                 const camera = xr.baseExperience.camera;
-    
-                if (Math.abs(rotationInput) > 0.01) {
-                    console.log("Rotation input: " + rotationInput);
-                    console.log("Camera rotation before: " + camera.rotationQuaternion.toEulerAngles().y);
-                    // Rotate around Y axis (yaw)
-                    if (Math.abs(rotationInput) > 0.01) {
-                        // Rotate around the WORLD Y axis (not local)
-                        const deltaYaw = rotationInput * rotationSpeed;
-                        const yawQuaternion = Quaternion.FromEulerAngles(0, deltaYaw, 0);
-                        camera.rotationQuaternion = yawQuaternion.multiply(camera.rotationQuaternion!);
-                    }
-                    console.log("Camera rotation after: " + camera.rotationQuaternion.toEulerAngles().y);
-                }
-                // Instead of moving the player directly, set the desired velocity for the character controller
-                player.setDesiredVelocityFromInput(xPositionInput * movementSpeed, yPositionInput * movementSpeed, camera);
+                const dt = scene.getEngine().getDeltaTime() / 1000;
+
+                // Pass all inputs to Player (including rotationInput)
+                player.setDesiredVelocityAndRotationFromInput(
+                    xPositionInput,
+                    yPositionInput,
+                    rotationInput,
+                    camera,
+                    dt
+                );
             } else {
-                // If teleportation is enabled, stop movement
-                player.setDesiredVelocityFromInput(0, 0, xr.baseExperience.camera);
+                // If teleportation is enabled, stop movement and rotation
+                player.setDesiredVelocityAndRotationFromInput(0, 0, 0, xr.baseExperience.camera, scene.getEngine().getDeltaTime() / 1000);
             }
         });
     

@@ -28,6 +28,7 @@ export class Player{
     public characterController: PhysicsCharacterController | null = null;
     public playerCapsule: AbstractMesh | null = null;
     private _desiredVelocity: Vector3 = Vector3.Zero();
+    private _desiredYaw: number = 0;
 
     constructor(){
         this.selectedObject = null;
@@ -497,9 +498,11 @@ export class Player{
         // Prevent moving where there's no ground (stick to ground)
         scene.onBeforeRenderObservable.add(() => {
             // Integrate character controller with current desired velocity
-            const dt = scene.getEngine().getDeltaTime() / 1000;
             const oldPos = this.playerCapsule?.position.clone();
 
+            
+            // Update character controller and camera rotation
+            this.updateCharacterController(scene.getEngine().getDeltaTime() / 1000);
             // Optionally, clamp to ground if falling off (safety)
             if (!this.playerCapsule) return;
             const ray = new Ray(this.playerCapsule.position, new Vector3(0, -1, 0), 2);
@@ -512,8 +515,8 @@ export class Player{
         });
     }
 
-    // Called by XRHandler to update the desired velocity from thumbstick input and camera orientation
-    setDesiredVelocityFromInput(xAxis: number, yAxis: number, camera: Camera) {
+    // Called by XRHandler to update the desired velocity and rotation from thumbstick input and camera orientation
+    setDesiredVelocityAndRotationFromInput(xAxis: number, yAxis: number, rotationInput: number, camera: Camera, dt: number) {
         // Calculate movement vector in world space based on camera orientation
         const forward = camera.getDirection(new Vector3(0, 0, 1));
         const right = camera.getDirection(new Vector3(1, 0, 0));
@@ -522,13 +525,18 @@ export class Player{
         forward.normalize();
         right.normalize();
         // yAxis is forward/back, xAxis is left/right
-        this._desiredVelocity = forward.scale(-yAxis).add(right.scale(xAxis));
+        const speed = 0.05; // meters per second
+        this._desiredVelocity = forward.scale(-yAxis * dt).add(right.scale(xAxis * speed * dt));
+
+        // Rotation: accumulate yaw from rotationInput (right stick X)
+        const rotationSpeed = 0.04; // radians per frame per unit input
+        this._desiredYaw = rotationInput * rotationSpeed;
     }
 
-    // Call this in the scene loop to apply the desired velocity to the character controller
+    // Call this in the scene loop to apply the desired velocity and rotation to the character controller and camera
     updateCharacterController(dt: number) {
         if (!this.characterController) return;
-        // Set the velocity (scale as needed for speed)
+        // Set the velocity (already scaled by dt in setDesiredVelocityAndRotationFromInput)
         const velocity = this._desiredVelocity;
         const down = new Vector3(0, -1, 0); // Gravity direction
         const support = this.characterController.checkSupport(dt, down);
@@ -537,8 +545,12 @@ export class Player{
 
         const characterGravity = new Vector3(0, 0, 0); // Gravity vector
         this.characterController.integrate(dt, support, characterGravity);
-        const newPosition = this.characterController.getPosition();
-        // Integrate movement (gravity is handled by the controller)
-        return newPosition
+
+        // Apply rotation to the camera's parent (the capsule)
+        if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001) {
+            this.playerCapsule.rotate(Vector3.Up(), this._desiredYaw);
+        }
+        // Reset desiredYaw after applying
+        this._desiredYaw = 0;
     }
 }
