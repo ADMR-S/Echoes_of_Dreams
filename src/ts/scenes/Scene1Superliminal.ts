@@ -47,6 +47,11 @@ export class Scene1Superliminal implements CreateSceneClass {
     // @ts-ignore
     createScene = async (engine: AbstractEngine, canvas: HTMLCanvasElement, audioContext: AudioContext, player: Player, requestSceneSwitchFn: () => Promise<void>
     ): Promise<Scene> => {
+        // --- Add these flags at the top of the function ---
+        let hasLoggedGroundMeshDisposed = false;
+        let hasLoggedGroundAggregateMissing = false;
+        let hasLoggedGroundAggregateTransformDisposed = false;
+
         const scene: Scene = new Scene(engine);
         scene.metadata = { sceneName: "Scene1Superliminal" };
 
@@ -156,6 +161,17 @@ export class Scene1Superliminal implements CreateSceneClass {
                     groundAggregate.body.transformNode.onDisposeObservable.add(() => {
                         console.warn("Ground aggregate's transformNode was disposed!");
                         console.trace("Ground aggregate's transformNode disposed stack trace:");
+                        // Log current state of ground mesh and aggregate
+                        console.warn("Ground mesh state:", groundMesh ? {
+                            name: groundMesh.name,
+                            disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
+                            id: groundMesh.id,
+                            uniqueId: groundMesh.uniqueId,
+                        } : "undefined");
+                        console.warn("Ground aggregate state:", groundAggregate ? {
+                            body: groundAggregate.body,
+                            disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
+                        } : "undefined");
                     });
                 }
 
@@ -170,21 +186,36 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // --- Robust ground mesh/aggregate checks each frame ---
                 scene.onBeforeRenderObservable.add(() => {
                     // Check if ground mesh is disposed or missing
-                    if (!groundMesh || groundMesh.isDisposed()) {
+                    if ((!groundMesh || groundMesh.isDisposed()) && !hasLoggedGroundMeshDisposed) {
+                        hasLoggedGroundMeshDisposed = true;
                         console.error("Ground mesh is missing or disposed during frame!");
                         console.trace("Ground mesh missing/disposed stack trace:");
                     }
                     // Check if groundAggregate or its body is missing/disposed
-                    if (!groundAggregate || !groundAggregate.body) {
+                    if ((!groundAggregate || !groundAggregate.body) && !hasLoggedGroundAggregateMissing) {
+                        hasLoggedGroundAggregateMissing = true;
                         console.error("Ground aggregate or its body is missing during frame!");
                         console.trace("Ground aggregate/body missing stack trace:");
                     } else if (
                         groundAggregate.body.transformNode &&
                         groundAggregate.body.transformNode.isDisposed &&
-                        groundAggregate.body.transformNode.isDisposed()
+                        groundAggregate.body.transformNode.isDisposed() &&
+                        !hasLoggedGroundAggregateTransformDisposed
                     ) {
-                        console.error("Ground aggregate's transformNode is disposed during frame!");
-                        console.trace("Ground aggregate's transformNode disposed stack trace:");
+                        hasLoggedGroundAggregateTransformDisposed = true;
+                        console.error("Ground aggregate transform is disposed during frame!");
+                        console.trace("Ground aggregate transform disposed stack trace:");
+                        // Log current state of ground mesh and aggregate
+                        console.warn("Ground mesh state:", groundMesh ? {
+                            name: groundMesh.name,
+                            disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
+                            id: groundMesh.id,
+                            uniqueId: groundMesh.uniqueId,
+                        } : "undefined");
+                        console.warn("Ground aggregate state:", groundAggregate ? {
+                            body: groundAggregate.body,
+                            disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
+                        } : "undefined");
                     }
                 });
 
