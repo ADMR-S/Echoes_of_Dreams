@@ -193,6 +193,77 @@ export class Scene1Superliminal implements CreateSceneClass {
                     throw new Error("Failed to create or find a ground mesh.");
                 }
 
+                var queenMesh = task.loadedMeshes.find(m => m.name === "queen");
+                    if (!queenMesh) {
+                        console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
+                        return;
+                    }
+
+                    
+                    console.log("parent : ", queenMesh.parent);
+                    const rootNode = queenMesh.parent;
+                    queenMesh.parent = null
+                    if(rootNode){
+                        rootNode.dispose()
+                    }
+                    // --- Ensure the queen has a StandardMaterial for highlight ---
+                    if (!(queenMesh.material && queenMesh.material instanceof StandardMaterial)) {
+                        queenMesh.material = new StandardMaterial("queenMat", scene);
+                    }
+                    // --- Center geometry so bounding box center is at the origin ---
+                    if (typeof queenMesh.setPivotPoint === "function") {
+                        const bbox = queenMesh.getBoundingInfo().boundingBox;
+                        const center = bbox.center.clone();
+                        (queenMesh as Mesh).bakeTransformIntoVertices(
+                            Matrix.Translation(-center.x, -center.y, -center.z)
+                        );
+                        // After baking, move mesh to where the center should be
+                        queenMesh.position.addInPlace(center);
+                        queenMesh.refreshBoundingInfo(true, true);
+                        queenMesh.computeWorldMatrix(true);
+                        queenMesh.setPivotPoint(queenMesh.getBoundingInfo().boundingBox.center.clone());
+
+                        queenMesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
+
+                    }
+                    queenMesh.scaling = new Vector3(0.3, 0.3, 0.3);
+                    queenMesh.isPickable = true;
+
+                    
+
+                    // Create Object3DPickable for the queen
+                    //@ts-ignore
+                    if(groundMesh){
+                        const queenPickable = new Object3DPickable(
+                            scene,
+                            "queenPickable",
+                            queenMesh.material,
+                            PhysicsShapeType.MESH,
+                            1,
+                            groundMesh,
+                            // Custom mesh factory to use the imported mesh and add physics
+                            //@ts-ignore
+                            (scene, name, material, size) => {
+                                if(queenMesh){
+                                    queenMesh.name = name;
+                                    queenMesh.material = material;
+                                    // Add physics aggregate (MESH shape for complex mesh)
+                                    const aggregate = new PhysicsAggregate(queenMesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
+                                    aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+                                    aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                                    //aggregate.body.setCollisionCallbackEnabled(true);
+                                    //aggregate.body.setEventMask(eventMask);
+                                return { queenMesh, extra : {}, aggregate };
+                                }
+                            }
+                        );
+                    
+                
+                    // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
+                    (queenMesh as any).object3DPickable = queenPickable;
+
+                    console.log("Queen chess piece loaded and pickable.");
+
                 
                 const xr = await scene.createDefaultXRExperienceAsync({
                     floorMeshes: [groundMesh],
@@ -413,104 +484,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                 
                 // Example: Load the queen chess piece from asset/chess/queen
                 // Assumes a .glb file named queen.glb in that folder
-                const queenTask = assetsManager.addMeshTask(
-                    "loadQueen",
-                    "", // mesh names, empty for all
-                    "asset/scene1/chess/",
-                    "queen.glb"
-                );
-
-                queenTask.onSuccess = (task) => {
-                    // Log all loaded meshes for debugging
-                    console.log("Loaded meshes:");
-                    task.loadedMeshes.forEach(m => {
-                        console.log(
-                            `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
-                        );
-                    });
-
-                    // Find the first loaded mesh that is a Mesh, visible, and has geometry
-                    const mesh = task.loadedMeshes.find(
-                        m => m instanceof Mesh && typeof m.getTotalVertices === "function" && m.getTotalVertices() > 0
-                    ) as Mesh | undefined;
-                    if (!mesh) {
-                        console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
-                        return;
-                    }
-
-                    
-                    console.log("parent : ", mesh.parent);
-                    const rootNode = mesh.parent;
-                    mesh.parent = null
-                    if(rootNode){
-                        rootNode.dispose()
-                    }
-                    // --- Ensure the queen has a StandardMaterial for highlight ---
-                    if (!(mesh.material && mesh.material instanceof StandardMaterial)) {
-                        mesh.material = new StandardMaterial("queenMat", scene);
-                    }
-                    // --- Center geometry so bounding box center is at the origin ---
-                    if (mesh.getBoundingInfo && typeof mesh.setPivotPoint === "function") {
-                        const bbox = mesh.getBoundingInfo().boundingBox;
-                        const center = bbox.center.clone();
-                        mesh.bakeTransformIntoVertices(
-                            Matrix.Translation(-center.x, -center.y, -center.z)
-                        );
-                        // After baking, move mesh to where the center should be
-                        mesh.position.addInPlace(center);
-                        mesh.refreshBoundingInfo(true, true);
-                        mesh.computeWorldMatrix(true);
-                        mesh.setPivotPoint(mesh.getBoundingInfo().boundingBox.center.clone());
-
-                        mesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
-
-                    }
-                    mesh.scaling = new Vector3(0.3, 0.3, 0.3);
-                    mesh.isPickable = true;
-
-                    
-
-                    // Create Object3DPickable for the queen
-                    //@ts-ignore
-                    if(groundMesh){
-                        const queenPickable = new Object3DPickable(
-                            scene,
-                            "queenPickable",
-                            mesh.material,
-                            PhysicsShapeType.MESH,
-                            1,
-                            groundMesh,
-                            // Custom mesh factory to use the imported mesh and add physics
-                            //@ts-ignore
-                            (scene, name, material, size) => {
-                                mesh.name = name;
-                                mesh.material = material;
-                                // Add physics aggregate (MESH shape for complex mesh)
-                                const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
-                                aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-                                aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-                                //aggregate.body.setCollisionCallbackEnabled(true);
-                                //aggregate.body.setEventMask(eventMask);
-                                return { mesh, extra : {}, aggregate };
-                            }
-                        );
-                    
                 
-                    // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
-                    (mesh as any).object3DPickable = queenPickable;
-
-                    console.log("Queen chess piece loaded and pickable.");
-                    }
-                };
-
-                //@ts-ignore
-                queenTask.onError = (task, message, exception) => {
-                    console.error("Failed to load queen chess piece:", message, exception);
-                };
-
-                // You can add more mesh tasks for other pieces here
-
-                assetsManager.load();
+                
 
                 //SceneOptimizer.OptimizeAsync(scene);
                 resolve(scene); // Only resolve after setup is done
@@ -521,6 +496,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 reject(exception);
             };
             assetsManager.load();
+            }
         });
     }
 }
