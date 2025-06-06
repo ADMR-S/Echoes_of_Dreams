@@ -188,6 +188,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 }
 
                 // Find queen mesh (case-insensitive)
+                var queenMesh = task.loadedMeshes.find(m => m.name && m.name.toLowerCase() === "queen");
                 if (!queenMesh) {
                     console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
                     return;
