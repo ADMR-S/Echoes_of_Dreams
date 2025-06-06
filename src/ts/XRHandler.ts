@@ -343,6 +343,7 @@ export class XRHandler{
                 const camera = xr.baseExperience.camera;
                 const capsule = player.playerCapsule;
 
+                camera.computeWorldMatrix(); // Ensure camera's world matrix is up-to-date
                 // 1. Get camera's world position before unparenting
                 const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
 
