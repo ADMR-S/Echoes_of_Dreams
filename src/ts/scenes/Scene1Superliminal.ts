@@ -96,8 +96,9 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         // enable physics in the scene with a gravity
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
-        //const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-        //light.intensity = 0.7;
+        
+        const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
+        light.intensity = 0.7;
 
         // --- Asset Manager for Chess Pieces ---
         const assetsManager = new AssetsManager(scene);

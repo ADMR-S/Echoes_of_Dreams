@@ -12,7 +12,7 @@ import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
-import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { WebXRFeatureName } from "@babylonjs/core";
 import XRLogger from "./XRLogger";
 //@ts-ignore
@@ -348,7 +348,7 @@ export class XRHandler{
 
                 // 1. Get camera's world position and rotation after teleport
                 const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
-                const cameraWorldQuat = camera.rotationQuaternion.clone();
+                const cameraWorldQuat = camera.rotationQuaternion?.clone();
 
                 // 2. Unparent camera (if already parented)
                 camera.parent = null;
@@ -367,11 +367,11 @@ export class XRHandler{
                 }
                 capsule.computeWorldMatrix(true);
 
-                // 5. Parent camera to capsule and reset camera's local transform
+                // 5. Parent camera to capsule (do NOT set camera.position to zero)
                 camera.parent = capsule;
-                camera.position.set(0, 0, 0);
-                camera.rotation.set(0, 0, 0);
-                camera.rotationQuaternion = Quaternion.Identity();
+                // camera.position.set(0, 0, 0); // <-- REMOVE THIS LINE
+                // camera.rotation.set(0, 0, 0); // <-- REMOVE THIS LINE
+                // camera.rotationQuaternion = Quaternion.Identity(); // <-- REMOVE THIS LINE
 
                 // --- Debug logs (immediate) ---
                 console.log("Camera/capsule sync after teleport (immediate):");
