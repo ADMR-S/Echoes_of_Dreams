@@ -341,28 +341,29 @@ export class XRHandler{
         sessionManager.onXRReferenceSpaceChanged.add(() => {
             if (player.characterController && player.playerCapsule && xr.baseExperience.camera) {
                 const camera = xr.baseExperience.camera;
-                // Log capsule position before teleport
-                console.log("Character controller position BEFORE teleport:", player.characterController.getPosition().toString());
-                // Temporarily unparent camera to avoid offset
+
+                // 1. Get camera's world position before unparenting
+                const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
+
+                // 2. Unparent camera
                 camera.parent = null;
-                console.log("Capsule position before update : ", player.playerCapsule.position.toString());
-                console.log("character controller _position before update : ", (player.characterController as any)._position.toString());
-                (player.characterController as any)._position = camera.position.clone();
-                player.playerCapsule.position.copyFrom(player.characterController.getPosition());
-                console.log("camera local position before parenting : ", camera.position.toString());
+
+                // 3. Move character controller and capsule to camera's world position
+                (player.characterController as any)._position = cameraWorldPos.clone();
+                player.playerCapsule.position.copyFrom(cameraWorldPos);
+
+                // 4. Reparent camera to capsule
                 camera.parent = player.playerCapsule;
-                console.log("camera local position after parenting : ", camera.position.toString());
 
-                // Log absolute/world positions for debugging
-                const cameraWorld = camera.getWorldMatrix().getTranslation();
-                const capsuleWorld = player.playerCapsule.getAbsolutePosition();
-                console.log("camera world position: ", cameraWorld.toString());
-                console.log("capsule world position: ", capsuleWorld.toString());
+                // 5. Snap camera's local position to zero (so it sits at capsule's origin)
+                camera.position.set(0, 0, 0);
 
-                // Log capsule position after teleport
-                console.log("Character controller position AFTER teleport:", player.characterController.getPosition().toString());  
-                console.log("Capsule position after update : ", player.playerCapsule.position.toString());
-     
+                // --- Debug logs ---
+                console.log("Camera/capsule sync after teleport:");
+                console.log("camera local position after parenting:", camera.position.toString());
+                console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
+                console.log("capsule world position:", player.playerCapsule.getAbsolutePosition().toString());
+                console.log("character controller position:", player.characterController.getPosition().toString());
             }
         });
     }
