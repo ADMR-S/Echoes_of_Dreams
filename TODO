@@ -12,26 +12,26 @@ Raccourcir la phase de tir (et clarifier le changement de phase de jeu, effet so
 
 
 Scene 1 :
-Ajuster déplacement character controller en cas de TP
+A Faire de toute urgence :
 Switch entre animation de déplacement et rotation manuelle (en appuyant sur la gachette et en tournant la main, déplacement relatif)
 Créer sortie du niveau, qui produit une musique locale dans la scène
 Intégrer puzzle géant au 1er niveau
-Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
-La musique boucle mal, changer
+Développer UI (contrôles, afficher si téléportation activée / désactivée...), afficher objectif...
+Tutoriels, dialogues (monologue intérieur), instructions, HUD...
+Permettre de monter sur des objets (les ajouter au "ground" ?), tester saut sur bouton A
+
+Sera fait en parallèle :
+Enrichir scène Blender (materials, plus d'objets, nuages)...
+
+Ne sera probablement pas fait :
 Ajouter effets de caméra lorsqu'un gros objet tombe au sol
     + Effets sonores
-HUD pour décrire les états (TP / deplacement, Télékinésie activée ou non...)
-Permettre de monter sur des objets (les ajouter au "ground" ?), tester saut sur bouton A
-Intégrer scène Blender, plus d'objets, assets...
-
-Développer UI (contrôles, afficher si téléportation activée / désactivée...), afficher objectif...
-
+Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
+La musique boucle mal, changer
 
 GLOBAL : 
-Parvenir à passer d'un niveau à l'autre
+Parvenir à passer d'un niveau à l'autre plus fluidement
 
-Tutoriels, dialogues (monologue intérieur), instructions, HUD...
-Scene Optimizer pour stabiliser le framerate (pas compliqué du tout, voir doc babylon Optimizer)
 
 Instructions :
 Stick gauche : Se déplacer
