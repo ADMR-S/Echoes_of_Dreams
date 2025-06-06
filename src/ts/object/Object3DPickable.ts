@@ -14,6 +14,7 @@ export class Object3DPickable implements Object3D{
     aggregate?: PhysicsAggregate; // Store aggregate directly
     extra: any;
     initialPosition: Vector3;
+    initialScaling: Vector3;
 
     constructor(
       scene: Scene,
@@ -66,8 +67,9 @@ export class Object3DPickable implements Object3D{
             console.log("  boundingBox centerWorld:", bbox.centerWorld.toString());
         }
 
-        // Store initial position for respawn logic
+        // Store initial position and scaling for respawn logic
         this.initialPosition = this.mesh.position.clone();
+        this.initialScaling = this.mesh.scaling.clone();
 
         // --- Ground-level respawn logic ---
         scene.onBeforeRenderObservable.add(() => {
@@ -75,9 +77,10 @@ export class Object3DPickable implements Object3D{
             if (!ground) return;
             const groundY = ground.position.y;
             if (this.mesh.position.y < groundY - 10) {
-                // Reset position to initial position at ground level
+                // Reset position and scaling to initial values at ground level
                 this.mesh.position.copyFrom(this.initialPosition);
                 this.mesh.position.y = groundY + (this.mesh.getBoundingInfo()?.boundingBox.extendSize.y || 0);
+                this.mesh.scaling.copyFrom(this.initialScaling);
                 // Reset velocity if physics is enabled
                 if (this.aggregate && this.aggregate.body) {
                     this.aggregate.body.setLinearVelocity(new Vector3(0, 0, 0));
