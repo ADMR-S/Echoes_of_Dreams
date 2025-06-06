@@ -29,6 +29,7 @@ export class Player{
     public characterControllerObservable: any = null; // Observable for character controller updates
     public playerCapsule: AbstractMesh | null = null;
     public playerRotationNode : Mesh | null = null; // Node for rotation control
+    public teleportationEnabled = true;
     private _desiredVelocity: Vector3 = Vector3.Zero();
     private _desiredYaw: number = 0;
 
@@ -536,7 +537,15 @@ export class Player{
                 // Sync camera position to capsule position (optionally add offset if needed)
                 if (this.playerCapsule) {
                     camera.position.copyFrom(this.playerCapsule.position);
-                    (camera as any).rotationQuaternion = (this.playerCapsule.rotationQuaternion || Quaternion.Identity()).clone();
+                    // Only apply yaw offset when teleportation is disabled
+                    if (this.teleportationEnabled === false) {
+                        // Calculate the yaw offset between capsule and camera
+                        const capsuleYaw = Quaternion.FromEulerAngles(0, this.getYawFromQuaternion(this.playerCapsule.rotationQuaternion), 0);
+                        // Combine the current camera rotation with the yaw offset
+                        if ((camera as any).rotationQuaternion) {
+                            capsuleYaw.multiplyToRef((camera as any).rotationQuaternion, (camera as any).rotationQuaternion);
+                        }
+                    }
                 }
             }
 
@@ -605,5 +614,24 @@ export class Player{
         }
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
+
+        /*
+        // To rotate the camera around its own Y axis (yaw) without tilting, use this pattern wherever you want to apply the yaw (e.g., in your observable or after movement):
+
+        if ((camera as any).rotationQuaternion) {
+            // offsetAngle is your desired yaw in radians (e.g., this._desiredYaw)
+            const offsetAngle = this._desiredYaw; // or any yaw delta you want to apply
+            Quaternion.FromEulerAngles(0, offsetAngle, 0)
+                .multiplyToRef((camera as any).rotationQuaternion, (camera as any).rotationQuaternion);
+        }
+        */
+    }
+
+    getYawFromQuaternion(q: Quaternion | null): number {
+        if (!q) return 0;
+        // Extract yaw from quaternion (Babylon uses Y-up)
+        const ysqr = q.y * q.y;
+        // yaw (y-axis rotation)
+        return Math.atan2(2.0 * (q.w * q.y + q.z * q.x), 1.0 - 2.0 * (ysqr + q.z * q.z));
     }
 }

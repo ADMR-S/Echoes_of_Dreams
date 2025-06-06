@@ -248,6 +248,7 @@ export class XRHandler{
                         yButton.onButtonStateChangedObservable.add(() => {
                             if (yButton.changes.pressed && yButton.pressed) {
                                 teleportationEnabled = !teleportationEnabled;
+                                player.teleportationEnabled = teleportationEnabled;
                                 if (teleportationEnabled) {
                                     // Enable teleportation
                                     featuresManager.enableFeature(
