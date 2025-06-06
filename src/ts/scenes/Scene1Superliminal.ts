@@ -126,6 +126,16 @@ export class Scene1Superliminal implements CreateSceneClass {
                     if (m.parent && m.parent.name === "__root__") {
                         m.parent = null;
                         m.computeWorldMatrix(true);
+
+                        // --- Reduce emissive intensity if present ---
+                        if (m.material && m.material instanceof StandardMaterial) {
+                            const mat = m.material as StandardMaterial;
+                        // If the material has an emissive color, reduce its intensity
+                        if (mat.emissiveColor && (mat.emissiveColor.r > 0 || mat.emissiveColor.g > 0 || mat.emissiveColor.b > 0)) {
+                            // Reduce intensity by scaling the color (e.g., divide by 4)
+                            mat.emissiveColor.scaleInPlace(0.25);
+                        }
+                    }
                     }
                 });
 
