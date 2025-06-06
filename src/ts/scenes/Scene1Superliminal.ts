@@ -113,6 +113,8 @@ export class Scene1Superliminal implements CreateSceneClass {
         // Return a promise that resolves after assets are loaded and setup is done
         return new Promise<Scene>((resolve, reject) => {
             sceneTask.onSuccess = async (task) => {
+                // Store all physics bodies for visualization
+                const physicsBodies: any[] = [];
 
                 // Create a PhysicsAggregate for each mesh (except ground, handled below)
                 task.loadedMeshes.forEach(m => {
@@ -159,6 +161,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         const aggregate = new PhysicsAggregate(m, shapeType, { mass: 1 }, scene);
                         aggregate.body.setMotionType(PhysicsMotionType.STATIC);
                         aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                        physicsBodies.push(aggregate.body);
                     }
                 });
 
@@ -246,8 +249,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                                     const aggregate = new PhysicsAggregate(queenMesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
                                     aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
                                     aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-                                    //aggregate.body.setCollisionCallbackEnabled(true);
-                                    //aggregate.body.setEventMask(eventMask);
+                                    physicsBodies.push(aggregate.body); // <-- add queen body
                                     return { mesh: queenMesh, extra : {}, aggregate }; 
                                 }
                             }
@@ -271,6 +273,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.MESH, { mass: 0 }, scene);
                     groundAggregate.body.setMotionType(PhysicsMotionType.STATIC);
                     groundAggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                    physicsBodies.push(groundAggregate.body); // <-- add ground body
 
                     // Debug: log aggregate creation and disposal
                     if (groundAggregate.body.transformNode) {
@@ -291,49 +294,49 @@ export class Scene1Superliminal implements CreateSceneClass {
                         });
                     }
 
-                    //Show body of ground with physics viewer:
+                    //Show all physics bodies with physics viewer:
                     if (!this.physicsViewer) {
                         this.physicsViewer = new PhysicsViewer(scene);
                         console.log("PhysicsViewer created for scene.");
                     }
-                    this.physicsViewer.showBody(groundAggregate.body);
-                    console.log("PhysicsViewer: ground body shown", groundAggregate.body);
+                    physicsBodies.forEach(body => this.physicsViewer!.showBody(body));
+                    console.log("PhysicsViewer: all scene bodies shown", physicsBodies);
 
-                    // --- Robust ground mesh/aggregate checks each frame ---
-                    scene.onBeforeRenderObservable.add(() => {
-                        // Check if ground mesh is disposed or missing
-                        if ((!groundMesh || groundMesh.isDisposed()) && !hasLoggedGroundMeshDisposed) {
-                            hasLoggedGroundMeshDisposed = true;
-                            console.error("Ground mesh is missing or disposed during frame!");
-                            console.trace("Ground mesh missing/disposed stack trace:");
-                        }
-                        // Check if groundAggregate or its body is missing/disposed
-                        if ((!groundAggregate || !groundAggregate.body) && !hasLoggedGroundAggregateMissing) {
-                            hasLoggedGroundAggregateMissing = true;
-                            console.error("Ground aggregate or its body is missing during frame!");
-                            console.trace("Ground aggregate/body missing stack trace:");
-                        } else if (
-                            groundAggregate.body.transformNode &&
-                            groundAggregate.body.transformNode.isDisposed &&
-                            groundAggregate.body.transformNode.isDisposed() &&
-                            !hasLoggedGroundAggregateTransformDisposed
-                        ) {
-                            hasLoggedGroundAggregateTransformDisposed = true;
-                            console.error("Ground aggregate transform is disposed during frame!");
-                            console.trace("Ground aggregate transform disposed stack trace:");
-                            // Log current state of ground mesh and aggregate
-                            console.warn("Ground mesh state:", groundMesh ? {
-                                name: groundMesh.name,
-                                disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
-                                id: groundMesh.id,
-                                uniqueId: groundMesh.uniqueId,
-                            } : "undefined");
-                            console.warn("Ground aggregate state:", groundAggregate ? {
-                                body: groundAggregate.body,
-                                disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
-                            } : "undefined");
-                        }
-                    });
+                // --- Robust ground mesh/aggregate checks each frame ---
+                scene.onBeforeRenderObservable.add(() => {
+                    // Check if ground mesh is disposed or missing
+                    if ((!groundMesh || groundMesh.isDisposed()) && !hasLoggedGroundMeshDisposed) {
+                        hasLoggedGroundMeshDisposed = true;
+                        console.error("Ground mesh is missing or disposed during frame!");
+                        console.trace("Ground mesh missing/disposed stack trace:");
+                    }
+                    // Check if groundAggregate or its body is missing/disposed
+                    if ((!groundAggregate || !groundAggregate.body) && !hasLoggedGroundAggregateMissing) {
+                        hasLoggedGroundAggregateMissing = true;
+                        console.error("Ground aggregate or its body is missing during frame!");
+                        console.trace("Ground aggregate/body missing stack trace:");
+                    } else if (
+                        groundAggregate.body.transformNode &&
+                        groundAggregate.body.transformNode.isDisposed &&
+                        groundAggregate.body.transformNode.isDisposed() &&
+                        !hasLoggedGroundAggregateTransformDisposed
+                    ) {
+                        hasLoggedGroundAggregateTransformDisposed = true;
+                        console.error("Ground aggregate transform is disposed during frame!");
+                        console.trace("Ground aggregate transform disposed stack trace:");
+                        // Log current state of ground mesh and aggregate
+                        console.warn("Ground mesh state:", groundMesh ? {
+                            name: groundMesh.name,
+                            disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
+                            id: groundMesh.id,
+                            uniqueId: groundMesh.uniqueId,
+                        } : "undefined");
+                        console.warn("Ground aggregate state:", groundAggregate ? {
+                            body: groundAggregate.body,
+                            disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
+                        } : "undefined");
+                    }
+                });
 
         
                     new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
