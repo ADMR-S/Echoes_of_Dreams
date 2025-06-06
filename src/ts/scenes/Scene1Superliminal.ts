@@ -16,10 +16,11 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, SceneOptimizer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
+//import { SceneOptimizer } from "@babylonjs/core";
 //import XRDrumKit from "../xrDrumKit.ts"
 
 import XRHandler from "../XRHandler.ts"
@@ -487,7 +488,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 //assetsManager.load();
 
-                SceneOptimizer.OptimizeAsync(scene);
+                //SceneOptimizer.OptimizeAsync(scene);
                 resolve(scene); // Only resolve after setup is done
             };
             //@ts-ignore

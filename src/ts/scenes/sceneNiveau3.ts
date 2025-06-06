@@ -22,9 +22,11 @@ import {
     PhysicsShapeType,
     PointerDragBehavior,
     Ray,
-    Scalar, SceneOptimizer, Sound,
+    Scalar, Sound,
     StandardMaterial, TransformNode
 } from "@babylonjs/core";
+
+//import { SceneOptimizer } from "@babylonjs/core";
 
 import {AbstractEngine} from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
@@ -932,7 +934,7 @@ export class SceneNiveau3 implements CreateSceneClass {
             }
         });
 
-        SceneOptimizer.OptimizeAsync(scene);
+        //SceneOptimizer.OptimizeAsync(scene);
 
 
         return scene;
