@@ -478,6 +478,9 @@ export class Player{
      * @param ground The ground mesh
      */
     setupCharacterController(scene: Scene, camera: Camera, ground: AbstractMesh,) {
+        
+        camera.parent = null;
+
         // Dispose old character controller if it exists
         if (this.characterController && typeof (this.characterController as any).dispose === "function") {
             (this.characterController as any).dispose();
