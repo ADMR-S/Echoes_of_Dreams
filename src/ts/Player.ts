@@ -503,6 +503,7 @@ export class Player{
             tessellation: 12
         }, scene);
         this.playerCapsule.isVisible = false;
+        this.playerCapsule.isPickable = false;
         // --- Set capsule Y so feet are at ground level ---
         this.playerCapsule.position = camera.position.clone();
         this.playerCapsule.position.y = ground.position.y + h / 2; // Ensure feet are on ground
