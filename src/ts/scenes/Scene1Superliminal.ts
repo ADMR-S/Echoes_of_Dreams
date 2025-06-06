@@ -376,7 +376,12 @@ export class Scene1Superliminal implements CreateSceneClass {
                     skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
                     skyboxMaterial.specularColor = new Color3(0, 0, 0);
                     skybox.material = skyboxMaterial;			
-                    
+
+                    // Make the skybox ignore fog (StandardMaterial uses disableLighting for this effect)
+                    // @ts-ignore
+                    skyboxMaterial.disableLighting = true;
+                    // @ts-ignore
+                    skyboxMaterial.disableFog = true; // For compatibility with some BabylonJS versions
 
                     var camera=  xr.baseExperience.camera;
 
