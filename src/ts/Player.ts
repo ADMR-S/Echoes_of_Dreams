@@ -354,7 +354,6 @@ export class Player{
         const myRadius = myWorldBox.extendSize.length();
 
         const scene = objectPickable.mesh.getScene();
-        // Exclude self, skyBox, laserPointers, rotationCone, and any mesh with "joint" or "jointparent" in the name
         const otherMeshes = scene.meshes.filter(mesh =>
             mesh !== objectPickable.mesh &&
             mesh.isVisible && // Only visible meshes
@@ -365,9 +364,8 @@ export class Player{
             mesh.name !== "rotationCone" &&
             !mesh.name.toLowerCase().includes("joint") &&
             !mesh.name.toLowerCase().includes("teleportation") &&
-            !mesh.name.toLowerCase().includes("hand")
-
-
+            !mesh.name.toLowerCase().includes("hand") &&
+            mesh.name !== "playerCapsule"
         );
         for (const mesh of otherMeshes) {
             // Defensive: skip meshes without bounding info (e.g., ground sometimes)
