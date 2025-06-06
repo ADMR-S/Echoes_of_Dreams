@@ -502,7 +502,7 @@ export class Player{
             capSubdivisions: 6,
             tessellation: 12
         }, scene);
-        this.playerCapsule.isVisible = true;
+        this.playerCapsule.isVisible = false;
         this.playerCapsule.position = camera.position.clone();
         this.playerCapsule.checkCollisions = true;
         this.playerCapsule.position.y = h / 2; // Position capsule so bottom is at ground level
