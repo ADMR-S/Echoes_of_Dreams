@@ -13,7 +13,7 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { Mesh, WebXRFeatureName } from "@babylonjs/core";
+import { WebXRFeatureName } from "@babylonjs/core";
 import XRLogger from "./XRLogger";
 //@ts-ignore
 import { WebXRMotionControllerTeleportation } from "@babylonjs/core/XR/features/WebXRControllerTeleportation";
@@ -37,7 +37,7 @@ export class XRHandler{
         player: Player,
         requestSceneSwitchFn: () => Promise<void>,
         eventMask : number,
-        ground : Mesh
+        ground : AbstractMesh
     ) {        this.scene = scene;
         this.xr = xr;
         this.player = player;
@@ -221,7 +221,7 @@ export class XRHandler{
 
     // Add movement with left joystick
     //@ts-ignore
-    addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground: Mesh, player: Player) {
+    addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground: AbstractMesh, player: Player) {
         // Store rotation state
         var rotationInput = 0;
         var xPositionInput = 0;

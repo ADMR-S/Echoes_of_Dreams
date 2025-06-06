@@ -37,7 +37,7 @@ import { Object3DPickable } from "../object/Object3DPickable";
 import { WebXRFeatureName } from "@babylonjs/core";
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
-import {Game} from './Echoes_of_Dreams/puzzle_3d/src/game.ts';
+import {Game} from '../../../puzzle_3d/src/game.ts';
 
 
 export class Scene1TestAlai2 implements CreateSceneClass {

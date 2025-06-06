@@ -52,11 +52,45 @@ export class Scene1Superliminal implements CreateSceneClass {
         //const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
         //light.intensity = 0.7;
 
-        // Our built-in 'ground' shape.
-        const ground: Mesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+        // --- Asset Manager for Chess Pieces ---
+        const assetsManager = new AssetsManager(scene);
 
+        const sceneTask = assetsManager.addMeshTask(
+            "loadSceneMeshes",
+            "",
+            "asset/scene1/",
+            "champi.glb"
+        )
+
+        sceneTask.onSuccess = (task) => {
+            // Log all loaded meshes for debugging
+            console.log("Loaded scene meshes:");
+            task.loadedMeshes.forEach(m => {
+                console.log(
+                    `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
+                );
+            });
+        }
+
+        //@ts-ignore
+        sceneTask.onError = (task, message, exception) => {
+            console.error("Failed to load scene meshes:", message, exception);
+        };
+
+        //Load ground from scene meshes : 
+        var groundMesh = sceneTask.loadedMeshes.find(m => m.name === "sol");
+        if (groundMesh) {
+            groundMesh.isVisible = true; // Ensure the ground mesh is visible
+        } else {
+            console.warn("Ground mesh not found in loaded scene meshes.");
+            // Our built-in 'ground' shape.
+            groundMesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+
+        }
+
+        
         const xr = await scene.createDefaultXRExperienceAsync({
-            floorMeshes: [ground],
+            floorMeshes: [groundMesh],
         });
         console.log("BASE EXPERIENCE")
         console.log(xr.baseExperience)
@@ -71,7 +105,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         // enable physics in the scene with a gravity
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
-        var groundAggregate = new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 }, scene);
+        var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.BOX, { mass: 0 }, scene);
 
         const started = hk._hknp.EventType.COLLISION_STARTED.value;
         const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
@@ -79,7 +113,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
     const eventMask = started | continued | finished;
 
-    new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, ground);
+    new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
       
     // @ts-ignore
     //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
@@ -100,7 +134,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         var camera=  xr.baseExperience.camera;
 
         // Setup CharacterController for Player
-        player.setupCharacterController(scene, camera, ground);
+        player.setupCharacterController(scene, camera, groundMesh);
 
 
         // Add keyboard controls for movement
@@ -120,7 +154,9 @@ export class Scene1Superliminal implements CreateSceneClass {
                     collidedBody = collisionEvent.collidedAgainst;
                 }
                 const position = collidedBody.transformNode.position;
-                collidedBody.transformNode.position = new Vector3(position.x, ground.position.y + 5, position.z); // Adjust the y-coordinate to be just above the ground
+                if(groundMesh){
+                    collidedBody.transformNode.position = new Vector3(position.x, groundMesh.position.y + 5, position.z); // Adjust the y-coordinate to be just above the ground
+                }
                 collidedBody.setLinearVelocity(Vector3.Zero());
                 collidedBody.setAngularVelocity(Vector3.Zero());
             }
@@ -219,18 +255,13 @@ export class Scene1Superliminal implements CreateSceneClass {
 
           */
           //FIN SWITCH SCENE BUTTON
-
-          
-        // --- Asset Manager for Chess Pieces ---
-        const assetsManager = new AssetsManager(scene);
-
         
         // Example: Load the queen chess piece from asset/chess/queen
         // Assumes a .glb file named queen.glb in that folder
         const queenTask = assetsManager.addMeshTask(
             "loadQueen",
             "", // mesh names, empty for all
-            "asset/chess/",
+            "asset/scene1/chess/",
             "queen.glb"
         );
 
