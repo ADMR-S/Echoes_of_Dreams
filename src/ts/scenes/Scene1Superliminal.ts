@@ -38,6 +38,9 @@ import { Object3DPickable } from "../object/Object3DPickable";
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
+import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
+
+
 export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
 
@@ -98,7 +101,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
         
         const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-        light.intensity = 0.7;
+        light.intensity = 0.02;
 
         // --- Asset Manager for Chess Pieces ---
         const assetsManager = new AssetsManager(scene);
@@ -301,8 +304,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                         this.physicsViewer = new PhysicsViewer(scene);
                         console.log("PhysicsViewer created for scene.");
                     }
-                    physicsBodies.forEach(body => this.physicsViewer!.showBody(body));
-                    console.log("PhysicsViewer: all scene bodies shown", physicsBodies);
+                    //physicsBodies.forEach(body => this.physicsViewer!.showBody(body));
+                    //console.log("PhysicsViewer: all scene bodies shown", physicsBodies);
 
                 // --- Robust ground mesh/aggregate checks each frame ---
                 scene.onBeforeRenderObservable.add(() => {
@@ -414,6 +417,14 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                     }
                 });
+
+                // Place DirectionalLight above MurEnigme.001 after meshes are loaded
+                const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
+                if (murMesh) {
+                    const dirLight = new DirectionalLight("dirLight", new Vector3(0, -1, 0), scene);
+                    dirLight.position = murMesh.position.add(new Vector3(0, 50, 0));
+                    dirLight.intensity = 0.8;
+                }
 
                 // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
                 const wallWidth = 0.5;
