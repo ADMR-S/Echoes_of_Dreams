@@ -72,19 +72,30 @@ export class Scene1Superliminal implements CreateSceneClass {
                 );
             });
 
+            // Unparent all meshes from __root__ node
+            task.loadedMeshes.forEach(m => {
+                if (m.parent && m.parent.name === "__root__") {
+                    m.parent = null;
+                    m.computeWorldMatrix(true);
+                }
+            });
+
+            // Unparent all meshes from __root__ node
+            task.loadedMeshes.forEach(m => {
+                if (m.parent && m.parent.name === "__root__") {
+                    m.parent = null;
+                    m.computeWorldMatrix(true);
+                }
+            });
+
             //Load ground from scene meshes : 
             var groundMesh = task.loadedMeshes.find(m => m.name === "SOL");
             if (groundMesh) {
                 groundMesh.isVisible = true; // Ensure the ground mesh is visible
-                if (groundMesh.parent) {
-                    groundMesh.parent = null; // Unparent from __root__ or any parent
-                    groundMesh.computeWorldMatrix(true);
-                }
             } else {
                 console.warn("Ground mesh not found in loaded scene meshes.");
                 // Our built-in 'ground' shape.
                 groundMesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
-
             }
 
             
