@@ -513,31 +513,32 @@ export class Player{
         this.characterController = characterController;
 
         // Prevent moving where there's no ground (stick to ground)
+        let lastCameraPosition = camera.position.clone(); // Add this line to track last camera position
         this.characterControllerObservable = scene.onBeforeRenderObservable.add(() => {
 
-            console.log("camera position : " + camera.position.toString());
-            console.log("player capsule position : " + this.playerCapsule?.position.toString());
-            
-            if(camera.position !== this.playerCapsule?.position){
-                (this.characterController as any)._position = camera.position.clone();
-                this.playerCapsule!.position = this.characterController!.getPosition();
+            const oldPos = this.playerCapsule?.position.clone(); // <-- Move this line here
+
+            // Detect teleportation (camera moved a large distance not due to movement input)
+            const cameraMoved = !camera.position.equalsWithEpsilon(lastCameraPosition, 0.01);
+            if (cameraMoved) {
+                // Sync capsule and character controller to camera after teleport
+                if (this.playerCapsule) {
+                    this.playerCapsule.position.copyFrom(camera.position);
+                    if (this.characterController) {
+                        (this.characterController as any)._position.copyFrom(camera.position);
+                    }
+                }
+            } else {
+                // Update character controller and camera rotation as usual
+                this.updateCharacterController(scene.getEngine().getDeltaTime() / 1000);
+
+                // Sync camera position to capsule position (optionally add offset if needed)
+                if (this.playerCapsule) {
+                    camera.position.copyFrom(this.playerCapsule.position);
+                }
             }
-                
-            else{
-            
-                // Integrate character controller with current desired velocity
-            const oldPos = this.playerCapsule?.position.clone();
 
-            // Update character controller and camera rotation
-            this.updateCharacterController(scene.getEngine().getDeltaTime() / 1000);
-
-            // Sync camera position to capsule position (optionally add offset if needed)
-            if (this.playerCapsule) {
-                camera.position.copyFrom(this.playerCapsule.position);
-            }
-
-            console.log("Updated camera position :", camera.position.toString());
-            console.log("Updated player capsule position :", this.playerCapsule!.position.toString());
+            lastCameraPosition.copyFrom(camera.position);
 
             // Optionally, clamp to ground if falling off (safety)
             if (!this.playerCapsule) return;
@@ -552,7 +553,7 @@ export class Player{
                     this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
                     (this.characterController as any)._position.copyFrom(oldPos);
                 }
-            }
+            //}
             }
         });
     }
