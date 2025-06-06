@@ -443,15 +443,32 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // Place DirectionalLight above MurEnigme.001 after meshes are loaded
                 const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
+                let dirLight: DirectionalLight | null = null;
                 if (murMesh) {
-                    
-                    const dirLight = new DirectionalLight("dirLight", new Vector3(-1, -1, 0), scene);
+                    dirLight = new DirectionalLight("dirLight", new Vector3(-1, -1, 0), scene);
                     dirLight.diffuse = new Color3(1, 1, 1);
                     dirLight.specular = new Color3(1, 1, 1);
                     dirLight.position = murMesh.position.add(new Vector3(0, 50, 0));
                     dirLight.intensity = 0.4;
-                    
+                    dirLight.setEnabled(false); // Start disabled
                 }
+
+                // Get queen mesh position as tunnel center reference
+                const tunnelCenter = queenMesh.position.clone();
+
+                // Track which side of the tunnel the camera is on
+                let lastSide: "positive" | "negative" | null = null;
+                scene.onBeforeRenderObservable.add(() => {
+                    const cameraPos = camera.position;
+                    // Use Z axis as tunnel axis (adjust if needed)
+                    const delta = cameraPos.z - tunnelCenter.z;
+                    const currentSide: "positive" | "negative" = delta >= 0 ? "positive" : "negative";
+                    if (lastSide !== null && currentSide !== lastSide && dirLight) {
+                        // Side changed: toggle light
+                        dirLight.setEnabled(!dirLight.isEnabled());
+                    }
+                    lastSide = currentSide;
+                });
 
                 /*
                 // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
@@ -546,7 +563,7 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
     const newSceneInstance = new XRSceneWithHavok2();
-    newSceneInstance.createScene(engine).then(newScene => {
+    newSceneInstance.createScene(engine).then((newScene: Scene) => {
         engine.runRenderLoop(() => {
             newScene.render();
         });
