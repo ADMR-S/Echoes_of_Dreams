@@ -12,7 +12,7 @@ import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { WebXRFeatureName } from "@babylonjs/core";
 import XRLogger from "./XRLogger";
 //@ts-ignore
@@ -344,18 +344,42 @@ export class XRHandler{
                 const capsule = player.playerCapsule;
 
                 camera.computeWorldMatrix(); // Ensure camera's world matrix is up-to-date
-                // 1. Get camera's world position after teleport
-                const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
 
-                // 2. Move character controller and capsule to camera's world position
+                // 1. Get camera's world position and rotation after teleport
+                const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
+                const cameraWorldQuat = camera.rotationQuaternion.clone();
+
+                // 2. Unparent camera (if already parented)
+                camera.parent = null;
+
+                // 3. Move character controller and capsule to camera's world position
                 (player.characterController as any)._position = cameraWorldPos.clone();
                 capsule.position.copyFrom(player.characterController.getPosition());
+
+                // 4. Sync capsule's rotation to camera's world rotation (if available)
+                if (cameraWorldQuat) {
+                    capsule.rotationQuaternion = cameraWorldQuat.clone();
+                    capsule.rotation = capsule.rotationQuaternion.toEulerAngles();
+                } else {
+                    capsule.rotationQuaternion = null;
+                    capsule.rotation.copyFrom(camera.rotation);
+                }
                 capsule.computeWorldMatrix(true);
+
+                // 5. Parent camera to capsule and reset camera's local transform
+                camera.parent = capsule;
+                camera.position.set(0, 0, 0);
+                camera.rotation.set(0, 0, 0);
+                camera.rotationQuaternion = Quaternion.Identity();
 
                 // --- Debug logs ---
                 console.log("Camera/capsule sync after teleport:");
+                console.log("camera local position after parenting:", camera.position.toString());
+                console.log("camera local rotation after parenting:", camera.rotation.toString());
                 console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
+                console.log("camera world rotation:", cameraWorldQuat ? cameraWorldQuat.toEulerAngles().toString() : camera.rotation.toString());
                 console.log("capsule world position:", capsule.getAbsolutePosition().toString());
+                console.log("capsule world rotation:", capsule.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule.rotation.toString());
                 console.log("character controller position:", player.characterController.getPosition().toString());
             }
         });
