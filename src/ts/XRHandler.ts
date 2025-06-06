@@ -336,12 +336,14 @@ export class XRHandler{
         */
     }
     
+    //@ts-ignore
     syncCapsuleWithCameraOnTeleport(xr: WebXRDefaultExperience, player: Player, ground : AbstractMesh) {
         const sessionManager = xr.baseExperience.sessionManager;
         sessionManager.onXRReferenceSpaceChanged.add(() => {
             
-            player.setupCharacterController(this.scene, xr.baseExperience.camera, ground);
-            
+        (player.characterController as any)._position = xr.baseExperience.camera.position.clone();
+        player.playerCapsule!.position = player.characterController!.getPosition();
+        
         });
     }
 

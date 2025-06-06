@@ -478,8 +478,6 @@ export class Player{
      * @param ground The ground mesh
      */
     setupCharacterController(scene: Scene, camera: Camera, ground: AbstractMesh,) {
-        
-        camera.parent = null;
 
         // Dispose old character controller if it exists
         if (this.characterController && typeof (this.characterController as any).dispose === "function") {
@@ -506,8 +504,7 @@ export class Player{
         this.playerCapsule.checkCollisions = true;
         this.playerCapsule.position.y = h / 2; // Position capsule so bottom is at ground level
 
-        // Parent camera to capsule
-        camera.parent = this.playerCapsule;
+        // Do NOT parent camera to capsule
 
         const characterPosition = this.playerCapsule.position.clone();
 
@@ -519,9 +516,14 @@ export class Player{
             // Integrate character controller with current desired velocity
             const oldPos = this.playerCapsule?.position.clone();
 
-            
             // Update character controller and camera rotation
             this.updateCharacterController(scene.getEngine().getDeltaTime() / 1000);
+
+            // Sync camera position to capsule position (optionally add offset if needed)
+            if (this.playerCapsule) {
+                camera.position.copyFrom(this.playerCapsule.position);
+            }
+
             // Optionally, clamp to ground if falling off (safety)
             if (!this.playerCapsule) return;
             const ray = new Ray(this.playerCapsule.position, new Vector3(0, -1, 0), 2);
