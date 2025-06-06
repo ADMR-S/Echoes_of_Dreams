@@ -151,6 +151,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                     */
                    if (
                         m.name !== "SOL" &&
+                        m.name !== "Queen" &&
+                        m.name !== "queen" &&  
                         m instanceof Mesh &&
                         typeof m.getTotalVertices === "function" &&
                         m.getTotalVertices() > 0
