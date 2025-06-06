@@ -38,7 +38,7 @@ import { Object3DPickable } from "../object/Object3DPickable";
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
-//import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
+import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -106,6 +106,19 @@ export class Scene1Superliminal implements CreateSceneClass {
 	    light.specular = new Color3(1, 0, 0);
 	    light.groundColor = new Color3(1, 0, 0);
 
+        // Fog
+        scene.fogMode = Scene.FOGMODE_LINEAR;
+        //BABYLON.Scene.FOGMODE_NONE;
+        //BABYLON.Scene.FOGMODE_EXP;
+        //BABYLON.Scene.FOGMODE_EXP2;
+        //BABYLON.Scene.FOGMODE_LINEAR;
+
+        scene.fogColor = new Color3(0.3, 0.04, 0.0);
+        scene.fogDensity = 0.01;
+
+        scene.fogStart = 40;
+        scene.fogEnd = 60;
+
         // --- Asset Manager for Chess Pieces ---
         const assetsManager = new AssetsManager(scene);
 
@@ -144,22 +157,23 @@ export class Scene1Superliminal implements CreateSceneClass {
                             }
                         }
                     }
-                    /*
-                    if( m.name === "ile volante" ||
+                    if( m.name === "Champignon_Enigme.003" 
+                        /*
+                        m.name === "ile volante" ||
                         m.name === "ile volante.001" ||
                         m.name === "ile volante.002" ||
                         m.name === "ile volante.003" ||
                         m.name === "ile volante.004"
+                        */
                     ){
                         m.dispose();
                     }
                     else 
-                    */
+                    
                    if (
                         m.name !== "SOL" &&
                         m.name !== "Queen" &&
                         m.name !== "queen" &&  
-                        m.name !== "Champignon_Enigme.003" &&
                         m instanceof Mesh &&
                         typeof m.getTotalVertices === "function" &&
                         m.getTotalVertices() > 0
@@ -425,15 +439,16 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Place DirectionalLight above MurEnigme.001 after meshes are loaded
                 const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
                 if (murMesh) {
-                    /*
-                    const dirLight = new DirectionalLight("dirLight", new Vector3(0, -1, 0), scene);
+                    
+                    const dirLight = new DirectionalLight("dirLight", new Vector3(-1, -1, 0), scene);
                     dirLight.diffuse = new Color3(1, 1, 1);
                     dirLight.specular = new Color3(1, 1, 1);
                     dirLight.position = murMesh.position.add(new Vector3(0, 50, 0));
-                    dirLight.intensity = 0.8;
-                    */
+                    dirLight.intensity = 0.4;
+                    
                 }
 
+                /*
                 // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
                 const wallWidth = 0.5;
                 const wallHeight = 5;
@@ -451,7 +466,8 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // Optional: add physics to the wall
                 new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
-
+                */
+               
                 //@ts-ignore
                 var lightBulb = createLightBulbPickable(scene, eventMask, groundMesh);
 
