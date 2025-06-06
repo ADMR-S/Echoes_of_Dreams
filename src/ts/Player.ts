@@ -503,7 +503,10 @@ export class Player{
             tessellation: 12
         }, scene);
         this.playerCapsule.isVisible = false;
+        // --- Set capsule Y so feet are at ground level ---
         this.playerCapsule.position = camera.position.clone();
+        this.playerCapsule.position.y = ground.position.y + h / 2; // Ensure feet are on ground
+
         this.playerCapsule.checkCollisions = true;
         this.playerCapsule.position.y = h / 2; // Position capsule so bottom is at ground level
 
@@ -567,13 +570,11 @@ export class Player{
             const pick = scene.pickWithRay(ray, mesh => mesh === ground);
             if (!pick || !pick.hit) {
                 if(oldPos){
-                    if(oldPos.y != ground.position.y + this.playerCapsule.getBoundingInfo().boundingBox.extendSize.y / 2){ 
-                        oldPos.y = ground.position.y + this.playerCapsule.getBoundingInfo().boundingBox.extendSize.y / 2;
-                    }
-                    //console.log("No ground hit, resetting position to old position.");
-                    this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
+                    // --- Place feet on ground, not center ---
+                    oldPos.y = ground.position.y + this.playerCapsule.getBoundingInfo().boundingBox.extendSize.y;
+                    this.playerCapsule.position = oldPos;
                     (this.characterController as any)._position.copyFrom(oldPos);
-                    camera.position.copyFrom(oldPos); // Sync camera position to old position
+                    camera.position.copyFrom(oldPos);
                 }
             //}
             }
