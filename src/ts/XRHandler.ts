@@ -38,7 +38,8 @@ export class XRHandler{
         requestSceneSwitchFn: () => Promise<void>,
         eventMask : number,
         ground : AbstractMesh
-    ) {        this.scene = scene;
+    ) {
+        this.scene = scene;
         this.xr = xr;
         this.player = player;
         this.requestSceneSwitch = requestSceneSwitchFn;
@@ -382,12 +383,14 @@ export class XRHandler{
                 console.log("capsule world rotation:", capsule.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule.rotation.toString());
                 console.log("character controller position:", player.characterController.getPosition().toString());
 
-                // --- Log after first frame rendered ---
+                // --- Log for the next 5 frames after teleport ---
+                let frameCount = 0;
                 let afterRenderObserver: any = null;
                 afterRenderObserver = this.scene.onAfterRenderObservable.add(() => {
                     camera.computeWorldMatrix();
                     capsule.computeWorldMatrix(true);
-                    console.log("Camera/capsule sync after teleport (after first frame):");
+                    frameCount++;
+                    console.log(`Camera/capsule sync after teleport (frame ${frameCount}):`);
                     console.log("camera local position after parenting:", camera.position.toString());
                     console.log("camera local rotation after parenting:", camera.rotation.toString());
                     console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
@@ -395,8 +398,9 @@ export class XRHandler{
                     console.log("capsule world position:", capsule.getAbsolutePosition().toString());
                     console.log("capsule world rotation:", capsule.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule.rotation.toString());
                     console.log("character controller position:", player.characterController?.getPosition().toString());
-                    // Remove observer after first call
-                    this.scene.onAfterRenderObservable.remove(afterRenderObserver);
+                    if (frameCount >= 5) {
+                        this.scene.onAfterRenderObservable.remove(afterRenderObserver);
+                    }
                 });
             }
         });
