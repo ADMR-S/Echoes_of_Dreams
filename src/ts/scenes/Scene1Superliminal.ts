@@ -378,10 +378,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                     skybox.material = skyboxMaterial;			
 
                     // Make the skybox ignore fog (StandardMaterial uses disableLighting for this effect)
-                    // @ts-ignore
                     skyboxMaterial.disableLighting = true;
-                    // @ts-ignore
-                    skyboxMaterial.disableFog = true; // For compatibility with some BabylonJS versions
+                    skybox.applyFog = false; // For compatibility with some BabylonJS versions
 
                     var camera=  xr.baseExperience.camera;
 
@@ -461,7 +459,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 scene.onBeforeRenderObservable.add(() => {
                     const cameraPos = camera.position;
                     // Use Z axis as tunnel axis (adjust if needed)
-                    const delta = cameraPos.z - tunnelCenter.z;
+                    const delta = cameraPos.x - tunnelCenter.x;
                     const currentSide: "positive" | "negative" = delta >= 0 ? "positive" : "negative";
                     if (lastSide !== null && currentSide !== lastSide && dirLight) {
                         // Side changed: toggle light
