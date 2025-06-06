@@ -133,6 +133,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         // If the material has an emissive color, reduce its intensity
                         if (mat.emissiveColor && (mat.emissiveColor.r > 0 || mat.emissiveColor.g > 0 || mat.emissiveColor.b > 0)) {
                             // Reduce intensity by scaling the color (e.g., divide by 4)
+                            console.log("Reducing emissive color intensity for mesh:", m.name);
                             mat.emissiveColor.scaleInPlace(0.25);
                         }
                     }
