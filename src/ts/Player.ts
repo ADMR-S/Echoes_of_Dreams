@@ -28,7 +28,7 @@ export class Player{
     public characterController: PhysicsCharacterController | null = null;
     public characterControllerObservable: any = null; // Observable for character controller updates
     public playerCapsule: AbstractMesh | null = null;
-    public playerRotationNode : TransformNode = new TransformNode("playerRotationNode"); // Node for rotation control
+    public playerRotationNode : TransformNode | null = null; // Node for rotation control
     private _desiredVelocity: Vector3 = Vector3.Zero();
     private _desiredYaw: number = 0;
 
@@ -493,6 +493,8 @@ export class Player{
             this.playerCapsule = null;
         }
 
+        // Create the rotation node with the correct scene
+        this.playerRotationNode = new TransformNode("playerRotationNode", scene);
         camera.parent = this.playerRotationNode;
 
         const h = 1.7; // Capsule height
@@ -595,7 +597,7 @@ export class Player{
         this.playerCapsule?.position.copyFrom(this.characterController.getPosition());
 
         // Apply rotation to the camera's parent (the capsule)
-        if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001) {
+        if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001 && this.playerRotationNode) {
             // Use quaternion multiplication for yaw rotation
             if (!this.playerCapsule.rotationQuaternion) {
                 this.playerCapsule.rotationQuaternion = Quaternion.FromEulerAngles(0, 0, 0);
