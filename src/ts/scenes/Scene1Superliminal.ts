@@ -75,6 +75,10 @@ export class Scene1Superliminal implements CreateSceneClass {
             var groundMesh = task.loadedMeshes.find(m => m.name === "SOL");
             if (groundMesh) {
                 groundMesh.isVisible = true; // Ensure the ground mesh is visible
+                if (groundMesh.parent) {
+                    groundMesh.parent = null; // Unparent from __root__ or any parent
+                    groundMesh.computeWorldMatrix(true);
+                }
             } else {
                 console.warn("Ground mesh not found in loaded scene meshes.");
                 // Our built-in 'ground' shape.
