@@ -478,6 +478,18 @@ export class Player{
      * @param ground The ground mesh
      */
     setupCharacterController(scene: Scene, camera: Camera, ground: AbstractMesh,) {
+        // Dispose old character controller if it exists
+        if (this.characterController && typeof (this.characterController as any).dispose === "function") {
+            (this.characterController as any).dispose();
+        }
+        this.characterController = null;
+
+        // Dispose old capsule if it exists
+        if (this.playerCapsule) {
+            this.playerCapsule.dispose();
+            this.playerCapsule = null;
+        }
+
         const h = 1.7; // Capsule height
         const r = 0.6; // Capsule radius
         this.playerCapsule = MeshBuilder.CreateCapsule("playerCapsule", {
@@ -489,9 +501,10 @@ export class Player{
         this.playerCapsule.isVisible = true;
         this.playerCapsule.position = camera.position.clone();
         this.playerCapsule.checkCollisions = true;
-
-        camera.parent = this.playerCapsule;
         this.playerCapsule.position.y = h / 2; // Position capsule so bottom is at ground level
+
+        // Parent camera to capsule
+        camera.parent = this.playerCapsule;
 
         const characterPosition = this.playerCapsule.position.clone();
 
