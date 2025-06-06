@@ -12,7 +12,7 @@ import { WebXRInputSource } from "@babylonjs/core/XR/webXRInputSource";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { WebXRFeatureName } from "@babylonjs/core";
 import XRLogger from "./XRLogger";
 //@ts-ignore
@@ -352,13 +352,7 @@ export class XRHandler{
                 const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
                 const cameraLocalPos = camera.position.clone();
 
-                // 3. Set capsule position so that after parenting, camera's world position stays the same
-                // capsule.position + cameraLocalPos = cameraWorldPos  =>  capsule.position = cameraWorldPos - cameraLocalPos
-                const newCapsulePos = cameraWorldPos.subtract(cameraLocalPos);
-                (player.characterController as any)._position = newCapsulePos.clone();
-                capsule.position.copyFrom(player.characterController.getPosition());
-
-                // 4. Optionally, sync capsule's rotation to camera's world rotation
+                // 3. Optionally, sync capsule's rotation to camera's world rotation
                 if (camera.rotationQuaternion) {
                     capsule.rotationQuaternion = camera.rotationQuaternion.clone();
                     capsule.rotation = capsule.rotationQuaternion.toEulerAngles();
@@ -368,7 +362,22 @@ export class XRHandler{
                 }
                 capsule.computeWorldMatrix(true);
 
-                // 5. Parent camera to capsule (do NOT set camera.position to zero)
+                // 4. If capsule has rotation, rotate cameraLocalPos by capsule's rotationQuaternion
+                let rotatedLocalPos = cameraLocalPos.clone();
+                if (capsule.rotationQuaternion) {
+                    const rotMat = Matrix.Identity();
+                    Matrix.FromQuaternionToRef(capsule.rotationQuaternion, rotMat);
+                    rotatedLocalPos = Vector3.TransformCoordinates(cameraLocalPos, rotMat);
+                }
+
+                // 5. Set capsule position so that after parenting, camera's world position stays the same
+                // capsule.position + rotatedLocalPos = cameraWorldPos  =>  capsule.position = cameraWorldPos - rotatedLocalPos
+                const newCapsulePos = cameraWorldPos.subtract(rotatedLocalPos);
+                (player.characterController as any)._position = newCapsulePos.clone();
+                capsule.position.copyFrom(player.characterController.getPosition());
+                capsule.computeWorldMatrix(true);
+
+                // 6. Parent camera to capsule (do NOT set camera.position to zero)
                 camera.parent = capsule;
 
                 // --- Debug logs (immediate) ---
