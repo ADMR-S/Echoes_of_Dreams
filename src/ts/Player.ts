@@ -513,8 +513,14 @@ export class Player{
         this.characterController = characterController;
 
         // Prevent moving where there's no ground (stick to ground)
-        this.characterControllerObservable = scene.onAfterRenderObservable.add(() => {
-            // Integrate character controller with current desired velocity
+        this.characterControllerObservable = scene.onBeforeRenderObservable.add(() => {
+
+            if(camera.position !== this.playerCapsule?.position){
+                (this.characterController as any)._position = camera.position.clone();
+                this.playerCapsule!.position = this.characterController!.getPosition();
+            }
+            else{
+                // Integrate character controller with current desired velocity
             const oldPos = this.playerCapsule?.position.clone();
 
             // Update character controller and camera rotation
@@ -538,6 +544,7 @@ export class Player{
                     this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
                     (this.characterController as any)._position.copyFrom(oldPos);
                 }
+            }
             }
         });
     }
