@@ -16,7 +16,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsViewer, SceneOptimizer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, SceneOptimizer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -51,6 +51,32 @@ export class Scene1Superliminal implements CreateSceneClass {
         let hasLoggedGroundMeshDisposed = false;
         let hasLoggedGroundAggregateMissing = false;
         let hasLoggedGroundAggregateTransformDisposed = false;
+
+        // --- GLOBAL DISPOSE LOGGER ---
+        // Only install once per session
+        if (!(window as any)._babylonDisposeLoggerInstalled) {
+            (window as any)._babylonDisposeLoggerInstalled = true;
+            const origMeshDispose = Mesh.prototype.dispose;
+            Mesh.prototype.dispose = function () {
+                console.warn(`[DisposeLogger] Mesh.dispose called: ${this.name} (id: ${this.id}, uniqueId: ${this.uniqueId})`);
+                console.trace("[DisposeLogger] Mesh.dispose stack trace:");
+                // @ts-ignore
+                return origMeshDispose.apply(this, arguments);
+            };
+            // PhysicsAggregate body (if available)
+            if (
+                PhysicsBody &&
+                typeof PhysicsBody.prototype.dispose === "function"
+            ) {
+                const origBodyDispose = PhysicsBody.prototype.dispose;
+                PhysicsBody.prototype.dispose = function () {
+                    console.warn(`[DisposeLogger] PhysicsBody.dispose called for mesh: ${this.transformNode?.name}`);
+                    console.trace("[DisposeLogger] PhysicsBody.dispose stack trace:");
+                    // @ts-ignore
+                    return origBodyDispose.apply(this, arguments);
+                };
+            }
+        }
 
         const scene: Scene = new Scene(engine);
         scene.metadata = { sceneName: "Scene1Superliminal" };
