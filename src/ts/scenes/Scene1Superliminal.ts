@@ -587,7 +587,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             pointLight.parent = mesh;
 
             const gl = new GlowLayer("glow", scene);
-            gl.intensity = 0.25;
+            gl.intensity = 0.03;
 
             const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
 
