@@ -355,7 +355,7 @@ export class XRHandler{
                 camera.parent = null;
 
                 // 2. Get camera's world position and local position (after XR update)
-                const cameraWorldPos = camera.getWorldMatrix().clone();
+                const cameraWorldPos = camera.position.clone();
                 //const cameraLocalPos = camera.position.clone();
 
                 capsule?.computeWorldMatrix(true);
