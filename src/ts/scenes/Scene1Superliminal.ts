@@ -142,7 +142,15 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // Create a PhysicsAggregate for each mesh (except ground, handled below)
                 task.loadedMeshes.forEach(m => {
-                    if (
+                    if( m.name === "ile volante" ||
+                        m.name === "ile volante.001" ||
+                        m.name === "ile volante.002" ||
+                        m.name === "ile volante.003" ||
+                        m.name === "ile volante.004"
+                    ){
+                        m.dispose();
+                    }
+                    else if (
                         m.name !== "SOL" &&
                         m instanceof Mesh &&
                         typeof m.getTotalVertices === "function" &&
