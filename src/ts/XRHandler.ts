@@ -372,8 +372,8 @@ export class XRHandler{
                 camera.rotation.set(0, 0, 0);
                 camera.rotationQuaternion = Quaternion.Identity();
 
-                // --- Debug logs ---
-                console.log("Camera/capsule sync after teleport:");
+                // --- Debug logs (immediate) ---
+                console.log("Camera/capsule sync after teleport (immediate):");
                 console.log("camera local position after parenting:", camera.position.toString());
                 console.log("camera local rotation after parenting:", camera.rotation.toString());
                 console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
@@ -381,6 +381,23 @@ export class XRHandler{
                 console.log("capsule world position:", capsule.getAbsolutePosition().toString());
                 console.log("capsule world rotation:", capsule.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule.rotation.toString());
                 console.log("character controller position:", player.characterController.getPosition().toString());
+
+                // --- Log after first frame rendered ---
+                let afterRenderObserver: any = null;
+                afterRenderObserver = this.scene.onAfterRenderObservable.add(() => {
+                    camera.computeWorldMatrix(true);
+                    capsule.computeWorldMatrix(true);
+                    console.log("Camera/capsule sync after teleport (after first frame):");
+                    console.log("camera local position after parenting:", camera.position.toString());
+                    console.log("camera local rotation after parenting:", camera.rotation.toString());
+                    console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
+                    console.log("camera world rotation:", camera.rotationQuaternion ? camera.rotationQuaternion.toEulerAngles().toString() : camera.rotation.toString());
+                    console.log("capsule world position:", capsule.getAbsolutePosition().toString());
+                    console.log("capsule world rotation:", capsule.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule.rotation.toString());
+                    console.log("character controller position:", player.characterController.getPosition().toString());
+                    // Remove observer after first call
+                    this.scene.onAfterRenderObservable.remove(afterRenderObserver);
+                });
             }
         });
     }
