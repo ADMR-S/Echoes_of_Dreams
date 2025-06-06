@@ -80,7 +80,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         assetsManager.load();
 
         //Load ground from scene meshes : 
-        var groundMesh = sceneTask.loadedMeshes.find(m => m.name === "sol");
+        var groundMesh = sceneTask.loadedMeshes.find(m => m.name === "SOL");
         if (groundMesh) {
             groundMesh.isVisible = true; // Ensure the ground mesh is visible
         } else {
