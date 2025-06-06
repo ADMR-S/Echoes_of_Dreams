@@ -512,8 +512,12 @@ export class Player{
             const pick = scene.pickWithRay(ray, mesh => mesh === ground);
             if (!pick || !pick.hit) {
                 if(oldPos){
-                    console.log("No ground hit, resetting position to old position.");
+                    if(oldPos.y != ground.position.y + this.playerCapsule.getBoundingInfo().boundingBox.extendSize.y / 2){ 
+                        oldPos.y = ground.position.y + this.playerCapsule.getBoundingInfo().boundingBox.extendSize.y / 2;
+                    }
+                    //console.log("No ground hit, resetting position to old position.");
                     this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
+                    (this.characterController as any)._position.copyFrom(oldPos);
                 }
             }
         });

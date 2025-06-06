@@ -121,6 +121,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     groundMesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
                     groundMesh.onDisposeObservable.add(() => {
                         console.warn("Fallback ground mesh was disposed!");
+                        console.trace("Fallback ground mesh disposed stack trace:");
                     });
                 } else {
                     groundMesh.isVisible = true; // Ensure the ground mesh is visible
@@ -129,6 +130,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     console.log("Ground mesh found and set visible:", groundMesh);
                     groundMesh.onDisposeObservable.add(() => {
                         console.warn("Ground mesh was disposed!");
+                        console.trace("Ground mesh disposed stack trace:");
                     });
                 }
                 // TypeScript type guard: ensure groundMesh is not undefined
@@ -153,6 +155,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 if (groundAggregate.body.transformNode) {
                     groundAggregate.body.transformNode.onDisposeObservable.add(() => {
                         console.warn("Ground aggregate's transformNode was disposed!");
+                        console.trace("Ground aggregate's transformNode disposed stack trace:");
                     });
                 }
 
@@ -169,6 +172,19 @@ export class Scene1Superliminal implements CreateSceneClass {
                     // Check if ground mesh is disposed or missing
                     if (!groundMesh || groundMesh.isDisposed()) {
                         console.error("Ground mesh is missing or disposed during frame!");
+                        console.trace("Ground mesh missing/disposed stack trace:");
+                    }
+                    // Check if groundAggregate or its body is missing/disposed
+                    if (!groundAggregate || !groundAggregate.body) {
+                        console.error("Ground aggregate or its body is missing during frame!");
+                        console.trace("Ground aggregate/body missing stack trace:");
+                    } else if (
+                        groundAggregate.body.transformNode &&
+                        groundAggregate.body.transformNode.isDisposed &&
+                        groundAggregate.body.transformNode.isDisposed()
+                    ) {
+                        console.error("Ground aggregate's transformNode is disposed during frame!");
+                        console.trace("Ground aggregate's transformNode disposed stack trace:");
                     }
                 });
 
