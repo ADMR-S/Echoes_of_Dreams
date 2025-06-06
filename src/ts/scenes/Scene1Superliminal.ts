@@ -77,6 +77,8 @@ export class Scene1Superliminal implements CreateSceneClass {
             console.error("Failed to load scene meshes:", message, exception);
         };
 
+        assetsManager.load();
+
         //Load ground from scene meshes : 
         var groundMesh = sceneTask.loadedMeshes.find(m => m.name === "sol");
         if (groundMesh) {
