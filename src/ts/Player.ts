@@ -535,6 +535,7 @@ export class Player{
                 // Sync camera position to capsule position (optionally add offset if needed)
                 if (this.playerCapsule) {
                     camera.position.copyFrom(this.playerCapsule.position);
+                    (camera as any).absoluteRotation = this.playerCapsule.rotationQuaternion || Quaternion.Identity();
                 }
             }
 
@@ -552,6 +553,7 @@ export class Player{
                     //console.log("No ground hit, resetting position to old position.");
                     this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
                     (this.characterController as any)._position.copyFrom(oldPos);
+                    camera.position.copyFrom(oldPos); // Sync camera position to old position
                 }
             //}
             }
