@@ -218,10 +218,10 @@ export class Scene1Superliminal implements CreateSceneClass {
                         queenMesh.computeWorldMatrix(true);
                         queenMesh.setPivotPoint(queenMesh.getBoundingInfo().boundingBox.center.clone());
 
-                        queenMesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
+                        //queenMesh.position = new Vector3(4, bbox.extendSize.y/2, 3);
 
                     }
-                    queenMesh.scaling = new Vector3(0.3, 0.3, 0.3);
+                    //queenMesh.scaling = new Vector3(0.3, 0.3, 0.3);
                     queenMesh.isPickable = true;
 
                     
