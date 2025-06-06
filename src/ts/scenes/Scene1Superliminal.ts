@@ -107,7 +107,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             "loadSceneMeshes",
             "",
             "asset/scene1/",
-            "champi.glb"
+            "champi_4.glb"
         )
 
         // Return a promise that resolves after assets are loaded and setup is done
@@ -142,6 +142,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // Create a PhysicsAggregate for each mesh (except ground, handled below)
                 task.loadedMeshes.forEach(m => {
+                    /*
                     if( m.name === "ile volante" ||
                         m.name === "ile volante.001" ||
                         m.name === "ile volante.002" ||
@@ -150,7 +151,9 @@ export class Scene1Superliminal implements CreateSceneClass {
                     ){
                         m.dispose();
                     }
-                    else if (
+                    else 
+                    */
+                   if (
                         m.name !== "SOL" &&
                         m instanceof Mesh &&
                         typeof m.getTotalVertices === "function" &&
@@ -594,7 +597,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             pointLight.intensity = 0.05;
             pointLight.parent = mesh;
 
-            //new GlowLayer("glow", scene);
+            new GlowLayer("glow", scene);
             //const gl = new GlowLayer("glow", scene);
             //gl.intensity = 0.03;
 
