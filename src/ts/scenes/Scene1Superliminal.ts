@@ -106,7 +106,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             // enable physics in the scene with a gravity
             scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
-            var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.BOX, { mass: 0 }, scene);
+            var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.MESH, { mass: 0 }, scene);
 
             const started = hk._hknp.EventType.COLLISION_STARTED.value;
             const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
