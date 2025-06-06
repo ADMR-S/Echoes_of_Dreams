@@ -1,4 +1,4 @@
-import { Camera, MeshBuilder, TransformNode, WebXRDefaultExperience } from "@babylonjs/core";
+import { Camera, Mesh, MeshBuilder, WebXRDefaultExperience } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -28,7 +28,7 @@ export class Player{
     public characterController: PhysicsCharacterController | null = null;
     public characterControllerObservable: any = null; // Observable for character controller updates
     public playerCapsule: AbstractMesh | null = null;
-    public playerRotationNode : TransformNode | null = null; // Node for rotation control
+    public playerRotationNode : Mesh | null = null; // Node for rotation control
     private _desiredVelocity: Vector3 = Vector3.Zero();
     private _desiredYaw: number = 0;
 
@@ -494,7 +494,8 @@ export class Player{
         }
 
         // Create the rotation node with the correct scene
-        this.playerRotationNode = new TransformNode("playerRotationNode", scene);
+        this.playerRotationNode = new Mesh("playerRotationMesh", scene);
+        this.playerRotationNode.isVisible = false; // Hide the rotation node
         camera.parent = this.playerRotationNode;
 
         const h = 1.7; // Capsule height
