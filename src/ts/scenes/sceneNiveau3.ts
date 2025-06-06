@@ -22,7 +22,7 @@ import {
     PhysicsShapeType,
     PointerDragBehavior,
     Ray,
-    Scalar, Sound,
+    Scalar, SceneOptimizer, Sound,
     StandardMaterial, TransformNode
 } from "@babylonjs/core";
 
@@ -931,6 +931,8 @@ export class SceneNiveau3 implements CreateSceneClass {
                 handlebar.rotation.z = currentTiltZ;
             }
         });
+
+        SceneOptimizer.OptimizeAsync(scene);
 
 
         return scene;

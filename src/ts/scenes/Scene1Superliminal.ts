@@ -16,7 +16,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, Sound, WebXRControllerPhysics } from "@babylonjs/core";
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, SceneOptimizer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -357,6 +357,8 @@ export class Scene1Superliminal implements CreateSceneClass {
         // You can add more mesh tasks for other pieces here
 
         assetsManager.load();
+
+        SceneOptimizer.OptimizeAsync(scene);
                 
         return scene;
     };
