@@ -115,13 +115,25 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 //Load ground from scene meshes : 
                 var groundMesh = task.loadedMeshes.find(m => m.name === "SOL");
-                if (groundMesh) {
-                    groundMesh.isVisible = true; // Ensure the ground mesh is visible
-                    groundMesh.parent = null;
-                } else {
+                if (!groundMesh) {
                     console.warn("Ground mesh not found in loaded scene meshes.");
                     // Our built-in 'ground' shape.
                     groundMesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+                    groundMesh.onDisposeObservable.add(() => {
+                        console.warn("Fallback ground mesh was disposed!");
+                    });
+                } else {
+                    groundMesh.isVisible = true; // Ensure the ground mesh is visible
+                    groundMesh.parent = null;
+                    // Debug: log ground mesh creation
+                    console.log("Ground mesh found and set visible:", groundMesh);
+                    groundMesh.onDisposeObservable.add(() => {
+                        console.warn("Ground mesh was disposed!");
+                    });
+                }
+                // TypeScript type guard: ensure groundMesh is not undefined
+                if (!groundMesh) {
+                    throw new Error("Failed to create or find a ground mesh.");
                 }
 
                 
@@ -137,10 +149,36 @@ export class Scene1Superliminal implements CreateSceneClass {
                 groundAggregate.body.setMotionType(PhysicsMotionType.STATIC);
                 groundAggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
 
+                // Debug: log aggregate creation and disposal
+                if (groundAggregate.body.transformNode) {
+                    groundAggregate.body.transformNode.onDisposeObservable.add(() => {
+                        console.warn("Ground aggregate's transformNode was disposed!");
+                    });
+                }
+
                 //Show body of ground with physics viewer:
-                this.physicsViewer = new PhysicsViewer(scene);
+                if (!this.physicsViewer) {
+                    this.physicsViewer = new PhysicsViewer(scene);
+                    console.log("PhysicsViewer created for scene.");
+                }
                 this.physicsViewer.showBody(groundAggregate.body);
-                
+                console.log("PhysicsViewer: ground body shown", groundAggregate.body);
+
+                // --- Robust ground mesh/aggregate checks each frame ---
+                scene.onBeforeRenderObservable.add(() => {
+                    // Check if ground mesh is disposed or missing
+                    if (!groundMesh || groundMesh.isDisposed()) {
+                        console.error("Ground mesh is missing or disposed during frame!");
+                    }
+                });
+
+                // Optionally: re-add ground body to viewer if it disappears (workaround)
+                scene.onAfterRenderObservable.add(() => {
+                    if (this.physicsViewer && !(this.physicsViewer as any)._impostors.has(groundAggregate.body)) {
+                        console.warn("Ground body missing from PhysicsViewer, re-adding.");
+                        this.physicsViewer.showBody(groundAggregate.body);
+                    }
+                });
 
                 new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
                 
