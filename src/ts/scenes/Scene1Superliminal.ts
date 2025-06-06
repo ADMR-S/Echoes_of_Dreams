@@ -187,7 +187,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     throw new Error("Failed to create or find a ground mesh.");
                 }
 
-                var queenMesh = task.loadedMeshes.find(m => m.name === "queen");
+                var queenMesh = task.loadedMeshes.find(m => m.name === "Queen");
                     if (!queenMesh) {
                         console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
                         return;
