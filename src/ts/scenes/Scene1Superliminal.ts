@@ -107,7 +107,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             "loadSceneMeshes",
             "",
             "asset/scene1/",
-            "champi.glb"
+            "champi_2.glb"
         )
 
         // Return a promise that resolves after assets are loaded and setup is done
@@ -586,8 +586,9 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             pointLight.intensity = 0.05;
             pointLight.parent = mesh;
 
-            const gl = new GlowLayer("glow", scene);
-            gl.intensity = 0.03;
+            new GlowLayer("glow", scene);
+            //const gl = new GlowLayer("glow", scene);
+            //gl.intensity = 0.03;
 
             const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
 
