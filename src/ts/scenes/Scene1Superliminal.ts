@@ -486,7 +486,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // You can add more mesh tasks for other pieces here
 
-                //assetsManager.load();
+                assetsManager.load();
 
                 //SceneOptimizer.OptimizeAsync(scene);
                 resolve(scene); // Only resolve after setup is done
