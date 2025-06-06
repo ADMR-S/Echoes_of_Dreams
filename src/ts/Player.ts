@@ -1,4 +1,4 @@
-import { Camera, MeshBuilder, WebXRDefaultExperience } from "@babylonjs/core";
+import { Camera, MeshBuilder, TransformNode, WebXRDefaultExperience } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -28,6 +28,7 @@ export class Player{
     public characterController: PhysicsCharacterController | null = null;
     public characterControllerObservable: any = null; // Observable for character controller updates
     public playerCapsule: AbstractMesh | null = null;
+    public playerRotationNode : TransformNode = new TransformNode("playerRotationNode"); // Node for rotation control
     private _desiredVelocity: Vector3 = Vector3.Zero();
     private _desiredYaw: number = 0;
 
@@ -492,6 +493,8 @@ export class Player{
             this.playerCapsule = null;
         }
 
+        camera.parent = this.playerRotationNode;
+
         const h = 1.7; // Capsule height
         const r = 0.6; // Capsule radius
         this.playerCapsule = MeshBuilder.CreateCapsule("playerCapsule", {
@@ -534,9 +537,7 @@ export class Player{
 
                 // Sync camera position to capsule position (optionally add offset if needed)
                 if (this.playerCapsule) {
-                    camera.position.copyFrom(this.playerCapsule.position);
-                    (camera as any).absoluteRotation = this.playerCapsule.rotationQuaternion || Quaternion.Identity();
-                }
+                    camera.position.copyFrom(this.playerCapsule.position);                }
             }
 
             lastCameraPosition.copyFrom(camera.position);
@@ -600,7 +601,7 @@ export class Player{
                 this.playerCapsule.rotationQuaternion = Quaternion.FromEulerAngles(0, 0, 0);
             }
             const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
-            this.playerCapsule.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
+            this.playerRotationNode.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
         }
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
