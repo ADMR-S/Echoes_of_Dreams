@@ -113,16 +113,14 @@ export class Scene1Superliminal implements CreateSceneClass {
         // Return a promise that resolves after assets are loaded and setup is done
         return new Promise<Scene>((resolve, reject) => {
             sceneTask.onSuccess = async (task) => {
-                // Log all loaded meshes for debugging
-                console.log("Loaded scene meshes:");
+
+                // Create a PhysicsAggregate for each mesh (except ground, handled below)
                 task.loadedMeshes.forEach(m => {
+
                     console.log(
                         `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
                     );
-                });
 
-                // Unparent all meshes from __root__ node
-                task.loadedMeshes.forEach(m => {
                     if (m.parent && m.parent.name === "__root__") {
                         m.parent = null;
                         m.computeWorldMatrix(true);
@@ -130,18 +128,14 @@ export class Scene1Superliminal implements CreateSceneClass {
                         // --- Reduce emissive intensity if present ---
                         if (m.material && m.material instanceof StandardMaterial) {
                             const mat = m.material as StandardMaterial;
-                        // If the material has an emissive color, reduce its intensity
-                        if (mat.emissiveColor && (mat.emissiveColor.r > 0 || mat.emissiveColor.g > 0 || mat.emissiveColor.b > 0)) {
-                            // Reduce intensity by scaling the color (e.g., divide by 4)
-                            console.log("Reducing emissive color intensity for mesh:", m.name);
-                            mat.emissiveColor.scaleInPlace(0.25);
+                            // If the material has an emissive color, reduce its intensity
+                            if (mat.emissiveColor && (mat.emissiveColor.r > 0 || mat.emissiveColor.g > 0 || mat.emissiveColor.b > 0)) {
+                                // Reduce intensity by scaling the color (e.g., divide by 4)
+                                console.log("Reducing emissive color intensity for mesh:", m.name);
+                                mat.emissiveColor.scaleInPlace(0.25);
+                            }
                         }
                     }
-                    }
-                });
-
-                // Create a PhysicsAggregate for each mesh (except ground, handled below)
-                task.loadedMeshes.forEach(m => {
                     /*
                     if( m.name === "ile volante" ||
                         m.name === "ile volante.001" ||
@@ -258,120 +252,120 @@ export class Scene1Superliminal implements CreateSceneClass {
                             }
                         );
                     
-                
-                    // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
-                    (queenMesh as any).object3DPickable = queenPickable;
+                    
+                        // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
+                        (queenMesh as any).object3DPickable = queenPickable;
 
-                    console.log("Queen chess piece loaded and pickable.");
+                        console.log("Queen chess piece loaded and pickable.");
 
-                
-                const xr = await scene.createDefaultXRExperienceAsync({
-                    floorMeshes: [groundMesh],
-                });
-                console.log("BASE EXPERIENCE")
-                console.log(xr.baseExperience)
-
-                console.log("Ground Mesh: ", groundMesh);
-
-                var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.MESH, { mass: 0 }, scene);
-                groundAggregate.body.setMotionType(PhysicsMotionType.STATIC);
-                groundAggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-
-                // Debug: log aggregate creation and disposal
-                if (groundAggregate.body.transformNode) {
-                    groundAggregate.body.transformNode.onDisposeObservable.add(() => {
-                        console.warn("Ground aggregate's transformNode was disposed!");
-                        console.trace("Ground aggregate's transformNode disposed stack trace:");
-                        // Log current state of ground mesh and aggregate
-                        console.warn("Ground mesh state:", groundMesh ? {
-                            name: groundMesh.name,
-                            disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
-                            id: groundMesh.id,
-                            uniqueId: groundMesh.uniqueId,
-                        } : "undefined");
-                        console.warn("Ground aggregate state:", groundAggregate ? {
-                            body: groundAggregate.body,
-                            disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
-                        } : "undefined");
+                    }                
+                    const xr = await scene.createDefaultXRExperienceAsync({
+                        floorMeshes: [groundMesh],
                     });
-                }
+                    console.log("BASE EXPERIENCE")
+                    console.log(xr.baseExperience)
 
-                //Show body of ground with physics viewer:
-                if (!this.physicsViewer) {
-                    this.physicsViewer = new PhysicsViewer(scene);
-                    console.log("PhysicsViewer created for scene.");
-                }
-                this.physicsViewer.showBody(groundAggregate.body);
-                console.log("PhysicsViewer: ground body shown", groundAggregate.body);
+                    console.log("Ground Mesh: ", groundMesh);
 
-                // --- Robust ground mesh/aggregate checks each frame ---
-                scene.onBeforeRenderObservable.add(() => {
-                    // Check if ground mesh is disposed or missing
-                    if ((!groundMesh || groundMesh.isDisposed()) && !hasLoggedGroundMeshDisposed) {
-                        hasLoggedGroundMeshDisposed = true;
-                        console.error("Ground mesh is missing or disposed during frame!");
-                        console.trace("Ground mesh missing/disposed stack trace:");
+                    var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.MESH, { mass: 0 }, scene);
+                    groundAggregate.body.setMotionType(PhysicsMotionType.STATIC);
+                    groundAggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+
+                    // Debug: log aggregate creation and disposal
+                    if (groundAggregate.body.transformNode) {
+                        groundAggregate.body.transformNode.onDisposeObservable.add(() => {
+                            console.warn("Ground aggregate's transformNode was disposed!");
+                            console.trace("Ground aggregate's transformNode disposed stack trace:");
+                            // Log current state of ground mesh and aggregate
+                            console.warn("Ground mesh state:", groundMesh ? {
+                                name: groundMesh.name,
+                                disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
+                                id: groundMesh.id,
+                                uniqueId: groundMesh.uniqueId,
+                            } : "undefined");
+                            console.warn("Ground aggregate state:", groundAggregate ? {
+                                body: groundAggregate.body,
+                                disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
+                            } : "undefined");
+                        });
                     }
-                    // Check if groundAggregate or its body is missing/disposed
-                    if ((!groundAggregate || !groundAggregate.body) && !hasLoggedGroundAggregateMissing) {
-                        hasLoggedGroundAggregateMissing = true;
-                        console.error("Ground aggregate or its body is missing during frame!");
-                        console.trace("Ground aggregate/body missing stack trace:");
-                    } else if (
-                        groundAggregate.body.transformNode &&
-                        groundAggregate.body.transformNode.isDisposed &&
-                        groundAggregate.body.transformNode.isDisposed() &&
-                        !hasLoggedGroundAggregateTransformDisposed
-                    ) {
-                        hasLoggedGroundAggregateTransformDisposed = true;
-                        console.error("Ground aggregate transform is disposed during frame!");
-                        console.trace("Ground aggregate transform disposed stack trace:");
-                        // Log current state of ground mesh and aggregate
-                        console.warn("Ground mesh state:", groundMesh ? {
-                            name: groundMesh.name,
-                            disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
-                            id: groundMesh.id,
-                            uniqueId: groundMesh.uniqueId,
-                        } : "undefined");
-                        console.warn("Ground aggregate state:", groundAggregate ? {
-                            body: groundAggregate.body,
-                            disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
-                        } : "undefined");
+
+                    //Show body of ground with physics viewer:
+                    if (!this.physicsViewer) {
+                        this.physicsViewer = new PhysicsViewer(scene);
+                        console.log("PhysicsViewer created for scene.");
                     }
-                });
+                    this.physicsViewer.showBody(groundAggregate.body);
+                    console.log("PhysicsViewer: ground body shown", groundAggregate.body);
 
-    
-                new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
-                
-                // @ts-ignore
-                //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+                    // --- Robust ground mesh/aggregate checks each frame ---
+                    scene.onBeforeRenderObservable.add(() => {
+                        // Check if ground mesh is disposed or missing
+                        if ((!groundMesh || groundMesh.isDisposed()) && !hasLoggedGroundMeshDisposed) {
+                            hasLoggedGroundMeshDisposed = true;
+                            console.error("Ground mesh is missing or disposed during frame!");
+                            console.trace("Ground mesh missing/disposed stack trace:");
+                        }
+                        // Check if groundAggregate or its body is missing/disposed
+                        if ((!groundAggregate || !groundAggregate.body) && !hasLoggedGroundAggregateMissing) {
+                            hasLoggedGroundAggregateMissing = true;
+                            console.error("Ground aggregate or its body is missing during frame!");
+                            console.trace("Ground aggregate/body missing stack trace:");
+                        } else if (
+                            groundAggregate.body.transformNode &&
+                            groundAggregate.body.transformNode.isDisposed &&
+                            groundAggregate.body.transformNode.isDisposed() &&
+                            !hasLoggedGroundAggregateTransformDisposed
+                        ) {
+                            hasLoggedGroundAggregateTransformDisposed = true;
+                            console.error("Ground aggregate transform is disposed during frame!");
+                            console.trace("Ground aggregate transform disposed stack trace:");
+                            // Log current state of ground mesh and aggregate
+                            console.warn("Ground mesh state:", groundMesh ? {
+                                name: groundMesh.name,
+                                disposed: groundMesh.isDisposed ? groundMesh.isDisposed() : undefined,
+                                id: groundMesh.id,
+                                uniqueId: groundMesh.uniqueId,
+                            } : "undefined");
+                            console.warn("Ground aggregate state:", groundAggregate ? {
+                                body: groundAggregate.body,
+                                disposed: groundAggregate.body.transformNode && groundAggregate.body.transformNode.isDisposed ? groundAggregate.body.transformNode.isDisposed() : undefined,
+                            } : "undefined");
+                        }
+                    });
 
-                // Skybox
-                var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
-                var skyboxMaterial = new StandardMaterial("skyBox", scene);
-                skyboxMaterial.backFaceCulling = false;
-                skyboxMaterial.reflectionTexture = new CubeTexture("asset/texture/skybox_space", scene);
-                skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-                skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
-                skyboxMaterial.specularColor = new Color3(0, 0, 0);
-                skybox.material = skyboxMaterial;			
-                
+        
+                    new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
+                    
+                    // @ts-ignore
+                    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
 
-                var camera=  xr.baseExperience.camera;
+                    // Skybox
+                    var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+                    var skyboxMaterial = new StandardMaterial("skyBox", scene);
+                    skyboxMaterial.backFaceCulling = false;
+                    skyboxMaterial.reflectionTexture = new CubeTexture("asset/texture/skybox_space", scene);
+                    skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+                    skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+                    skyboxMaterial.specularColor = new Color3(0, 0, 0);
+                    skybox.material = skyboxMaterial;			
+                    
 
-                // Setup CharacterController for Player
-                player.setupCharacterController(scene, camera, groundMesh);
+                    var camera=  xr.baseExperience.camera;
+
+                    // Setup CharacterController for Player
+                    player.setupCharacterController(scene, camera, groundMesh);
 
 
-                // Add keyboard controls for movement
-                const moveSpeed = 1;
-                addKeyboardControls(xr, moveSpeed);
+                    // Add keyboard controls for movement
+                    const moveSpeed = 1;
+                    addKeyboardControls(xr, moveSpeed);
 
 
 
-                // Add collision detection for the ground
-                groundAggregate.body.getCollisionObservable().add((collisionEvent: any) => {
-                if (collisionEvent.type === "COLLISION_STARTED") {
+                    // Add collision detection for the ground
+                    groundAggregate.body.getCollisionObservable().add((collisionEvent: any) => {
+                    if (collisionEvent.type === "COLLISION_STARTED") {
                         var collidedBody = null;
                         if(collisionEvent.collider != groundAggregate.body){
                             collidedBody = collisionEvent.collider;
@@ -413,7 +407,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         switchScene(engine, scene);
 
                     }
-                })
+                });
 
                 // --- Add a wall on the right side (x = +5, z = 0), 5 meters high ---
                 const wallWidth = 0.5;
@@ -489,14 +483,13 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 //SceneOptimizer.OptimizeAsync(scene);
                 resolve(scene); // Only resolve after setup is done
-            };
+                assetsManager.load();
+            }
             //@ts-ignore
             sceneTask.onError = (task, message, exception) => {
-                console.error("Failed to load scene meshes:", message, exception);
-                reject(exception);
+                console.error("Error loading scene meshes:", message, exception);
+                reject(new Error(`Failed to load scene meshes: ${message}`));
             };
-            assetsManager.load();
-            }
         });
     }
 }
