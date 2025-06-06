@@ -89,6 +89,8 @@ export class Scene1Superliminal implements CreateSceneClass {
             console.log("BASE EXPERIENCE")
             console.log(xr.baseExperience)
 
+            console.log("Ground Mesh: ", groundMesh);
+
             //Good way of initializing Havok
             // initialize plugin
             const havokInstance = await HavokPhysics();
