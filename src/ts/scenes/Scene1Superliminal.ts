@@ -16,7 +16,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, SceneOptimizer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
+import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsShapeType, PhysicsViewer, SceneOptimizer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -41,6 +41,7 @@ export class Scene1Superliminal implements CreateSceneClass {
     preTasks = [havokModule];
 
     private backgroundMusic: Sound | null = null;
+    private physicsViewer: PhysicsViewer | null = null;
     
 
     // @ts-ignore
@@ -112,6 +113,11 @@ export class Scene1Superliminal implements CreateSceneClass {
             const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
 
         const eventMask = started | continued | finished;
+
+        //Show body of ground with physics viewer:
+        this.physicsViewer = new PhysicsViewer(scene);
+        this.physicsViewer.showBody(groundAggregate.body);
+        
 
         new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
           
