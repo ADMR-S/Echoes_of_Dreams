@@ -610,7 +610,7 @@ export class Player{
             }
             // Always use world Y axis for yaw
             const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
-            this.playerCapsule.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
+            this.playerCapsule.rotationQuaternion = yawQuat.multiply(yawQuat);
         }
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
