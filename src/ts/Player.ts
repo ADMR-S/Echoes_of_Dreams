@@ -26,6 +26,7 @@ export class Player{
     //@ts-ignore
     private physicsViewer?: any;
     public characterController: PhysicsCharacterController | null = null;
+    public characterControllerObservable: any = null; // Observable for character controller updates
     public playerCapsule: AbstractMesh | null = null;
     private _desiredVelocity: Vector3 = Vector3.Zero();
     private _desiredYaw: number = 0;
@@ -512,7 +513,7 @@ export class Player{
         this.characterController = characterController;
 
         // Prevent moving where there's no ground (stick to ground)
-        scene.onBeforeRenderObservable.add(() => {
+        this.characterControllerObservable = scene.onAfterRenderObservable.add(() => {
             // Integrate character controller with current desired velocity
             const oldPos = this.playerCapsule?.position.clone();
 
