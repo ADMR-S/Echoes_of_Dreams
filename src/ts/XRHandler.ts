@@ -350,8 +350,8 @@ export class XRHandler{
 
                 // 3. Move character controller and capsule to camera's world position
                 (player.characterController as any)._position = cameraWorldPos.clone();
-                player.playerCapsule.position.copyFrom(cameraWorldPos);
-
+                player.playerCapsule?.position.copyFrom(player.characterController.getPosition());
+                player.playerCapsule.computeWorldMatrix(true);
                 // 4. Reparent camera to capsule
                 camera.parent = player.playerCapsule;
 
