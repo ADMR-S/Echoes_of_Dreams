@@ -483,13 +483,13 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 //SceneOptimizer.OptimizeAsync(scene);
                 resolve(scene); // Only resolve after setup is done
-                assetsManager.load();
             }
             //@ts-ignore
             sceneTask.onError = (task, message, exception) => {
                 console.error("Error loading scene meshes:", message, exception);
                 reject(new Error(`Failed to load scene meshes: ${message}`));
             };
+            assetsManager.load(); // <-- Move this here so assets actually load
         });
     }
 }
