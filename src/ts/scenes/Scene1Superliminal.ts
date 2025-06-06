@@ -250,7 +250,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                                     aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
                                     aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
                                     physicsBodies.push(aggregate.body); // <-- add queen body
-                                    return { mesh: queenMesh, extra : {}, aggregate }; 
+                                    return { mesh: queenMesh, extra : {}, aggregate : aggregate }; 
                                 }
                             }
                         );
