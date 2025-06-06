@@ -515,6 +515,9 @@ export class Player{
         // Prevent moving where there's no ground (stick to ground)
         this.characterControllerObservable = scene.onBeforeRenderObservable.add(() => {
 
+            console.log("camera position : " + camera.position.toString());
+            console.log("player capsule position : " + this.playerCapsule?.position.toString());
+
             if(camera.position !== this.playerCapsule?.position){
                 (this.characterController as any)._position = camera.position.clone();
                 this.playerCapsule!.position = this.characterController!.getPosition();
@@ -530,6 +533,9 @@ export class Player{
             if (this.playerCapsule) {
                 camera.position.copyFrom(this.playerCapsule.position);
             }
+
+            console.log("Updated camera position :", camera.position.toString());
+            console.log("Updated player capsule position :", this.playerCapsule.position.toString());
 
             // Optionally, clamp to ground if falling off (safety)
             if (!this.playerCapsule) return;
