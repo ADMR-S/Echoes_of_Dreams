@@ -191,7 +191,7 @@ export class Scene1TestAlai2 implements CreateSceneClass {
             new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
     
             //@ts-ignore
-            var lightBulb = createLightBulbPickable(scene, eventMask);
+            var lightBulb = createLightBulbPickable(scene, eventMask, ground);
     
             this.backgroundMusic = new Sound(
                         "backgroundMusic",
@@ -523,7 +523,7 @@ function addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, groun
 
 // Create a light bulb as an Object3DPickable
 //@ts-ignore
-function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPickable {
+function createLightBulbPickable(scene: Scene, eventMask : number, ground : AbstractMesh): Object3DPickable {
     // Usage in scene :
     // const bulbPickable = createLightBulbPickable(scene);
     // Access mesh: bulbPickable.mesh
@@ -539,6 +539,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
         mat,
         PhysicsShapeType.SPHERE, // Use sphere shape for bulb
         0.2, // Diameter of the bulb
+        ground,
         (scene, name, material, size) => {
             const mesh = MeshBuilder.CreateSphere(name, { diameter: size }, scene);
             mesh.material = material;
