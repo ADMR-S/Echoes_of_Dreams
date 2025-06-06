@@ -517,14 +517,14 @@ export class Player{
 
             console.log("camera position : " + camera.position.toString());
             console.log("player capsule position : " + this.playerCapsule?.position.toString());
-            /*
+            
             if(camera.position !== this.playerCapsule?.position){
                 (this.characterController as any)._position = camera.position.clone();
                 this.playerCapsule!.position = this.characterController!.getPosition();
             }
                 
             else{
-            */
+            
                 // Integrate character controller with current desired velocity
             const oldPos = this.playerCapsule?.position.clone();
 
@@ -552,7 +552,7 @@ export class Player{
                     this.playerCapsule.position = oldPos; // Reset to old position if no ground hit
                     (this.characterController as any)._position.copyFrom(oldPos);
                 }
-            //}
+            }
             }
         });
     }
