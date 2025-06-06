@@ -80,11 +80,18 @@ export class Scene1Superliminal implements CreateSceneClass {
                 }
             });
 
-            // Unparent all meshes from __root__ node
+            // Create a PhysicsAggregate for each mesh (except ground, handled below)
             task.loadedMeshes.forEach(m => {
-                if (m.parent && m.parent.name === "__root__") {
-                    m.parent = null;
+                if (m.name !== "SOL" && m instanceof Mesh) {
+                    m.parent = null; // Ensure no parent interferes with physics
                     m.computeWorldMatrix(true);
+                    // Use MESH shape for complex meshes, BOX as fallback
+                    let shapeType = PhysicsShapeType.MESH;
+                    // Optionally, you can use BOX for simple meshes:
+                    // if (m.getTotalVertices && m.getTotalVertices() < 100) shapeType = PhysicsShapeType.BOX;
+                    const aggregate = new PhysicsAggregate(m, shapeType, { mass: 1 }, scene);
+                    aggregate.body.setMotionType(PhysicsMotionType.STATIC);
+                    aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
                 }
             });
 
@@ -92,6 +99,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             var groundMesh = task.loadedMeshes.find(m => m.name === "SOL");
             if (groundMesh) {
                 groundMesh.isVisible = true; // Ensure the ground mesh is visible
+                groundMesh.parent = null;
             } else {
                 console.warn("Ground mesh not found in loaded scene meshes.");
                 // Our built-in 'ground' shape.
@@ -118,6 +126,8 @@ export class Scene1Superliminal implements CreateSceneClass {
             scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
 
             var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.MESH, { mass: 0 }, scene);
+            groundAggregate.body.setMotionType(PhysicsMotionType.STATIC);
+            groundAggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
 
             const started = hk._hknp.EventType.COLLISION_STARTED.value;
             const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
