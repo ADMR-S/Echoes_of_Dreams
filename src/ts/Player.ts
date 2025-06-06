@@ -603,7 +603,11 @@ export class Player{
             if (!this.playerRotationNode.rotationQuaternion) {
                 this.playerRotationNode.rotationQuaternion = Quaternion.FromEulerAngles(0, 0, 0);
             }
-            const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
+            // Use the local up axis of the capsule for rotation
+            const localUp = this.playerRotationNode
+                ? Vector3.TransformNormal(Vector3.Up(), this.playerRotationNode.getWorldMatrix()).normalize()
+                : Vector3.Up();
+            const yawQuat = Quaternion.RotationAxis(localUp, this._desiredYaw);
             this.playerRotationNode.rotationQuaternion = yawQuat.multiply(this.playerRotationNode.rotationQuaternion);
         }
         // Reset desiredYaw after applying
