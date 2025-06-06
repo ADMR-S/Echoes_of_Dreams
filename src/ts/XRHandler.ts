@@ -58,7 +58,7 @@ export class XRHandler{
         this.setupObjectSelection();
         this.setupHighlighting(); // Add highlighting setup
         this.setupSceneSwitchControls();
-        this.syncCapsuleWithCameraOnTeleport(xr, player);
+        this.syncCapsuleWithCameraOnTeleport(xr, player, ground);
         new XRLogger(xr, scene); // Initialize XRLogger
     }
 
@@ -336,68 +336,12 @@ export class XRHandler{
         */
     }
     
-    syncCapsuleWithCameraOnTeleport(xr: WebXRDefaultExperience, player: Player) {
+    syncCapsuleWithCameraOnTeleport(xr: WebXRDefaultExperience, player: Player, ground : AbstractMesh) {
         const sessionManager = xr.baseExperience.sessionManager;
         sessionManager.onXRReferenceSpaceChanged.add(() => {
-            if (player.characterController && player.playerCapsule && xr.baseExperience.camera) {
-                
-                // --- Log for the next 5 frames after teleport ---
-                let frameCount = 0;
-                let afterRenderObserver: any = null;
-                afterRenderObserver = this.scene.onAfterRenderObservable.add(() => {
-
-                const camera = xr.baseExperience.camera;
-                const capsule = player.playerCapsule;
-
-                camera.computeWorldMatrix();
-
-                // 1. Unparent camera (if already parented)
-                camera.parent = null;
-
-                // 2. Get camera's world position and local position (after XR update)
-                const cameraWorldPos = camera.position.clone();
-                //const cameraLocalPos = camera.position.clone();
-
-                capsule?.computeWorldMatrix(true);
-
-
-                // 5. Set capsule position so that after parenting, camera's world position stays the same
-                // capsule.position + rotatedLocalPos = cameraWorldPos  =>  capsule.position = cameraWorldPos - rotatedLocalPos
-                //const newCapsulePos = cameraWorldPos.subtract(rotatedLocalPos);
-                (player.characterController as any)._position = cameraWorldPos.clone();
-                capsule?.position.copyFrom(player.characterController!.getPosition());
-                capsule?.computeWorldMatrix(true);
-
-                // 6. Parent camera to capsule (do NOT set camera.position to zero)
-                camera.parent = capsule;
-
-                // --- Debug logs (immediate) ---
-                console.log("Camera/capsule sync after teleport (immediate):");
-                console.log("camera local position after parenting:", camera.position.toString());
-                console.log("camera local rotation after parenting:", camera.rotation.toString());
-                console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
-                console.log("camera world rotation:", camera.rotationQuaternion ? camera.rotationQuaternion.toEulerAngles().toString() : camera.rotation.toString());
-                console.log("capsule world position:", capsule?.getAbsolutePosition().toString());
-                console.log("capsule world rotation:", capsule?.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule?.rotation.toString());
-                console.log("character controller position:", player.characterController?.getPosition().toString());
-
-
-                    camera.computeWorldMatrix();
-                    capsule?.computeWorldMatrix(true);
-                    frameCount++;
-                    console.log(`Camera/capsule sync after teleport (frame ${frameCount}):`);
-                    console.log("camera local position after parenting:", camera.position.toString());
-                    console.log("camera local rotation after parenting:", camera.rotation.toString());
-                    console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
-                    console.log("camera world rotation:", camera.rotationQuaternion ? camera.rotationQuaternion.toEulerAngles().toString() : camera.rotation.toString());
-                    console.log("capsule world position:", capsule?.getAbsolutePosition().toString());
-                    console.log("capsule world rotation:", capsule?.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule?.rotation.toString());
-                    console.log("character controller position:", player.characterController?.getPosition().toString());
-                    if (frameCount >= 5) {
-                        this.scene.onAfterRenderObservable.remove(afterRenderObserver);
-                    }
-                });
-            }
+            
+            player.setupCharacterController(this.scene, xr.baseExperience.camera, ground);
+            
         });
     }
 
