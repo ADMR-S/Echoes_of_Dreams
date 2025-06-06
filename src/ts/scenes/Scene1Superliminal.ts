@@ -187,11 +187,11 @@ export class Scene1Superliminal implements CreateSceneClass {
                     throw new Error("Failed to create or find a ground mesh.");
                 }
 
-                var queenMesh = task.loadedMeshes.find(m => m.name === "Queen");
-                    if (!queenMesh) {
-                        console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
-                        return;
-                    }
+                // Find queen mesh (case-insensitive)
+                if (!queenMesh) {
+                    console.error("No valid Mesh with geometry found in loadedMeshes for queen.");
+                    return;
+                }
 
                     
                     console.log("parent : ", queenMesh.parent);
@@ -247,7 +247,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                                     aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
                                     //aggregate.body.setCollisionCallbackEnabled(true);
                                     //aggregate.body.setEventMask(eventMask);
-                                return { queenMesh, extra : {}, aggregate };
+                                    return { mesh: queenMesh, extra : {}, aggregate }; 
                                 }
                             }
                         );
