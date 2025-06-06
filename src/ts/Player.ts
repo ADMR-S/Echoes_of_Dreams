@@ -493,11 +493,6 @@ export class Player{
             this.playerCapsule = null;
         }
 
-        // Create the rotation node with the correct scene
-        this.playerRotationNode = new Mesh("playerRotationMesh", scene);
-        this.playerRotationNode.isVisible = false; // Hide the rotation node
-        camera.parent = this.playerRotationNode;
-
         const h = 1.7; // Capsule height
         const r = 0.6; // Capsule radius
         this.playerCapsule = MeshBuilder.CreateCapsule("playerCapsule", {
@@ -540,7 +535,9 @@ export class Player{
 
                 // Sync camera position to capsule position (optionally add offset if needed)
                 if (this.playerCapsule) {
-                    camera.position.copyFrom(this.playerCapsule.position);                }
+                    camera.position.copyFrom(this.playerCapsule.position);
+                    (camera as any).rotationQuaternion = (this.playerCapsule.rotationQuaternion || Quaternion.Identity()).clone();
+                }
             }
 
             lastCameraPosition.copyFrom(camera.position);
@@ -597,18 +594,14 @@ export class Player{
 
         this.playerCapsule?.position.copyFrom(this.characterController.getPosition());
 
-        // Apply rotation to the camera's parent (the capsule)
-        if (this.playerRotationNode && Math.abs(this._desiredYaw) > 0.0001) {
-            // Use quaternion multiplication for yaw rotation
-            if (!this.playerRotationNode.rotationQuaternion) {
-                this.playerRotationNode.rotationQuaternion = Quaternion.FromEulerAngles(0, 0, 0);
+        // Apply yaw rotation to the capsule around world Y axis
+        if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001) {
+            if (!this.playerCapsule.rotationQuaternion) {
+                this.playerCapsule.rotationQuaternion = Quaternion.Identity();
             }
-            // Use the local up axis of the capsule for rotation
-            const localUp = this.playerRotationNode
-                ? Vector3.TransformNormal(Vector3.Up(), this.playerRotationNode.getWorldMatrix()).normalize()
-                : Vector3.Up();
-            const yawQuat = Quaternion.RotationAxis(localUp, this._desiredYaw);
-            this.playerRotationNode.rotationQuaternion = yawQuat.multiply(this.playerRotationNode.rotationQuaternion);
+            // Always use world Y axis for yaw
+            const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
+            this.playerCapsule.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
         }
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
