@@ -344,31 +344,18 @@ export class XRHandler{
                 const capsule = player.playerCapsule;
 
                 camera.computeWorldMatrix(); // Ensure camera's world matrix is up-to-date
-                // 1. Get camera's world position before unparenting
+                // 1. Get camera's world position after teleport
                 const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
 
-                // 2. Unparent camera
-                camera.parent = null;
-
-                // 3. Move character controller and capsule to camera's world position
+                // 2. Move character controller and capsule to camera's world position
                 (player.characterController as any)._position = cameraWorldPos.clone();
                 capsule.position.copyFrom(player.characterController.getPosition());
                 capsule.computeWorldMatrix(true);
 
-                // 4. Reparent camera to capsule
-                camera.parent = capsule;
-
-                // 5. Reset camera's local position
-                camera.position.set(0, 0, 0);
-
                 // --- Debug logs ---
                 console.log("Camera/capsule sync after teleport:");
-                console.log("camera local position after parenting:", camera.position.toString());
-                console.log("camera local rotation after parenting:", camera.rotation.toString());
                 console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
-                console.log("camera world rotation:", camera.rotationQuaternion ? camera.rotationQuaternion.toEulerAngles().toString() : camera.rotation.toString());
                 console.log("capsule world position:", capsule.getAbsolutePosition().toString());
-                console.log("capsule world rotation:", capsule.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule.rotation.toString());
                 console.log("character controller position:", player.characterController.getPosition().toString());
             }
         });
