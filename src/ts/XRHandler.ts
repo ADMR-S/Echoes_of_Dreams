@@ -337,29 +337,30 @@ export class XRHandler{
     }
     
     syncCapsuleWithCameraOnTeleport(xr: WebXRDefaultExperience, player: Player) {
-        // Listen for reference space changes (teleport events)
         const sessionManager = xr.baseExperience.sessionManager;
         sessionManager.onXRReferenceSpaceChanged.add(() => {
             if (player.characterController && player.playerCapsule && xr.baseExperience.camera) {
                 const camera = xr.baseExperience.camera;
                 const capsule = player.playerCapsule;
 
-                camera.computeWorldMatrix(); // Ensure camera's world matrix is up-to-date
+                camera.computeWorldMatrix();
 
-                // 1. Get camera's world position and rotation after teleport
-                const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
-                const cameraWorldQuat = camera.rotationQuaternion?.clone();
-
-                // 2. Unparent camera (if already parented)
+                // 1. Unparent camera (if already parented)
                 camera.parent = null;
 
-                // 3. Move character controller and capsule to camera's world position
-                (player.characterController as any)._position = cameraWorldPos.clone();
+                // 2. Get camera's world position and local position (after XR update)
+                const cameraWorldPos = camera.getWorldMatrix().getTranslation().clone();
+                const cameraLocalPos = camera.position.clone();
+
+                // 3. Set capsule position so that after parenting, camera's world position stays the same
+                // capsule.position + cameraLocalPos = cameraWorldPos  =>  capsule.position = cameraWorldPos - cameraLocalPos
+                const newCapsulePos = cameraWorldPos.subtract(cameraLocalPos);
+                (player.characterController as any)._position = newCapsulePos.clone();
                 capsule.position.copyFrom(player.characterController.getPosition());
 
-                // 4. Sync capsule's rotation to camera's world rotation (if available)
-                if (cameraWorldQuat) {
-                    capsule.rotationQuaternion = cameraWorldQuat.clone();
+                // 4. Optionally, sync capsule's rotation to camera's world rotation
+                if (camera.rotationQuaternion) {
+                    capsule.rotationQuaternion = camera.rotationQuaternion.clone();
                     capsule.rotation = capsule.rotationQuaternion.toEulerAngles();
                 } else {
                     capsule.rotationQuaternion = null;
@@ -369,16 +370,13 @@ export class XRHandler{
 
                 // 5. Parent camera to capsule (do NOT set camera.position to zero)
                 camera.parent = capsule;
-                // camera.position.set(0, 0, 0); // <-- REMOVE THIS LINE
-                // camera.rotation.set(0, 0, 0); // <-- REMOVE THIS LINE
-                // camera.rotationQuaternion = Quaternion.Identity(); // <-- REMOVE THIS LINE
 
                 // --- Debug logs (immediate) ---
                 console.log("Camera/capsule sync after teleport (immediate):");
                 console.log("camera local position after parenting:", camera.position.toString());
                 console.log("camera local rotation after parenting:", camera.rotation.toString());
                 console.log("camera world position:", camera.getWorldMatrix().getTranslation().toString());
-                console.log("camera world rotation:", cameraWorldQuat ? cameraWorldQuat.toEulerAngles().toString() : camera.rotation.toString());
+                console.log("camera world rotation:", camera.rotationQuaternion ? camera.rotationQuaternion.toEulerAngles().toString() : camera.rotation.toString());
                 console.log("capsule world position:", capsule.getAbsolutePosition().toString());
                 console.log("capsule world rotation:", capsule.rotationQuaternion ? capsule.rotationQuaternion.toEulerAngles().toString() : capsule.rotation.toString());
                 console.log("character controller position:", player.characterController.getPosition().toString());
