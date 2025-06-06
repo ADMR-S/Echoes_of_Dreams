@@ -96,13 +96,15 @@ export class Scene1Superliminal implements CreateSceneClass {
 
             // Create a PhysicsAggregate for each mesh (except ground, handled below)
             task.loadedMeshes.forEach(m => {
-                if (m.name !== "SOL" && m instanceof Mesh) {
+                if (
+                    m.name !== "SOL" &&
+                    m instanceof Mesh &&
+                    typeof m.getTotalVertices === "function" &&
+                    m.getTotalVertices() > 0
+                ) {
                     m.parent = null; // Ensure no parent interferes with physics
                     m.computeWorldMatrix(true);
-                    // Use MESH shape for complex meshes, BOX as fallback
                     let shapeType = PhysicsShapeType.MESH;
-                    // Optionally, you can use BOX for simple meshes:
-                    // if (m.getTotalVertices && m.getTotalVertices() < 100) shapeType = PhysicsShapeType.BOX;
                     const aggregate = new PhysicsAggregate(m, shapeType, { mass: 1 }, scene);
                     aggregate.body.setMotionType(PhysicsMotionType.STATIC);
                     aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
