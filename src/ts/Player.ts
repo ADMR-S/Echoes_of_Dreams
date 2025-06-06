@@ -597,13 +597,13 @@ export class Player{
         this.playerCapsule?.position.copyFrom(this.characterController.getPosition());
 
         // Apply rotation to the camera's parent (the capsule)
-        if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001 && this.playerRotationNode) {
+        if (this.playerRotationNode && Math.abs(this._desiredYaw) > 0.0001) {
             // Use quaternion multiplication for yaw rotation
-            if (!this.playerCapsule.rotationQuaternion) {
-                this.playerCapsule.rotationQuaternion = Quaternion.FromEulerAngles(0, 0, 0);
+            if (!this.playerRotationNode.rotationQuaternion) {
+                this.playerRotationNode.rotationQuaternion = Quaternion.FromEulerAngles(0, 0, 0);
             }
             const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
-            this.playerRotationNode.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
+            this.playerRotationNode.rotationQuaternion = yawQuat.multiply(this.playerRotationNode.rotationQuaternion);
         }
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
