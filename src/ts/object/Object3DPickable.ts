@@ -4,7 +4,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Material } from "@babylonjs/core/Materials/material";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics";
-import { Vector3 } from "@babylonjs/core";
+import { AbstractMesh, Vector3 } from "@babylonjs/core";
 //import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class Object3DPickable implements Object3D{
@@ -21,6 +21,7 @@ export class Object3DPickable implements Object3D{
       material: Material,
       shapeType: PhysicsShapeType,
       size: number = 1,
+      ground : AbstractMesh,
       customMeshFactory?: (scene: Scene, name: string, material: Material, size: number) => { mesh: Mesh, extra?: any, aggregate?: PhysicsAggregate }
     ) 
     {
@@ -71,7 +72,6 @@ export class Object3DPickable implements Object3D{
         // --- Ground-level respawn logic ---
         scene.onBeforeRenderObservable.add(() => {
             // Find ground mesh by name (assumes "ground" is the name)
-            const ground = scene.getMeshByName("ground");
             if (!ground) return;
             const groundY = ground.position.y;
             if (this.mesh.position.y < groundY - 10) {

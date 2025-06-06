@@ -16,7 +16,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
+import { GroundMesh, HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -341,7 +341,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, scene);
 
                 //@ts-ignore
-                var lightBulb = createLightBulbPickable(scene, eventMask);
+                var lightBulb = createLightBulbPickable(scene, eventMask, groundMesh);
 
                 this.backgroundMusic = new Sound(
                             "backgroundMusic",
@@ -450,34 +450,35 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                     // Create Object3DPickable for the queen
                     //@ts-ignore
-                    const queenPickable = new Object3DPickable(
-                        scene,
-                        "queenPickable",
-                        mesh.material,
-                        PhysicsShapeType.MESH,
-                        1,
-                        // Custom mesh factory to use the imported mesh and add physics
-                        //@ts-ignore
-                        (scene, name, material, size) => {
-                            mesh.name = name;
-                            mesh.material = material;
-                            // Add physics aggregate (MESH shape for complex mesh)
-                            const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
-                            aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
-                            aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
-                            //aggregate.body.setCollisionCallbackEnabled(true);
-                            //aggregate.body.setEventMask(eventMask);
-                            return { mesh, extra : {}, aggregate };
-                        }
-
-                        
-                    );
-
+                    if(groundMesh){
+                        const queenPickable = new Object3DPickable(
+                            scene,
+                            "queenPickable",
+                            mesh.material,
+                            PhysicsShapeType.MESH,
+                            1,
+                            groundMesh,
+                            // Custom mesh factory to use the imported mesh and add physics
+                            //@ts-ignore
+                            (scene, name, material, size) => {
+                                mesh.name = name;
+                                mesh.material = material;
+                                // Add physics aggregate (MESH shape for complex mesh)
+                                const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, { mass: 1 }, scene);
+                                aggregate.body.setMotionType(PhysicsMotionType.DYNAMIC);
+                                aggregate.body.setPrestepType(PhysicsPrestepType.DISABLED);
+                                //aggregate.body.setCollisionCallbackEnabled(true);
+                                //aggregate.body.setEventMask(eventMask);
+                                return { mesh, extra : {}, aggregate };
+                            }
+                        );
+                    
                 
                     // --- Ensure the mesh has a reference to its Object3DPickable for highlighting/selection ---
                     (mesh as any).object3DPickable = queenPickable;
 
                     console.log("Queen chess piece loaded and pickable.");
+                    }
                 };
 
                 //@ts-ignore
@@ -545,7 +546,7 @@ function addKeyboardControls(xr: any, moveSpeed: number) {
 
 // Create a light bulb as an Object3DPickable
 //@ts-ignore
-function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPickable {
+function createLightBulbPickable(scene: Scene, eventMask : number, ground : AbstractMesh): Object3DPickable {
     // Usage in scene :
     // const bulbPickable = createLightBulbPickable(scene);
     // Access mesh: bulbPickable.mesh
@@ -561,6 +562,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number): Object3DPick
         mat,
         PhysicsShapeType.SPHERE, // Use sphere shape for bulb
         0.2, // Diameter of the bulb
+        ground,
         (scene, name, material, size) => {
             const mesh = MeshBuilder.CreateSphere(name, { diameter: size }, scene);
             mesh.material = material;
