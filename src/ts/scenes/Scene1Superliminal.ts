@@ -62,7 +62,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             "champi.glb"
         )
 
-        sceneTask.onSuccess = (task) => {
+        sceneTask.onSuccess = async (task) => {
             // Log all loaded meshes for debugging
             console.log("Loaded scene meshes:");
             task.loadedMeshes.forEach(m => {
@@ -70,68 +70,58 @@ export class Scene1Superliminal implements CreateSceneClass {
                     `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
                 );
             });
-        }
 
-        //@ts-ignore
-        sceneTask.onError = (task, message, exception) => {
-            console.error("Failed to load scene meshes:", message, exception);
-        };
+            //Load ground from scene meshes : 
+            var groundMesh = task.loadedMeshes.find(m => m.name === "SOL");
+            if (groundMesh) {
+                groundMesh.isVisible = true; // Ensure the ground mesh is visible
+            } else {
+                console.warn("Ground mesh not found in loaded scene meshes.");
+                // Our built-in 'ground' shape.
+                groundMesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
 
-        assetsManager.load();
+            }
 
-        //Load ground from scene meshes : 
-        var groundMesh = sceneTask.loadedMeshes.find(m => m.name === "SOL");
-        if (groundMesh) {
-            groundMesh.isVisible = true; // Ensure the ground mesh is visible
-        } else {
-            console.warn("Ground mesh not found in loaded scene meshes.");
-            // Our built-in 'ground' shape.
-            groundMesh = MeshBuilder.CreateGround("ground", { width: 100, height: 100 }, scene);
+            
+            const xr = await scene.createDefaultXRExperienceAsync({
+                floorMeshes: [groundMesh],
+            });
+            console.log("BASE EXPERIENCE")
+            console.log(xr.baseExperience)
 
-        }
+            //Good way of initializing Havok
+            // initialize plugin
+            const havokInstance = await HavokPhysics();
+            // pass the engine to the plugin
+            const hk = new HavokPlugin(true, havokInstance);
 
+
+            // enable physics in the scene with a gravity
+            scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
+
+            var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.BOX, { mass: 0 }, scene);
+
+            const started = hk._hknp.EventType.COLLISION_STARTED.value;
+            const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
+            const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
+
+        const eventMask = started | continued | finished;
+
+        new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
+          
+        // @ts-ignore
+        //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
+
+        // Skybox
+        var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
+        var skyboxMaterial = new StandardMaterial("skyBox", scene);
+        skyboxMaterial.backFaceCulling = false;
+        skyboxMaterial.reflectionTexture = new CubeTexture("asset/texture/skybox_space", scene);
+        skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
+        skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
+        skyboxMaterial.specularColor = new Color3(0, 0, 0);
+        skybox.material = skyboxMaterial;			
         
-        const xr = await scene.createDefaultXRExperienceAsync({
-            floorMeshes: [groundMesh],
-        });
-        console.log("BASE EXPERIENCE")
-        console.log(xr.baseExperience)
-
-          //Good way of initializing Havok
-        // initialize plugin
-        const havokInstance = await HavokPhysics();
-        // pass the engine to the plugin
-        const hk = new HavokPlugin(true, havokInstance);
-
-
-        // enable physics in the scene with a gravity
-        scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
-
-        var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.BOX, { mass: 0 }, scene);
-
-        const started = hk._hknp.EventType.COLLISION_STARTED.value;
-        const continued = hk._hknp.EventType.COLLISION_CONTINUED.value;
-        const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
-
-    const eventMask = started | continued | finished;
-
-    new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
-      
-    // @ts-ignore
-    //const drum = new XRDrumKit(audioContext, scene, eventMask, xr, hk);
-
-    // Skybox
-	var skybox = MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
-	var skyboxMaterial = new StandardMaterial("skyBox", scene);
-	skyboxMaterial.backFaceCulling = false;
-	skyboxMaterial.reflectionTexture = new CubeTexture("asset/texture/skybox_space", scene);
-	skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
-	skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
-	skyboxMaterial.specularColor = new Color3(0, 0, 0);
-	skybox.material = skyboxMaterial;			
-	    
-
-        //addScaleRoutineToSphere(sphereObservable);
 
         var camera=  xr.baseExperience.camera;
 
@@ -356,12 +346,25 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         // You can add more mesh tasks for other pieces here
 
-        assetsManager.load();
+        //assetsManager.load();
 
         SceneOptimizer.OptimizeAsync(scene);
-                
+        };
+
+        //@ts-ignore
+        sceneTask.onError = (task, message, exception) => {
+            console.error("Failed to load scene meshes:", message, exception);
+        };
+
+        // You can add more mesh tasks for other pieces here
+
+        assetsManager.load();
+
+        // Remove groundMesh/xr/physics initialization from here, it's now in onSuccess
+
+        // ...existing code...
         return scene;
-    };
+    }
 }
 
 export default new Scene1Superliminal();
