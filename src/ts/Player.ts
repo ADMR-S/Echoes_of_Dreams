@@ -613,6 +613,7 @@ export class Player{
 
         this.playerCapsule?.position.copyFrom(this.characterController.getPosition());
 
+        /*
         // Apply yaw rotation to the capsule around world Y axis
         if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001) {
             if (!this.playerCapsule.rotationQuaternion) {
@@ -622,8 +623,10 @@ export class Player{
             const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
             this.playerCapsule.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
         }
+        
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
+        */
 
         /*
         // To rotate the camera around its own Y axis (yaw) without tilting, use this pattern wherever you want to apply the yaw (e.g., in your observable or after movement):
