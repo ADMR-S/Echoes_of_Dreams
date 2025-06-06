@@ -172,14 +172,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     }
                 });
 
-                // Optionally: re-add ground body to viewer if it disappears (workaround)
-                scene.onAfterRenderObservable.add(() => {
-                    if (this.physicsViewer && !(this.physicsViewer as any)._impostors.has(groundAggregate.body)) {
-                        console.warn("Ground body missing from PhysicsViewer, re-adding.");
-                        this.physicsViewer.showBody(groundAggregate.body);
-                    }
-                });
-
+    
                 new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, groundMesh);
                 
                 // @ts-ignore
