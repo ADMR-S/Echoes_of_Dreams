@@ -539,12 +539,22 @@ export class Player{
                     camera.position.copyFrom(this.playerCapsule.position);
                     // Only apply yaw offset when teleportation is disabled
                     if (this.teleportationEnabled === false) {
+
+                    if ((camera as any).rotationQuaternion && Math.abs(this._desiredYaw) > 0.0001) {
+                        if (!(camera as any).rotationQuaternion) {
+                            (camera as any).rotationQuaternion = Quaternion.Identity();
+                        }
+                        // Always use world Y axis for yaw
+                        const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
+                        (camera as any).rotationQuaternion = yawQuat.multiply((camera as any).rotationQuaternion);
+                    }/*
                         // Calculate the yaw offset between capsule and camera
                         const capsuleYaw = Quaternion.FromEulerAngles(0, this.getYawFromQuaternion(this.playerCapsule.rotationQuaternion), 0);
                         // Combine the current camera rotation with the yaw offset
                         if ((camera as any).rotationQuaternion) {
                             capsuleYaw.multiplyToRef((camera as any).rotationQuaternion, (camera as any).rotationQuaternion);
                         }
+                            */
                     }
                 }
             }
@@ -610,7 +620,7 @@ export class Player{
             }
             // Always use world Y axis for yaw
             const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
-            this.playerCapsule.rotationQuaternion = yawQuat.multiply(yawQuat);
+            this.playerCapsule.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
         }
         // Reset desiredYaw after applying
         this._desiredYaw = 0;
@@ -627,6 +637,7 @@ export class Player{
         */
     }
 
+    /*
     getYawFromQuaternion(q: Quaternion | null): number {
         if (!q) return 0;
         // Extract yaw from quaternion (Babylon uses Y-up)
@@ -634,4 +645,5 @@ export class Player{
         // yaw (y-axis rotation)
         return Math.atan2(2.0 * (q.w * q.y + q.z * q.x), 1.0 - 2.0 * (ysqr + q.z * q.z));
     }
+        */
 }
