@@ -4,6 +4,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { Material } from "@babylonjs/core/Materials/material";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { PhysicsAggregate, PhysicsShapeType, PhysicsMotionType, PhysicsPrestepType } from "@babylonjs/core/Physics";
+import { Vector3 } from "@babylonjs/core";
 //import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class Object3DPickable implements Object3D{
@@ -12,6 +13,7 @@ export class Object3DPickable implements Object3D{
     isSelected: boolean = false;
     aggregate?: PhysicsAggregate; // Store aggregate directly
     extra: any;
+    initialPosition: Vector3;
 
     constructor(
       scene: Scene,
@@ -62,6 +64,27 @@ export class Object3DPickable implements Object3D{
             console.log("  boundingBox center:", bbox.center.toString());
             console.log("  boundingBox centerWorld:", bbox.centerWorld.toString());
         }
+
+        // Store initial position for respawn logic
+        this.initialPosition = this.mesh.position.clone();
+
+        // --- Ground-level respawn logic ---
+        scene.onBeforeRenderObservable.add(() => {
+            // Find ground mesh by name (assumes "ground" is the name)
+            const ground = scene.getMeshByName("ground");
+            if (!ground) return;
+            const groundY = ground.position.y;
+            if (this.mesh.position.y < groundY - 10) {
+                // Reset position to initial position at ground level
+                this.mesh.position.copyFrom(this.initialPosition);
+                this.mesh.position.y = groundY + (this.mesh.getBoundingInfo()?.boundingBox.extendSize.y || 0);
+                // Reset velocity if physics is enabled
+                if (this.aggregate && this.aggregate.body) {
+                    this.aggregate.body.setLinearVelocity(new Vector3(0, 0, 0));
+                    this.aggregate.body.setAngularVelocity(new Vector3(0, 0, 0));
+                }
+            }
+        });
     }
   
     createMesh(scene: Scene, name: string, type: PhysicsShapeType, size: number): Mesh {
