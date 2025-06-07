@@ -107,6 +107,8 @@ export class Scene1Superliminal implements CreateSceneClass {
 	    light.specular = new Color3(1, 0, 0);
 	    light.groundColor = new Color3(1, 0, 0);
 
+        let tunnelExitPosition: Vector3 | null = null;
+
         // Fog
         scene.fogMode = Scene.FOGMODE_LINEAR;
         //BABYLON.Scene.FOGMODE_NONE;
@@ -123,6 +125,13 @@ export class Scene1Superliminal implements CreateSceneClass {
         // --- Asset Manager for Chess Pieces ---
         const assetsManager = new AssetsManager(scene);
 
+        // Prepare sounds for spotlight toggle
+        let spotOnSound: Sound | null = null;
+        let spotOffSound: Sound | null = null;
+
+        // Load the sounds (replace with your actual sound file paths)
+        spotOnSound = new Sound("spotOn", "/asset/sounds/spotlight.mp3", scene, null, { volume: 0.7 });
+        spotOffSound = spotOnSound;
         const sceneTask = assetsManager.addMeshTask(
             "loadSceneMeshes",
             "",
@@ -167,7 +176,14 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.name === "ile volante.004"
                         */
                     ){
-                        m.dispose();
+                        // Store tunnel exit position before disposing the mesh
+                        task.loadedMeshes.forEach(m => {
+                            if (m.name === "Champignon_Enigme.003") {
+                                m.parent = null; // Ensure no parent interferes with position
+                                tunnelExitPosition = m.position.clone();
+                                m.dispose();
+                            }
+                        });
                     }
                     else 
                     
@@ -443,11 +459,11 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Place SpotLight above MurEnigme.001 after meshes are loaded
                 const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
                 let spotLight: SpotLight | null = null;
-                if (murMesh) {
-                    // Position the spotlight much higher above the center area
+                if (murMesh && tunnelExitPosition) {
+                    // Position the spotlight much higher above the tunnel exit
                     const spotPos = murMesh.position.clone().add(new Vector3(0, 100, 0));
-                    // Target the center area (queenMesh.position)
-                    const target = queenMesh.position.clone();
+                    // Target is the stored tunnel exit position
+                    const target = tunnelExitPosition.clone();
                     // Direction from light to target
                     const direction = target.subtract(spotPos).normalize();
 
@@ -461,7 +477,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     );
                     spotLight.diffuse = new Color3(1, 1, 1);
                     spotLight.specular = new Color3(1, 1, 1);
-                    spotLight.intensity = 2; // Adjust as needed
+                    spotLight.intensity = 200; // Adjust as needed
                     spotLight.setEnabled(false); // Start disabled
                 }
 
@@ -477,7 +493,13 @@ export class Scene1Superliminal implements CreateSceneClass {
                     const currentSide: "positive" | "negative" = delta >= 0 ? "positive" : "negative";
                     if (lastSide !== null && currentSide !== lastSide && spotLight) {
                         // Side changed: toggle light
-                        spotLight.setEnabled(!spotLight.isEnabled());
+                        const newEnabled = !spotLight.isEnabled();
+                        spotLight.setEnabled(newEnabled);
+                        if (newEnabled && spotOnSound) {
+                            spotOnSound.play();
+                        } else if (!newEnabled && spotOffSound) {
+                            spotOffSound.play();
+                        }
                     }
                     lastSide = currentSide;
                 });
