@@ -675,6 +675,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             // Scale intensity with size (tune the multiplier as needed)
             pointLight.intensity = 0.05;
             pointLight.parent = mesh;
+            (material as StandardMaterial).disableLighting = true; // Disable lighting for the bulb material
 
             new GlowLayer("glow", scene);
             //const gl = new GlowLayer("glow", scene);
