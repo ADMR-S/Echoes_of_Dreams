@@ -109,6 +109,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         let tunnelExitPosition: Vector3 | null = null;
 
+        /*
         // Fog
         scene.fogMode = Scene.FOGMODE_LINEAR;
         //BABYLON.Scene.FOGMODE_NONE;
@@ -121,6 +122,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         scene.fogStart = 40;
         scene.fogEnd = 60;
+        */
 
         // --- Asset Manager for Chess Pieces ---
         const assetsManager = new AssetsManager(scene);
@@ -167,6 +169,16 @@ export class Scene1Superliminal implements CreateSceneClass {
                             }
                         }
                     }
+                    // Ensure all meshes receive light, even with non-standard materials
+                    if (m.material && "disableLighting" in m.material) {
+                        // @ts-ignore
+                        m.material.disableLighting = false;
+                    }
+                    // Only assign a StandardMaterial if there is no material at all
+                    if (!m.material) {
+                        m.material = new StandardMaterial(m.name + "_stdMat", scene);
+                    }
+
                     if( m.name === "Champignon_Enigme.003" 
                         /*
                         m.name === "ile volante" ||
@@ -393,10 +405,11 @@ export class Scene1Superliminal implements CreateSceneClass {
                     skyboxMaterial.diffuseColor = new Color3(0, 0, 0);
                     skyboxMaterial.specularColor = new Color3(0, 0, 0);
                     skybox.material = skyboxMaterial;			
-
-                    // Make the skybox ignore fog (StandardMaterial uses disableLighting for this effect)
                     skyboxMaterial.disableLighting = true;
-                    skybox.applyFog = false; // For compatibility with some BabylonJS versions
+
+                    
+                    // Make the skybox ignore fog (StandardMaterial uses disableLighting for this effect)
+                    //skybox.applyFog = false; // For compatibility with some BabylonJS versions
 
                     var camera=  xr.baseExperience.camera;
 
@@ -477,8 +490,26 @@ export class Scene1Superliminal implements CreateSceneClass {
                     );
                     spotLight.diffuse = new Color3(1, 1, 1);
                     spotLight.specular = new Color3(1, 1, 1);
-                    spotLight.intensity = 200; // Adjust as needed
+                    spotLight.intensity = 40; // Adjust as needed
                     spotLight.setEnabled(false); // Start disabled
+
+                    // --- Visualize the spotlight beam (for debugging/visual effect) ---
+                    const beamHeight = spotPos.subtract(target).length();
+                    const beam = MeshBuilder.CreateCylinder("spotBeam", {
+                        diameterTop: 0.1,
+                        diameterBottom: Math.tan(spotLight.angle) * beamHeight * 2,
+                        height: beamHeight,
+                        tessellation: 32
+                    }, scene);
+                    beam.position = spotPos.add(direction.scale(beamHeight / 2));
+                    beam.lookAt(target);
+                    const beamMat = new StandardMaterial("beamMat", scene);
+                    beamMat.diffuseColor = new Color3(1, 1, 0.7);
+                    beamMat.alpha = 0.15;
+                    beam.material = beamMat;
+                    beam.isPickable = false;
+                    beam.doNotSyncBoundingInfo = true;
+                    beam.alwaysSelectAsActiveMesh = false;
                 }
 
                 // Get queen mesh position as tunnel center reference
