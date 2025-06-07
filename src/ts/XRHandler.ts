@@ -14,7 +14,7 @@ import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { WebXRFeatureName } from "@babylonjs/core";
-import XRLogger from "./XRLogger";
+//import XRLogger from "./XRLogger";
 //@ts-ignore
 import { WebXRMotionControllerTeleportation } from "@babylonjs/core/XR/features/WebXRControllerTeleportation";
 
@@ -59,7 +59,7 @@ export class XRHandler{
         this.setupHighlighting(); // Add highlighting setup
         this.setupSceneSwitchControls();
         this.syncCapsuleWithCameraOnTeleport(xr, player, ground);
-        new XRLogger(xr, scene); // Initialize XRLogger
+        //new XRLogger(xr, scene); // Initialize XRLogger
     }
 
     getLeftAndRightControllers(){
