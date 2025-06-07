@@ -492,24 +492,6 @@ export class Scene1Superliminal implements CreateSceneClass {
                     spotLight.specular = new Color3(1, 1, 1);
                     spotLight.intensity = 40; // Adjust as needed
                     spotLight.setEnabled(false); // Start disabled
-
-                    // --- Visualize the spotlight beam (for debugging/visual effect) ---
-                    const beamHeight = spotPos.subtract(target).length();
-                    const beam = MeshBuilder.CreateCylinder("spotBeam", {
-                        diameterTop: 0.1,
-                        diameterBottom: Math.tan(spotLight.angle) * beamHeight * 2,
-                        height: beamHeight,
-                        tessellation: 32
-                    }, scene);
-                    beam.position = spotPos.add(direction.scale(beamHeight / 2));
-                    beam.lookAt(target);
-                    const beamMat = new StandardMaterial("beamMat", scene);
-                    beamMat.diffuseColor = new Color3(1, 1, 0.7);
-                    beamMat.alpha = 0.15;
-                    beam.material = beamMat;
-                    beam.isPickable = false;
-                    beam.doNotSyncBoundingInfo = true;
-                    beam.alwaysSelectAsActiveMesh = false;
                 }
 
                 // Get queen mesh position as tunnel center reference
