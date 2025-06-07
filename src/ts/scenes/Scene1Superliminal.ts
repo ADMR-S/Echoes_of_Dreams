@@ -38,7 +38,8 @@ import { Object3DPickable } from "../object/Object3DPickable";
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
-import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
+// Add this import:
+import { RectAreaLight } from "@babylonjs/core";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -439,16 +440,15 @@ export class Scene1Superliminal implements CreateSceneClass {
                     }
                 });
 
-                // Place DirectionalLight above MurEnigme.001 after meshes are loaded
+                // Place RectangularAreaLight above MurEnigme.001 after meshes are loaded
                 const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
-                let dirLight: DirectionalLight | null = null;
+                let areaLight: RectAreaLight | null = null;
                 if (murMesh) {
-                    dirLight = new DirectionalLight("dirLight", new Vector3(-1, -1, 0), scene);
-                    dirLight.diffuse = new Color3(1, 1, 1);
-                    dirLight.specular = new Color3(1, 1, 1);
-                    dirLight.position = murMesh.position.add(new Vector3(0, 50, 0));
-                    dirLight.intensity = 0.4;
-                    dirLight.setEnabled(false); // Start disabled
+                    areaLight = new RectAreaLight("areaLight", murMesh.position.clone(), 100, 100, scene);
+                    areaLight.intensity = 100; // RectAreaLight uses higher intensity values
+                    areaLight.diffuse = new Color3(0, 1, 0);
+                    areaLight.specular = new Color3(1, 0, 1);
+                    areaLight.setEnabled(false); // Start disabled
                 }
 
                 // Get queen mesh position as tunnel center reference
@@ -458,12 +458,12 @@ export class Scene1Superliminal implements CreateSceneClass {
                 let lastSide: "positive" | "negative" | null = null;
                 scene.onBeforeRenderObservable.add(() => {
                     const cameraPos = camera.position;
-                    // Use Z axis as tunnel axis (adjust if needed)
+                    // Use X axis as tunnel axis (adjust if needed)
                     const delta = cameraPos.x - tunnelCenter.x;
                     const currentSide: "positive" | "negative" = delta >= 0 ? "positive" : "negative";
-                    if (lastSide !== null && currentSide !== lastSide && dirLight) {
+                    if (lastSide !== null && currentSide !== lastSide && areaLight) {
                         // Side changed: toggle light
-                        dirLight.setEnabled(!dirLight.isEnabled());
+                        areaLight.setEnabled(!areaLight.isEnabled());
                     }
                     lastSide = currentSide;
                 });
