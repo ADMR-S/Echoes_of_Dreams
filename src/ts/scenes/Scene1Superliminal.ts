@@ -39,7 +39,7 @@ import { Object3DPickable } from "../object/Object3DPickable";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 // Add this import:
-import { RectAreaLight } from "@babylonjs/core";
+import { SpotLight } from "@babylonjs/core/Lights/spotLight";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -440,15 +440,29 @@ export class Scene1Superliminal implements CreateSceneClass {
                     }
                 });
 
-                // Place RectangularAreaLight above MurEnigme.001 after meshes are loaded
+                // Place SpotLight above MurEnigme.001 after meshes are loaded
                 const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
-                let areaLight: RectAreaLight | null = null;
+                let spotLight: SpotLight | null = null;
                 if (murMesh) {
-                    areaLight = new RectAreaLight("areaLight", murMesh.position.clone(), 100, 100, scene);
-                    areaLight.intensity = 100; // RectAreaLight uses higher intensity values
-                    areaLight.diffuse = new Color3(0, 1, 0);
-                    areaLight.specular = new Color3(1, 0, 1);
-                    areaLight.setEnabled(false); // Start disabled
+                    // Position the spotlight much higher above the center area
+                    const spotPos = murMesh.position.clone().add(new Vector3(0, 100, 0));
+                    // Target the center area (queenMesh.position)
+                    const target = queenMesh.position.clone();
+                    // Direction from light to target
+                    const direction = target.subtract(spotPos).normalize();
+
+                    spotLight = new SpotLight(
+                        "spotLight",
+                        spotPos,
+                        direction,
+                        Math.PI / 4, // angle (adjust for beam width)
+                        20,          // exponent (beam edge softness)
+                        scene
+                    );
+                    spotLight.diffuse = new Color3(1, 1, 1);
+                    spotLight.specular = new Color3(1, 1, 1);
+                    spotLight.intensity = 2; // Adjust as needed
+                    spotLight.setEnabled(false); // Start disabled
                 }
 
                 // Get queen mesh position as tunnel center reference
@@ -461,9 +475,9 @@ export class Scene1Superliminal implements CreateSceneClass {
                     // Use X axis as tunnel axis (adjust if needed)
                     const delta = cameraPos.x - tunnelCenter.x;
                     const currentSide: "positive" | "negative" = delta >= 0 ? "positive" : "negative";
-                    if (lastSide !== null && currentSide !== lastSide && areaLight) {
+                    if (lastSide !== null && currentSide !== lastSide && spotLight) {
                         // Side changed: toggle light
-                        areaLight.setEnabled(!areaLight.isEnabled());
+                        spotLight.setEnabled(!spotLight.isEnabled());
                     }
                     lastSide = currentSide;
                 });
