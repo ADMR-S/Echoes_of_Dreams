@@ -13,7 +13,10 @@ import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color"; // Add this import
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-//import XRLogger from "./XRLogger";
+import { WebXRFeatureName } from "@babylonjs/core";
+import XRLogger from "./XRLogger";
+//@ts-ignore
+import { WebXRMotionControllerTeleportation } from "@babylonjs/core/XR/features/WebXRControllerTeleportation";
 
 export class XRHandler{
 
@@ -32,8 +35,11 @@ export class XRHandler{
         scene: Scene,
         xr: WebXRDefaultExperience,
         player: Player,
-        requestSceneSwitchFn: () => Promise<void>
-    ) {        this.scene = scene;
+        requestSceneSwitchFn: () => Promise<void>,
+        eventMask : number,
+        ground : AbstractMesh
+    ) {
+        this.scene = scene;
         this.xr = xr;
         this.player = player;
         this.requestSceneSwitch = requestSceneSwitchFn;
@@ -48,10 +54,12 @@ export class XRHandler{
             this.glowLayer.intensity = 1.5; // Increase for stronger glow
         }
         this.getLeftAndRightControllers();
+        this.addXRControllersRoutine(scene, xr, eventMask, ground, player);
         this.setupObjectSelection();
         this.setupHighlighting(); // Add highlighting setup
         this.setupSceneSwitchControls();
-        //new XRLogger(xr, scene); // Initialize XRLogger
+        this.syncCapsuleWithCameraOnTeleport(xr, player, ground);
+        new XRLogger(xr, scene); // Initialize XRLogger
     }
 
     getLeftAndRightControllers(){
@@ -209,6 +217,132 @@ export class XRHandler{
                     }
                 }
             });
+        });
+    }
+
+    // Add movement with left joystick
+    //@ts-ignore
+    addXRControllersRoutine(scene: Scene, xr: any, eventMask: number, ground: AbstractMesh, player: Player) {
+        // Store rotation state
+        var rotationInput = 0;
+        var xPositionInput = 0;
+        var yPositionInput = 0;
+    
+        let teleportationEnabled = true;
+        const featuresManager = xr.baseExperience.featuresManager;
+    
+        xr.input.onControllerAddedObservable.add((controller: any) => {        
+            console.log("Ajout d'un controller")
+            if (controller.inputSource.handedness === "left") {
+                controller.onMotionControllerInitObservable.add((motionController: any) => {
+                    const leftStick = motionController.getComponent("xr-standard-thumbstick");
+                    if (leftStick) {
+                        leftStick.onAxisValueChangedObservable.add((axisValues: any) => {
+                            xPositionInput = axisValues.x;
+                            yPositionInput = axisValues.y;
+                        });
+                    }
+    
+                    const yButton = motionController.getComponent("y-button");
+                    if (yButton) {
+                        yButton.onButtonStateChangedObservable.add(() => {
+                            if (yButton.changes.pressed && yButton.pressed) {
+                                teleportationEnabled = !teleportationEnabled;
+                                player.teleportationEnabled = teleportationEnabled;
+                                if (teleportationEnabled) {
+                                    // Enable teleportation
+                                    featuresManager.enableFeature(
+                                        WebXRFeatureName.TELEPORTATION,
+                                        "stable",
+                                        {
+                                            xrInput: xr.input,
+                                            floorMeshes: [ground],
+                                        }
+                                    );
+                                    console.log("Teleportation ENABLED");
+                                } else {
+                                    // Disable teleportation
+                                    featuresManager.disableFeature(WebXRFeatureName.TELEPORTATION);
+                                    console.log("Teleportation DISABLED");
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+            // Right controller:
+            if (controller.inputSource.handedness === "right") {
+                controller.onMotionControllerInitObservable.add((motionController: any) => {
+                    const xrInput = motionController.getComponent("xr-standard-thumbstick");
+                    if (xrInput) {
+                        xrInput.onAxisValueChangedObservable.add((axisValues: any) => {
+                            rotationInput = axisValues.x;
+                        });
+                    }
+                });
+            }
+        });
+    
+        // Smooth rotation in the render loop
+        scene.onBeforeRenderObservable.add(() => {
+            // --- Disable movement and rotation if teleportation is enabled ---
+            if (!teleportationEnabled) {
+                const camera = xr.baseExperience.camera;
+
+
+                player.setDesiredVelocityAndRotationFromInput(
+                    xPositionInput,
+                    yPositionInput,
+                    rotationInput,
+                    camera
+                );
+            } else {
+                // If teleportation is enabled, stop movement and rotation
+                player.setDesiredVelocityAndRotationFromInput(0, 0, 0, xr.baseExperience.camera);
+            }
+        });
+    
+        /*
+        // Add physics to controllers when the mesh is loaded
+        xr.input.onControllerAddedObservable.add((controller: any) => {
+            controller.onMotionControllerInitObservable.add((motionController: any) => {
+                // @ts-ignore
+                motionController.onModelLoadedObservable.add((mc: any) => {
+    
+                    console.log("Ajout d'un mesh au controller");
+    
+                    const controllerMesh = MeshBuilder.CreateBox("controllerMesh", { size: 0.1 }, scene);
+                    controllerMesh.parent = controller.grip;
+                    controllerMesh.position = Vector3.ZeroReadOnly;
+                    controllerMesh.rotationQuaternion = Quaternion.Identity();
+    
+                    const controllerAggregate = new PhysicsAggregate(controllerMesh, PhysicsShapeType.BOX, { mass: 1 }, scene);
+                    controllerAggregate.body.setMotionType(PhysicsMotionType.ANIMATED); // Set motion type to ANIMATED
+                    controllerAggregate.body.setPrestepType(PhysicsPrestepType.TELEPORT);
+                    controllerAggregate.body.setCollisionCallbackEnabled(true);
+                    controllerAggregate.body.setEventMask(eventMask);
+    
+    
+    
+                    // Make the controller mesh invisible and non-pickable
+                    controllerMesh.isVisible = false;
+                    controllerMesh.isPickable = false;
+    
+                    // Attach WebXRControllerPhysics to the controller
+                    //const controllerPhysics = xr.baseExperience.featuresManager.enableFeature(WebXRControllerPhysics.Name, 'latest')
+                    //controller.physics = controllerPhysics
+                });
+            });
+        });
+        */
+    }
+    
+    //@ts-ignore
+    syncCapsuleWithCameraOnTeleport(xr: WebXRDefaultExperience, player: Player, ground : AbstractMesh) {
+        const sessionManager = xr.baseExperience.sessionManager;
+        sessionManager.onXRReferenceSpaceChanged.add(() => {
+                (player.characterController as any)._position = xr.baseExperience.camera.position.clone();
+                player.playerCapsule!.position = player.characterController!.getPosition();
         });
     }
 

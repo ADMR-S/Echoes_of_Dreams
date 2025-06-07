@@ -45,7 +45,6 @@ export class XRSceneWithHavok implements CreateSceneClass {
         console.log("BASE EXPERIENCE")
         console.log(xr.baseExperience)
 
-        new XRHandler(scene, xr, player, requestSceneSwitchFn);
 
           //Good way of initializing Havok
         // initialize plugin
@@ -64,6 +63,8 @@ export class XRSceneWithHavok implements CreateSceneClass {
         const finished = hk._hknp.EventType.COLLISION_FINISHED.value;
 
     const eventMask = started | continued | finished;	    
+
+        new XRHandler(scene, xr, player, requestSceneSwitchFn, eventMask, ground);
 
         //addScaleRoutineToSphere(sphereObservable);
 

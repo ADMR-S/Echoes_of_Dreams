@@ -2,15 +2,16 @@ import {Scene} from "@babylonjs/core/scene";
 import {Object3DPickable} from "./Object3DPickable.ts";
 import {Vector3} from "@babylonjs/core/Maths/math.vector";
 import {Color3, PhysicsShapeType, StandardMaterial} from "@babylonjs/core";
+import{ AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh.ts";
 
 export class FloatingEntity extends Object3DPickable{
 
     private velocity : Vector3;
 
-    constructor(scene: Scene, ) {
+    constructor(scene: Scene, ground: AbstractMesh) {
         const material = new StandardMaterial("entityMat", scene);
         material.diffuseColor = new Color3(0, 1, 0);
-        super(scene, "entity", material, PhysicsShapeType.SPHERE ,0.5);
+        super(scene, "entity", material, PhysicsShapeType.SPHERE ,0.5, ground);
         this.mesh.position=new Vector3(0,-0.5,0);
         this.velocity = new Vector3((Math.random() - 0.5) * 0.1, Math.random() * 0.1 + 0.05, (Math.random() - 0.5) * 0.1);
 

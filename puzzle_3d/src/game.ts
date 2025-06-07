@@ -1,7 +1,7 @@
 // src/game.ts
 import {
-    Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, StandardMaterial, Color3, Texture, PointerEventTypes, PointerInfo,
-    MeshBuilder, TransformNode, Mesh, Camera, Plane, Matrix, Animatable, Animation
+    Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, StandardMaterial, Color3, Texture, PointerEventTypes,
+    MeshBuilder, Mesh, Plane, Matrix, Animation
 } from '@babylonjs/core';
 import { PuzzlePiece } from './puzzlePiece';
 

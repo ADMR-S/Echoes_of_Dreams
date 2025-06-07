@@ -12,7 +12,7 @@ export class PuzzlePiece {
     public readonly row: number; // Position correcte de la pièce dans la grille (ligne)
     public readonly col: number; // Position correcte de la pièce dans la grille (colonne)
 
-    private _scene: Scene;
+    //private _scene: Scene;
     private _tileWidth: number;
     private _tileHeight: number;
     private _depth: number;
@@ -36,7 +36,7 @@ export class PuzzlePiece {
         pieceIndex: number,
         depth: number = 0.1 // Épaisseur par défaut pour la 3D
     ) {
-        this._scene = scene;
+        //this._scene = scene;
         this._tileWidth = babylonTileWidth;
         this._tileHeight = babylonTileHeight;
         this._depth = depth;

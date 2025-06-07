@@ -1,4 +1,4 @@
-import { Camera, MeshBuilder, WebXRDefaultExperience } from "@babylonjs/core";
+import { Camera, Mesh, MeshBuilder, WebXRDefaultExperience } from "@babylonjs/core";
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
@@ -9,6 +9,7 @@ import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Object3DPickable } from "./object/Object3DPickable";
 import { BoundingBox } from "@babylonjs/core";
 import { PhysicsViewer } from "@babylonjs/core";
+import { PhysicsCharacterController } from "@babylonjs/core";
 //Sortir les attributs de l'objet de la classe Player vers la classe ObjetPickable
 //Snapping et displacement en cours de dev
 
@@ -24,6 +25,13 @@ export class Player{
     private rayHelper: RayHelper | null = null;
     //@ts-ignore
     private physicsViewer?: any;
+    public characterController: PhysicsCharacterController | null = null;
+    public characterControllerObservable: any = null; // Observable for character controller updates
+    public playerCapsule: AbstractMesh | null = null;
+    public playerRotationNode : Mesh | null = null; // Node for rotation control
+    public teleportationEnabled = true;
+    private _desiredVelocity: Vector3 = Vector3.Zero();
+    private _desiredYaw: number = 0;
 
     constructor(){
         this.selectedObject = null;
@@ -37,7 +45,6 @@ export class Player{
             //console.log("Un objet est déjà sélectionné !");
             //console.log("On déselectionne : ");
             //console.log(this.selectedObject);
-            this.selectedObject.parent = null;
             this.selectedObject.isPickable = true;
             //console.log("Set isPickable = true for", this.selectedObject.name, "uniqueId:", this.selectedObject.uniqueId);
             if (this.resizeAndRepositionObjectObservable) {
@@ -144,9 +151,15 @@ export class Player{
             const camera = xr.baseExperience.camera;
             const ray = camera.getForwardRay();
             
-            
+            // --- Log what the displacement ray picks ---
             const pickResult = scene.pickWithRay(ray, (mesh) => !!mesh && mesh != this.selectedObject && mesh.isPickable);
-
+            if (pickResult) {
+                if (pickResult.pickedMesh) {
+                    console.log("[Player] Displacement ray picked mesh:", pickResult.pickedMesh.name, pickResult.pickedMesh);
+                } else {
+                    console.log("[Player] Displacement ray did not hit any mesh.");
+                }
+            }
             var distance = 0;
 
             if (pickResult && pickResult.pickedPoint) {
@@ -341,7 +354,6 @@ export class Player{
         const myRadius = myWorldBox.extendSize.length();
 
         const scene = objectPickable.mesh.getScene();
-        // Exclude self, skyBox, laserPointers, rotationCone, and any mesh with "joint" or "jointparent" in the name
         const otherMeshes = scene.meshes.filter(mesh =>
             mesh !== objectPickable.mesh &&
             mesh.isVisible && // Only visible meshes
@@ -352,9 +364,8 @@ export class Player{
             mesh.name !== "rotationCone" &&
             !mesh.name.toLowerCase().includes("joint") &&
             !mesh.name.toLowerCase().includes("teleportation") &&
-            !mesh.name.toLowerCase().includes("hand")
-
-
+            !mesh.name.toLowerCase().includes("hand") &&
+            mesh.name !== "playerCapsule"
         );
         for (const mesh of otherMeshes) {
             // Defensive: skip meshes without bounding info (e.g., ground sometimes)
@@ -460,4 +471,182 @@ export class Player{
 
         return closest;
     }
+
+    /**
+     * Call this after XR/camera and ground are created.
+     * @param scene The Babylon.js scene
+     * @param camera The XR camera
+     * @param ground The ground mesh
+     */
+    setupCharacterController(scene: Scene, camera: Camera, ground: AbstractMesh,) {
+
+        // Dispose old character controller if it exists
+        if (this.characterController && typeof (this.characterController as any).dispose === "function") {
+            (this.characterController as any).dispose();
+        }
+        this.characterController = null;
+
+        // Dispose old capsule if it exists
+        if (this.playerCapsule) {
+            this.playerCapsule.dispose();
+            this.playerCapsule = null;
+        }
+
+        const h = 1.7; // Capsule height
+        const r = 0.6; // Capsule radius
+        this.playerCapsule = MeshBuilder.CreateCapsule("playerCapsule", {
+            height: h,
+            radius: r,
+            capSubdivisions: 6,
+            tessellation: 12
+        }, scene);
+        this.playerCapsule.isVisible = false;
+        this.playerCapsule.isPickable = false;
+        // --- Set capsule Y so feet are at ground level ---
+        this.playerCapsule.position = camera.position.clone();
+        this.playerCapsule.position.y = ground.position.y + h / 2; // Ensure feet are on ground
+
+        this.playerCapsule.checkCollisions = true;
+        this.playerCapsule.position.y = h / 2; // Position capsule so bottom is at ground level
+
+        // Do NOT parent camera to capsule
+
+        const characterPosition = this.playerCapsule.position.clone();
+
+        const characterController = new PhysicsCharacterController(characterPosition, { capsuleHeight: h, capsuleRadius: r }, scene);
+        this.characterController = characterController;
+
+        // Prevent moving where there's no ground (stick to ground)
+        let lastCameraPosition = camera.position.clone(); // Add this line to track last camera position
+        this.characterControllerObservable = scene.onBeforeRenderObservable.add(() => {
+
+            const oldPos = this.playerCapsule?.position.clone(); // <-- Move this line here
+
+            // Detect teleportation (camera moved a large distance not due to movement input)
+            const cameraMoved = !camera.position.equalsWithEpsilon(lastCameraPosition, 0.01);
+            if (cameraMoved) {
+                // Sync capsule and character controller to camera after teleport
+                if (this.playerCapsule) {
+                    this.playerCapsule.position.copyFrom(camera.position);
+                    if (this.characterController) {
+                        (this.characterController as any)._position.copyFrom(camera.position);
+                    }
+                }
+            } else {
+                // Update character controller and camera rotation as usual
+                this.updateCharacterController(scene.getEngine().getDeltaTime() / 1000);
+
+                // Sync camera position to capsule position (optionally add offset if needed)
+                if (this.playerCapsule) {
+                    camera.position.copyFrom(this.playerCapsule.position);
+                    // Only apply yaw offset when teleportation is disabled
+                    if (this.teleportationEnabled === false) {
+
+                    if ((camera as any).rotationQuaternion && Math.abs(this._desiredYaw) > 0.0001) {
+                        if (!(camera as any).rotationQuaternion) {
+                            (camera as any).rotationQuaternion = Quaternion.Identity();
+                        }
+                        // Always use world Y axis for yaw
+                        const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
+                        (camera as any).rotationQuaternion = yawQuat.multiply((camera as any).rotationQuaternion);
+                    }/*
+                        // Calculate the yaw offset between capsule and camera
+                        const capsuleYaw = Quaternion.FromEulerAngles(0, this.getYawFromQuaternion(this.playerCapsule.rotationQuaternion), 0);
+                        // Combine the current camera rotation with the yaw offset
+                        if ((camera as any).rotationQuaternion) {
+                            capsuleYaw.multiplyToRef((camera as any).rotationQuaternion, (camera as any).rotationQuaternion);
+                        }
+                            */
+                    }
+                }
+            }
+
+            lastCameraPosition.copyFrom(camera.position);
+
+            // Optionally, clamp to ground if falling off (safety)
+            if (!this.playerCapsule) return;
+            const ray = new Ray(this.playerCapsule.position, new Vector3(0, -1, 0), 2);
+            const pick = scene.pickWithRay(ray, mesh => mesh === ground);
+            if (!pick || !pick.hit) {
+                if(oldPos){
+                    // --- Place feet on ground, not center ---
+                    oldPos.y = ground.position.y + this.playerCapsule.getBoundingInfo().boundingBox.extendSize.y;
+                    this.playerCapsule.position = oldPos;
+                    (this.characterController as any)._position.copyFrom(oldPos);
+                    camera.position.copyFrom(oldPos);
+                }
+            //}
+            }
+        });
+    }
+
+    // Called by XRHandler to update the desired velocity and rotation from thumbstick input and camera orientation
+    setDesiredVelocityAndRotationFromInput(xAxis: number, yAxis: number, rotationInput: number, camera: Camera) {
+        // Calculate movement vector in world space based on camera orientation
+        const forward = camera.getDirection(new Vector3(0, 0, 1));
+        const right = camera.getDirection(new Vector3(1, 0, 0));
+        forward.y = 0;
+        right.y = 0;
+        forward.normalize();
+        right.normalize();
+        // yAxis is forward/back, xAxis is left/right
+        const speed = 3.0; // meters per second (adjust as needed)
+        this._desiredVelocity = forward.scale(-yAxis * speed).add(right.scale(xAxis * speed));
+
+        // Rotation: accumulate yaw from rotationInput (right stick X)
+        const rotationSpeed = 0.04; // radians per frame per unit input
+        this._desiredYaw = rotationInput * rotationSpeed;
+    }
+
+    // Call this in the scene loop to apply the desired velocity and rotation to the character controller and camera
+    updateCharacterController(dt: number) {
+        if (!this.characterController) return;
+        // Set the velocity (already scaled by dt in setDesiredVelocityAndRotationFromInput)
+        const velocity = this._desiredVelocity;
+        const down = new Vector3(0, -1, 0); // Gravity direction
+        const support = this.characterController.checkSupport(dt, down);
+
+        this.characterController.setVelocity(velocity);
+
+        const characterGravity = new Vector3(0, 0, 0); // Gravity vector
+        this.characterController.integrate(dt, support, characterGravity);
+
+        this.playerCapsule?.position.copyFrom(this.characterController.getPosition());
+
+        /*
+        // Apply yaw rotation to the capsule around world Y axis
+        if (this.playerCapsule && Math.abs(this._desiredYaw) > 0.0001) {
+            if (!this.playerCapsule.rotationQuaternion) {
+                this.playerCapsule.rotationQuaternion = Quaternion.Identity();
+            }
+            // Always use world Y axis for yaw
+            const yawQuat = Quaternion.RotationAxis(Vector3.Up(), this._desiredYaw);
+            this.playerCapsule.rotationQuaternion = yawQuat.multiply(this.playerCapsule.rotationQuaternion);
+        }
+        
+        // Reset desiredYaw after applying
+        this._desiredYaw = 0;
+        */
+
+        /*
+        // To rotate the camera around its own Y axis (yaw) without tilting, use this pattern wherever you want to apply the yaw (e.g., in your observable or after movement):
+
+        if ((camera as any).rotationQuaternion) {
+            // offsetAngle is your desired yaw in radians (e.g., this._desiredYaw)
+            const offsetAngle = this._desiredYaw; // or any yaw delta you want to apply
+            Quaternion.FromEulerAngles(0, offsetAngle, 0)
+                .multiplyToRef((camera as any).rotationQuaternion, (camera as any).rotationQuaternion);
+        }
+        */
+    }
+
+    /*
+    getYawFromQuaternion(q: Quaternion | null): number {
+        if (!q) return 0;
+        // Extract yaw from quaternion (Babylon uses Y-up)
+        const ysqr = q.y * q.y;
+        // yaw (y-axis rotation)
+        return Math.atan2(2.0 * (q.w * q.y + q.z * q.x), 1.0 - 2.0 * (ysqr + q.z * q.z));
+    }
+        */
 }

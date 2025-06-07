@@ -26,6 +26,8 @@ import {
     StandardMaterial, TransformNode
 } from "@babylonjs/core";
 
+//import { SceneOptimizer } from "@babylonjs/core";
+
 import {AbstractEngine} from "@babylonjs/core/Engines/abstractEngine";
 import HavokPhysics from "@babylonjs/havok";
 
@@ -37,7 +39,7 @@ import {Texture} from "@babylonjs/core/Materials/Textures/texture";
 import {AdvancedDynamicTexture, Control, Rectangle, TextBlock} from "@babylonjs/gui";
 import {Tools} from "@babylonjs/core/Misc/tools";
 import {Player} from "../Player.ts";
-import XRHandler from "../XRHandler.ts";
+//import XRHandler from "../XRHandler.ts";
 
 
 export class SceneNiveau3 implements CreateSceneClass {
@@ -288,7 +290,7 @@ export class SceneNiveau3 implements CreateSceneClass {
         console.log("BASE EXPERIENCE Scene1Superliminal");
         console.log(xr.baseExperience);
 
-        new XRHandler(scene, xr, player, requestSceneSwitchFn);
+        //new XRHandler(scene, xr, player, requestSceneSwitchFn);
 
 
         this.hudTexture = AdvancedDynamicTexture.CreateFullscreenUI("HUD_UI", true, scene);
@@ -931,6 +933,8 @@ export class SceneNiveau3 implements CreateSceneClass {
                 handlebar.rotation.z = currentTiltZ;
             }
         });
+
+        //SceneOptimizer.OptimizeAsync(scene);
 
 
         return scene;
