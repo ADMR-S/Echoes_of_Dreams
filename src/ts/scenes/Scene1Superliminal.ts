@@ -204,7 +204,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.computeWorldMatrix(true);
                         console.log("Tunnel exit mesh found:", m.name);
                         tunnelExitPosition = m.position.clone();
-                        tunnelExitPosition.x += 17;
+                        tunnelExitPosition.x += 22;
                         m.dispose();
                     
                     }
@@ -688,7 +688,8 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             const pointLight = new PointLight("bulbLight", Vector3.Zero(), scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
             // Scale intensity with size (tune the multiplier as needed)
-            pointLight.intensity = 0.05;
+            const initialIntensity = 0.05;
+            pointLight.intensity = initialIntensity;
             pointLight.parent = mesh;
             //pointLight.range = 1;
             (material as StandardMaterial).disableLighting = true; // Disable lighting for the bulb material
@@ -710,7 +711,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
                 pointLight.position.copyFrom(mesh.position);
             });
             */
-            return { mesh, extra: { pointLight }, aggregate }; // store aggregate at top-level
+            return { mesh, extra: { pointLight, initialIntensity }, aggregate }; // store aggregate at top-level
         }
     );
 }
