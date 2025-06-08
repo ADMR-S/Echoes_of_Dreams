@@ -16,7 +16,7 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { GroundMesh, HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
+import { GroundMesh, HemisphericLight, Mesh, MeshBuilder, PBRMaterial, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
@@ -157,6 +157,19 @@ export class Scene1Superliminal implements CreateSceneClass {
                     if (m.parent && m.parent.name === "__root__") {
                         m.parent = null;
                         m.computeWorldMatrix(true);
+
+                        if (m.material) {
+                            if (m.material instanceof StandardMaterial) {
+                                (m.material as StandardMaterial).specularColor = new Color3(1, 1, 1); // white specular
+                                console.log("StandardMaterial found, setting specular color to white for mesh:", m.name);
+                            }
+                            // For PBRMaterial (optional, if you use them)
+                            else if (m.material instanceof PBRMaterial) {
+                                console.log("PBRMaterial found, setting metallic and roughness to 0");
+                                 m.material.metallic = 1;
+                                 m.material.roughness = 0;
+                            }
+                        }
 
                         // --- Reduce emissive intensity if present ---
                         if (m.material && m.material instanceof StandardMaterial) {
