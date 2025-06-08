@@ -160,14 +160,14 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                         if (m.material) {
                             if (m.material instanceof StandardMaterial) {
-                                (m.material as StandardMaterial).specularColor = new Color3(1, 1, 1); // white specular
+                                //(m.material as StandardMaterial).specularColor = new Color3(1, 1, 1); // white specular
                                 console.log("StandardMaterial found, setting specular color to white for mesh:", m.name);
                             }
                             // For PBRMaterial (optional, if you use them)
                             else if (m.material instanceof PBRMaterial) {
                                 console.log("PBRMaterial found, setting metallic and roughness to 0");
                                  //m.material.metallic = 0.1
-                                 m.material.specularIntensity = 1;
+                                 m.material.usePhysicalLightFalloff = false;
                             }
                         }
 
@@ -178,7 +178,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                             if (mat.emissiveColor && (mat.emissiveColor.r > 0 || mat.emissiveColor.g > 0 || mat.emissiveColor.b > 0)) {
                                 // Reduce intensity by scaling the color (e.g., divide by 4)
                                 console.log("Reducing emissive color intensity for mesh:", m.name);
-                                mat.emissiveColor.scaleInPlace(0.25);
+                                mat.emissiveColor.scaleInPlace(0.1);
                             }
                         }
                     }
@@ -688,11 +688,12 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             // Scale intensity with size (tune the multiplier as needed)
             pointLight.intensity = 0.05;
             pointLight.parent = mesh;
+            //pointLight.range = 1;
             (material as StandardMaterial).disableLighting = true; // Disable lighting for the bulb material
 
-            new GlowLayer("glow", scene);
-            //const gl = new GlowLayer("glow", scene);
-            //gl.intensity = 0.03;
+            //new GlowLayer("glow", scene);
+            const gl = new GlowLayer("glow", scene);
+            gl.intensity = 0.5;
 
             const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
 
