@@ -201,6 +201,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     ){
                         // Store tunnel exit position before disposing the mesh
                         m.parent = null; // Ensure no parent interferes with position
+                        m.computeWorldMatrix(true);
                         console.log("Tunnel exit mesh found:", m.name);
                         tunnelExitPosition = m.position.clone();
                         m.dispose();
