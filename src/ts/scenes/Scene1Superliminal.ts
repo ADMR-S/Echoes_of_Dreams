@@ -509,14 +509,14 @@ export class Scene1Superliminal implements CreateSceneClass {
                     spotLight.setEnabled(false); // Start disabled
 
                     // --- Create MurEnigme.001 SpotLight ---
-                    const murSpotPos = new Vector3(murMesh.position.x, murMesh.position.y + 100, 0);
+                    const murSpotPos = new Vector3(murMesh.position.x, murMesh.position.y + 30, 0);
                     const murTarget = murMesh.position.clone();
                     const murDirection = murTarget.subtract(murSpotPos).normalize();
                     murSpotLight = new SpotLight(
                         "murSpotLight",
                         murSpotPos,
                         murDirection,
-                        Math.PI / 20,
+                        Math.PI / 15,
                         15,
                         scene
                     );

@@ -29,6 +29,7 @@ Ajouter effets de caméra lorsqu'un gros objet tombe au sol
     + Effets sonores
 Déplacer logique de sélection des objets de la classe Player vers Object3DPickable
 La musique boucle mal, changer
+Permettre au joueur "d'accrocher le soleil dans le ciel" avec la mécanique superliminal et la boule de lumière et en jouant sur la lumière
 
 GLOBAL : 
 Parvenir à passer d'un niveau à l'autre plus fluidement
