@@ -102,7 +102,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
         
         const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-        light.intensity = 0.01;
+        light.intensity = 0.005;
         light.diffuse = new Color3(0, 0, 1);
 	    light.specular = new Color3(1, 0, 0);
 	    light.groundColor = new Color3(1, 0, 0);
