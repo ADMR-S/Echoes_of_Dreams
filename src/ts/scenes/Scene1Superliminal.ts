@@ -204,6 +204,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.computeWorldMatrix(true);
                         console.log("Tunnel exit mesh found:", m.name);
                         tunnelExitPosition = m.position.clone();
+                        tunnelExitPosition.x -= 17;
                         m.dispose();
                     
                     }
@@ -272,6 +273,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     }
                     // --- Center geometry so bounding box center is at the origin ---
                     if (typeof queenMesh.setPivotPoint === "function") {
+                        queenMesh.scaling = new Vector3(0.9, 0.9, 0.9); // Scale down the queen mesh
                         const bbox = queenMesh.getBoundingInfo().boundingBox;
                         const center = bbox.center.clone();
                         (queenMesh as Mesh).bakeTransformIntoVertices(
