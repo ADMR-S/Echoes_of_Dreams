@@ -16,9 +16,9 @@ import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
 import "@babylonjs/loaders/glTF";
 // @ts-ignore
-import { GroundMesh, HemisphericLight, Mesh, MeshBuilder, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
+import { GroundMesh, HemisphericLight, Mesh, MeshBuilder, PBRMaterial, PhysicsAggregate, PhysicsBody, PhysicsShapeType, PhysicsViewer, Sound, WebXRControllerPhysics } from "@babylonjs/core";
 import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
-import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
+//import {XRSceneWithHavok2} from "./a_supprimer/xrSceneWithHavok2.ts";
 
 //import { SceneOptimizer } from "@babylonjs/core";
 //import XRDrumKit from "../xrDrumKit.ts"
@@ -102,7 +102,7 @@ export class Scene1Superliminal implements CreateSceneClass {
         scene.enablePhysics(new Vector3(0, -9.8, 0), hk);
         
         const light: HemisphericLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-        light.intensity = 0.01;
+        light.intensity = 0.005;
         light.diffuse = new Color3(0, 0, 1);
 	    light.specular = new Color3(1, 0, 0);
 	    light.groundColor = new Color3(1, 0, 0);
@@ -150,13 +150,24 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Create a PhysicsAggregate for each mesh (except ground, handled below)
                 task.loadedMeshes.forEach(m => {
 
-                    console.log(
-                        `  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`
-                    );
+                    //console.log(`  name: ${m.name}, isVisible: ${m.isVisible}, getTotalVertices: ${typeof m.getTotalVertices === "function" ? m.getTotalVertices() : "n/a"}`);
 
                     if (m.parent && m.parent.name === "__root__") {
                         m.parent = null;
                         m.computeWorldMatrix(true);
+
+                        if (m.material) {
+                            if (m.material instanceof StandardMaterial) {
+                                //(m.material as StandardMaterial).specularColor = new Color3(1, 1, 1); // white specular
+                                console.log("StandardMaterial found, setting specular color to white for mesh:", m.name);
+                            }
+                            // For PBRMaterial (optional, if you use them)
+                            else if (m.material instanceof PBRMaterial) {
+                                console.log("PBRMaterial found, deactivating physical light falloff");
+                                 //m.material.metallic = 0.1
+                                 m.material.usePhysicalLightFalloff = false;
+                            }
+                        }
 
                         // --- Reduce emissive intensity if present ---
                         if (m.material && m.material instanceof StandardMaterial) {
@@ -165,7 +176,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                             if (mat.emissiveColor && (mat.emissiveColor.r > 0 || mat.emissiveColor.g > 0 || mat.emissiveColor.b > 0)) {
                                 // Reduce intensity by scaling the color (e.g., divide by 4)
                                 console.log("Reducing emissive color intensity for mesh:", m.name);
-                                mat.emissiveColor.scaleInPlace(0.25);
+                                mat.emissiveColor.scaleInPlace(0.1);
                             }
                         }
                     }
@@ -189,13 +200,13 @@ export class Scene1Superliminal implements CreateSceneClass {
                         */
                     ){
                         // Store tunnel exit position before disposing the mesh
-                        task.loadedMeshes.forEach(m => {
-                            if (m.name === "Champignon_Enigme.003") {
-                                m.parent = null; // Ensure no parent interferes with position
-                                tunnelExitPosition = m.position.clone();
-                                m.dispose();
-                            }
-                        });
+                        m.parent = null; // Ensure no parent interferes with position
+                        m.computeWorldMatrix(true);
+                        console.log("Tunnel exit mesh found:", m.name);
+                        tunnelExitPosition = m.position.clone();
+                        tunnelExitPosition.x += 25;
+                        m.dispose();
+                    
                     }
                     else 
                     
@@ -250,7 +261,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 }
 
                     
-                    console.log("parent : ", queenMesh.parent);
+                    //console.log("parent : ", queenMesh.parent);
                     const rootNode = queenMesh.parent;
                     queenMesh.parent = null
                     if(rootNode){
@@ -262,6 +273,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     }
                     // --- Center geometry so bounding box center is at the origin ---
                     if (typeof queenMesh.setPivotPoint === "function") {
+                        queenMesh.scaling = new Vector3(0.9, 0.9, 0.9); // Scale down the queen mesh
                         const bbox = queenMesh.getBoundingInfo().boundingBox;
                         const center = bbox.center.clone();
                         (queenMesh as Mesh).bakeTransformIntoVertices(
@@ -317,10 +329,10 @@ export class Scene1Superliminal implements CreateSceneClass {
                     const xr = await scene.createDefaultXRExperienceAsync({
                         floorMeshes: [groundMesh],
                     });
-                    console.log("BASE EXPERIENCE")
-                    console.log(xr.baseExperience)
+                    //console.log("BASE EXPERIENCE")
+                    //console.log(xr.baseExperience)
 
-                    console.log("Ground Mesh: ", groundMesh);
+                    //console.log("Ground Mesh: ", groundMesh);
 
                     var groundAggregate = new PhysicsAggregate(groundMesh, PhysicsShapeType.MESH, { mass: 0 }, scene);
                     groundAggregate.body.setMotionType(PhysicsMotionType.STATIC);
@@ -349,7 +361,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     //Show all physics bodies with physics viewer:
                     if (!this.physicsViewer) {
                         this.physicsViewer = new PhysicsViewer(scene);
-                        console.log("PhysicsViewer created for scene.");
+                        //console.log("PhysicsViewer created for scene.");
                     }
                     //physicsBodies.forEach(body => this.physicsViewer!.showBody(body));
                     //console.log("PhysicsViewer: all scene bodies shown", physicsBodies);
@@ -443,8 +455,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                 });
 
                 //-------------------------------------------------------------------------------------------------------
-                // Game loop
-
+                // TEST SWITCH SCENE
+                /*
                 let sceneAlreadySwitched = false;
 
 
@@ -452,11 +464,11 @@ export class Scene1Superliminal implements CreateSceneClass {
                     const isWithinX = camera.position.x > 9 && camera.position.x < 11;
                     const isWithinZ = camera.position.z > 9 && camera.position.z < 11;
 
-                    /*
+                    
                     console.log(camera.position.x)
                     console.log(camera.position.z)
                     console.log(isWithinX, isWithinZ)
-                    */
+                    
 
                     if (!sceneAlreadySwitched && isWithinX && isWithinZ) {
                         sceneAlreadySwitched = true;
@@ -468,10 +480,13 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                     }
                 });
+                */
 
                 // Place SpotLight above MurEnigme.001 after meshes are loaded
                 const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
                 let spotLight: SpotLight | null = null;
+                let murSpotLight: SpotLight | null = null;
+                // --- New variables for the MurEnigme.001 spotlight ---
                 if (murMesh && tunnelExitPosition) {
                     // Position the spotlight much higher above the tunnel exit
                     const spotPos = murMesh.position.clone().add(new Vector3(0, 100, 0));
@@ -484,14 +499,32 @@ export class Scene1Superliminal implements CreateSceneClass {
                         "spotLight",
                         spotPos,
                         direction,
-                        Math.PI / 4, // angle (adjust for beam width)
-                        20,          // exponent (beam edge softness)
+                        Math.PI / 40, // angle (adjust for beam width)
+                        10,          // exponent (beam edge softness)
                         scene
                     );
                     spotLight.diffuse = new Color3(1, 1, 1);
                     spotLight.specular = new Color3(1, 1, 1);
-                    spotLight.intensity = 40; // Adjust as needed
+                    spotLight.intensity = 5; // Adjust as needed
                     spotLight.setEnabled(false); // Start disabled
+
+                    // --- Create MurEnigme.001 SpotLight ---
+                    const murSpotPos = new Vector3(murMesh.position.x, murMesh.position.y + 30, 0);
+                    const murTarget = murMesh.position.clone() 
+                    murTarget.y += murMesh.getBoundingInfo().boundingBox.extendSize.y;
+                    const murDirection = murTarget.subtract(murSpotPos).normalize();
+                    murSpotLight = new SpotLight(
+                        "murSpotLight",
+                        murSpotPos,
+                        murDirection,
+                        Math.PI / 5,
+                        10,
+                        scene
+                    );
+                    murSpotLight.diffuse = new Color3(1, 1, 1);
+                    murSpotLight.specular = new Color3(1, 1, 1);
+                    murSpotLight.intensity = 5;
+                    murSpotLight.setEnabled(false);
                 }
 
                 // Get queen mesh position as tunnel center reference
@@ -499,6 +532,8 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // Track which side of the tunnel the camera is on
                 let lastSide: "positive" | "negative" | null = null;
+                // Track last murSpotLight enabled state for toggle
+                let lastMurSpotEnabled: boolean | null = null;
                 scene.onBeforeRenderObservable.add(() => {
                     const cameraPos = camera.position;
                     // Use X axis as tunnel axis (adjust if needed)
@@ -515,6 +550,21 @@ export class Scene1Superliminal implements CreateSceneClass {
                         }
                     }
                     lastSide = currentSide;
+
+                    // --- MurEnigme.001 SpotLight toggle logic ---
+                    if (murSpotLight && tunnelExitPosition) {
+                        const threshold = 0.5;
+                        const isEnabled = (cameraPos.x - tunnelExitPosition.x) < threshold;
+                        if (lastMurSpotEnabled !== null && isEnabled !== lastMurSpotEnabled) {
+                            murSpotLight.setEnabled(isEnabled);
+                            if (isEnabled && spotOnSound) {
+                                spotOnSound.play();
+                            } else if (!isEnabled && spotOffSound) {
+                                spotOffSound.play();
+                            }
+                        }
+                        lastMurSpotEnabled = isEnabled;
+                    }
                 });
 
                 /*
@@ -606,6 +656,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
 export default new Scene1Superliminal();
 
+/*
 function switchScene(engine: AbstractEngine, scene : Scene) {
     scene.dispose();
 
@@ -616,6 +667,7 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
         });
     });
 }
+    */
 
 
 function addKeyboardControls(xr: any, moveSpeed: number) {
@@ -673,13 +725,15 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             const pointLight = new PointLight("bulbLight", Vector3.Zero(), scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
             // Scale intensity with size (tune the multiplier as needed)
-            pointLight.intensity = 0.05;
+            const initialIntensity = 0.05;
+            pointLight.intensity = initialIntensity;
             pointLight.parent = mesh;
+            //pointLight.range = 1;
             (material as StandardMaterial).disableLighting = true; // Disable lighting for the bulb material
 
-            new GlowLayer("glow", scene);
-            //const gl = new GlowLayer("glow", scene);
-            //gl.intensity = 0.03;
+            //new GlowLayer("glow", scene);
+            const gl = new GlowLayer("glow", scene);
+            gl.intensity = 0.5;
 
             const aggregate = new PhysicsAggregate(mesh, PhysicsShapeType.SPHERE, { mass: 1 }, scene);
 
@@ -694,7 +748,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
                 pointLight.position.copyFrom(mesh.position);
             });
             */
-            return { mesh, extra: { pointLight }, aggregate }; // store aggregate at top-level
+            return { mesh, extra: { pointLight, initialIntensity }, aggregate }; // store aggregate at top-level
         }
     );
 }

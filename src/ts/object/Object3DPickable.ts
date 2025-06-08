@@ -81,6 +81,10 @@ export class Object3DPickable implements Object3D{
                 this.mesh.position.copyFrom(this.initialPosition);
                 this.mesh.position.y = groundY + (this.mesh.getBoundingInfo()?.boundingBox.extendSize.y || 0);
                 this.mesh.scaling.copyFrom(this.initialScaling);
+                if(this.extra.initialIntensity && this.extra.pointLight){
+                    // Reset point light intensity if it exists
+                    this.extra.pointLight.intensity = this.extra.initialIntensity;
+                }
                 // Reset velocity if physics is enabled
                 if (this.aggregate && this.aggregate.body) {
                     this.aggregate.body.setLinearVelocity(new Vector3(0, 0, 0));
