@@ -500,7 +500,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         spotPos,
                         direction,
                         Math.PI / 40, // angle (adjust for beam width)
-                        15,          // exponent (beam edge softness)
+                        10,          // exponent (beam edge softness)
                         scene
                     );
                     spotLight.diffuse = new Color3(1, 1, 1);
@@ -510,14 +510,15 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                     // --- Create MurEnigme.001 SpotLight ---
                     const murSpotPos = new Vector3(murMesh.position.x, murMesh.position.y + 30, 0);
-                    const murTarget = murMesh.position.clone();
+                    const murTarget = murMesh.position.clone() 
+                    murTarget.y += murMesh.getBoundingInfo().boundingBox.extendSize.y;
                     const murDirection = murTarget.subtract(murSpotPos).normalize();
                     murSpotLight = new SpotLight(
                         "murSpotLight",
                         murSpotPos,
                         murDirection,
-                        Math.PI / 15,
-                        15,
+                        Math.PI / 5,
+                        10,
                         scene
                     );
                     murSpotLight.diffuse = new Color3(1, 1, 1);
