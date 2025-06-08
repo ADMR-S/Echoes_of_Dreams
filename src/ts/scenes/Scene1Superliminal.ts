@@ -204,7 +204,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.computeWorldMatrix(true);
                         console.log("Tunnel exit mesh found:", m.name);
                         tunnelExitPosition = m.position.clone();
-                        tunnelExitPosition.x -= 17;
+                        tunnelExitPosition.x += 17;
                         m.dispose();
                     
                     }
