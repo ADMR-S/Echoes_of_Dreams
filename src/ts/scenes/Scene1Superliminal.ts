@@ -204,7 +204,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.computeWorldMatrix(true);
                         console.log("Tunnel exit mesh found:", m.name);
                         tunnelExitPosition = m.position.clone();
-                        tunnelExitPosition.x += 22;
+                        tunnelExitPosition.x += 25;
                         m.dispose();
                     
                     }
@@ -485,6 +485,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Place SpotLight above MurEnigme.001 after meshes are loaded
                 const murMesh = task.loadedMeshes.find(m => m.name === "MurEnigme.001");
                 let spotLight: SpotLight | null = null;
+                let murSpotLight: SpotLight | null = null;
+                // --- New variables for the MurEnigme.001 spotlight ---
                 if (murMesh && tunnelExitPosition) {
                     // Position the spotlight much higher above the tunnel exit
                     const spotPos = murMesh.position.clone().add(new Vector3(0, 100, 0));
@@ -498,13 +500,30 @@ export class Scene1Superliminal implements CreateSceneClass {
                         spotPos,
                         direction,
                         Math.PI / 40, // angle (adjust for beam width)
-                        30,          // exponent (beam edge softness)
+                        15,          // exponent (beam edge softness)
                         scene
                     );
                     spotLight.diffuse = new Color3(1, 1, 1);
                     spotLight.specular = new Color3(1, 1, 1);
                     spotLight.intensity = 5; // Adjust as needed
                     spotLight.setEnabled(false); // Start disabled
+
+                    // --- Create MurEnigme.001 SpotLight ---
+                    const murSpotPos = new Vector3(murMesh.position.x, murMesh.position.y + 100, 0);
+                    const murTarget = murMesh.position.clone();
+                    const murDirection = murTarget.subtract(murSpotPos).normalize();
+                    murSpotLight = new SpotLight(
+                        "murSpotLight",
+                        murSpotPos,
+                        murDirection,
+                        Math.PI / 20,
+                        15,
+                        scene
+                    );
+                    murSpotLight.diffuse = new Color3(1, 1, 1);
+                    murSpotLight.specular = new Color3(1, 1, 1);
+                    murSpotLight.intensity = 5;
+                    murSpotLight.setEnabled(false);
                 }
 
                 // Get queen mesh position as tunnel center reference
@@ -512,6 +531,8 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // Track which side of the tunnel the camera is on
                 let lastSide: "positive" | "negative" | null = null;
+                // Track last murSpotLight enabled state for toggle
+                let lastMurSpotEnabled: boolean | null = null;
                 scene.onBeforeRenderObservable.add(() => {
                     const cameraPos = camera.position;
                     // Use X axis as tunnel axis (adjust if needed)
@@ -528,6 +549,21 @@ export class Scene1Superliminal implements CreateSceneClass {
                         }
                     }
                     lastSide = currentSide;
+
+                    // --- MurEnigme.001 SpotLight toggle logic ---
+                    if (murSpotLight && tunnelExitPosition) {
+                        const threshold = 0.5;
+                        const isEnabled = Math.abs(cameraPos.x - tunnelExitPosition.x) < threshold;
+                        if (lastMurSpotEnabled !== null && isEnabled !== lastMurSpotEnabled) {
+                            murSpotLight.setEnabled(isEnabled);
+                            if (isEnabled && spotOnSound) {
+                                spotOnSound.play();
+                            } else if (!isEnabled && spotOffSound) {
+                                spotOffSound.play();
+                            }
+                        }
+                        lastMurSpotEnabled = isEnabled;
+                    }
                 });
 
                 /*
