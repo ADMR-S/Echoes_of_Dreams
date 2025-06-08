@@ -138,7 +138,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             "loadSceneMeshes",
             "",
             "asset/scene1/",
-            "champi_4.glb"
+            "champi_5.glb"
         )
 
         // Return a promise that resolves after assets are loaded and setup is done
