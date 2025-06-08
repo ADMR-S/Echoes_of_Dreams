@@ -553,7 +553,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                     // --- MurEnigme.001 SpotLight toggle logic ---
                     if (murSpotLight && tunnelExitPosition) {
                         const threshold = 0.5;
-                        const isEnabled = Math.abs(cameraPos.x - tunnelExitPosition.x) < threshold;
+                        const isEnabled = (cameraPos.x - tunnelExitPosition.x) < threshold;
                         if (lastMurSpotEnabled !== null && isEnabled !== lastMurSpotEnabled) {
                             murSpotLight.setEnabled(isEnabled);
                             if (isEnabled && spotOnSound) {
