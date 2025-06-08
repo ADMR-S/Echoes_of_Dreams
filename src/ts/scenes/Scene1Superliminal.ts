@@ -166,8 +166,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                             // For PBRMaterial (optional, if you use them)
                             else if (m.material instanceof PBRMaterial) {
                                 console.log("PBRMaterial found, setting metallic and roughness to 0");
-                                 m.material.metallic = 1;
-                                 m.material.roughness = 0;
+                                 //m.material.metallic = 0.1
+                                 m.material.specularIntensity = 1;
                             }
                         }
 
