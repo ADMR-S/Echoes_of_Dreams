@@ -190,7 +190,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.material = new StandardMaterial(m.name + "_stdMat", scene);
                     }
 
-                    if( m.name === "Champignon_Enigme.003" 
+                    if( m.name === "Champignon_Enigme.003" ||
+                        m.name === "Personnage.001"
                         /*
                         m.name === "ile volante" ||
                         m.name === "ile volante.001" ||
@@ -199,18 +200,29 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.name === "ile volante.004"
                         */
                     ){
-                        // Store tunnel exit position before disposing the mesh
-                        m.parent = null; // Ensure no parent interferes with position
-                        m.computeWorldMatrix(true);
-                        console.log("Tunnel exit mesh found:", m.name);
-                        tunnelExitPosition = m.position.clone();
-                        tunnelExitPosition.x += 25;
+                        if(m.name === "Champignon_Enigme.003"){
+                            // Store tunnel exit position before disposing the mesh
+                            m.parent = null; // Ensure no parent interferes with position
+                            m.computeWorldMatrix(true);
+                            console.log("Tunnel exit mesh found:", m.name);
+                            tunnelExitPosition = m.position.clone();
+                            tunnelExitPosition.x += 25;
+                        }
                         m.dispose();
                     
                     }
-                    else 
-                    
-                   if (
+                    else if (m.name === "Plane.007"){
+                        // Special case for Plane.007, which is the ground mesh
+                        m.parent = null; // Ensure no parent interferes with physics
+                        m.scaling = new Vector3(1.5, 1, 1.5); // Scale to a large size
+                        m.computeWorldMatrix(true);
+                        // Exclude Plane.007 from all lights except HemisphericLight
+                        if (m.material && "disableLighting" in m.material) {
+                            // @ts-ignore
+                            m.material.disableLighting = true;
+                        }
+                    }
+                    else if (
                         m.name !== "SOL" &&
                         m.name !== "Queen" &&
                         m.name !== "queen" &&  
@@ -220,6 +232,15 @@ export class Scene1Superliminal implements CreateSceneClass {
                     ) {
                         m.parent = null; // Ensure no parent interferes with physics
                         m.computeWorldMatrix(true);
+                        if(m.name === "MurEnigme.001"){
+                            m.position = new Vector3(m.position.x, 0, m.position.z); // Reset position to origin
+                             m.computeWorldMatrix(true);
+                        }
+                        if(m.name === "Bed"){
+                            m.scaling = new Vector3(1.75, 1.75, 1.75);
+                            m.position = new Vector3(m.position.x, 0, m.position.z);
+                            m.computeWorldMatrix(true);
+                        }
                         let shapeType = PhysicsShapeType.MESH;
                         const aggregate = new PhysicsAggregate(m, shapeType, { mass: 1 }, scene);
                         aggregate.body.setMotionType(PhysicsMotionType.STATIC);
