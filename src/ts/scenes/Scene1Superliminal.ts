@@ -161,14 +161,12 @@ export class Scene1Superliminal implements CreateSceneClass {
                                 //(m.material as StandardMaterial).specularColor = new Color3(1, 1, 1); // white specular
                                 console.log("StandardMaterial found, setting specular color to white for mesh:", m.name);
                             }
-                            /*
                             // For PBRMaterial (optional, if you use them)
                             else if (m.material instanceof PBRMaterial) {
                                 console.log("PBRMaterial found, deactivating physical light falloff");
                                  //m.material.metallic = 0.1
                                  m.material.usePhysicalLightFalloff = false;
                             }
-                            */
                         }
 
                         // --- Reduce emissive intensity if present ---
@@ -239,7 +237,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         }
                         if(m.name === "Bed"){
                             m.scaling = new Vector3(1.75, 1.75, 1.75);
-                            m.position = new Vector3(m.position.x, 3, m.position.z);
+                            m.position = new Vector3(m.position.x, 0.3, m.position.z);
                             m.computeWorldMatrix(true);
                         }
                         let shapeType = PhysicsShapeType.MESH;
@@ -751,7 +749,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             const pointLight = new PointLight("bulbLight", Vector3.Zero(), scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
             // Scale intensity with size (tune the multiplier as needed)
-            const initialIntensity = 1000;
+            const initialIntensity = 0.05;
             pointLight.intensity = initialIntensity;
             pointLight.parent = mesh;
             //pointLight.range = 1;
