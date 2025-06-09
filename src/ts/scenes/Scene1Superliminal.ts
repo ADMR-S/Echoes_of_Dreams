@@ -138,7 +138,7 @@ export class Scene1Superliminal implements CreateSceneClass {
             "loadSceneMeshes",
             "",
             "asset/scene1/",
-            "champi_4.glb"
+            "champi_5.glb"
         )
 
         // Return a promise that resolves after assets are loaded and setup is done
@@ -190,7 +190,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.material = new StandardMaterial(m.name + "_stdMat", scene);
                     }
 
-                    if( m.name === "Champignon_Enigme.003" 
+                    if( m.name === "Champignon_Enigme.003" ||
+                        m.name === "Personnage.001"
                         /*
                         m.name === "ile volante" ||
                         m.name === "ile volante.001" ||
@@ -199,18 +200,28 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.name === "ile volante.004"
                         */
                     ){
-                        // Store tunnel exit position before disposing the mesh
-                        m.parent = null; // Ensure no parent interferes with position
-                        m.computeWorldMatrix(true);
-                        console.log("Tunnel exit mesh found:", m.name);
-                        tunnelExitPosition = m.position.clone();
-                        tunnelExitPosition.x += 25;
+                        if(m.name === "Champignon_Enigme.003"){
+                            // Store tunnel exit position before disposing the mesh
+                            m.parent = null; // Ensure no parent interferes with position
+                            m.computeWorldMatrix(true);
+                            console.log("Tunnel exit mesh found:", m.name);
+                            tunnelExitPosition = m.position.clone();
+                            tunnelExitPosition.x += 25;
+                        }
                         m.dispose();
                     
                     }
-                    else 
-                    
-                   if (
+                    else if (m.name === "Plane.007"){
+                        // Special case for Plane.007, which is the ground mesh
+                        m.parent = null; // Ensure no parent interferes with physics
+                        m.scaling = new Vector3(1.5, 1, 1.5); // Scale to a large size
+                        m.computeWorldMatrix(true);
+                        // Exclude Plane.007 from all lights except HemisphericLight
+                        if( "disableLighting" in m.material){
+                            m.material.disableLighting = true; // Disable lighting for this mesh
+                        }
+                    }
+                    else if (
                         m.name !== "SOL" &&
                         m.name !== "Queen" &&
                         m.name !== "queen" &&  
@@ -220,6 +231,15 @@ export class Scene1Superliminal implements CreateSceneClass {
                     ) {
                         m.parent = null; // Ensure no parent interferes with physics
                         m.computeWorldMatrix(true);
+                        if(m.name === "MurEnigme.001"){
+                            m.position = new Vector3(m.position.x, -2, m.position.z); // Reset position to origin
+                             m.computeWorldMatrix(true);
+                        }
+                        if(m.name === "Bed"){
+                            m.scaling = new Vector3(1.75, 1.75, 1.75);
+                            m.position = new Vector3(m.position.x, 0.3, m.position.z);
+                            m.computeWorldMatrix(true);
+                        }
                         let shapeType = PhysicsShapeType.MESH;
                         const aggregate = new PhysicsAggregate(m, shapeType, { mass: 1 }, scene);
                         aggregate.body.setMotionType(PhysicsMotionType.STATIC);
@@ -419,7 +439,6 @@ export class Scene1Superliminal implements CreateSceneClass {
                     skybox.material = skyboxMaterial;			
                     skyboxMaterial.disableLighting = true;
 
-                    
                     // Make the skybox ignore fog (StandardMaterial uses disableLighting for this effect)
                     //skybox.applyFog = false; // For compatibility with some BabylonJS versions
 
@@ -507,6 +526,9 @@ export class Scene1Superliminal implements CreateSceneClass {
                     spotLight.specular = new Color3(1, 1, 1);
                     spotLight.intensity = 5; // Adjust as needed
                     spotLight.setEnabled(false); // Start disabled
+                    // Exclude skybox from spotLight only
+                    const nuages = task.loadedMeshes.find(m => m.name === "Plane.007");
+                    spotLight.excludedMeshes = [skybox, groundMesh, nuages!];
 
                     // --- Create MurEnigme.001 SpotLight ---
                     const murSpotPos = new Vector3(murMesh.position.x, murMesh.position.y + 30, 0);
@@ -525,6 +547,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                     murSpotLight.specular = new Color3(1, 1, 1);
                     murSpotLight.intensity = 5;
                     murSpotLight.setEnabled(false);
+                    // Exclude skybox from murSpotLight only
+                    murSpotLight.excludedMeshes = [skybox];
                 }
 
                 // Get queen mesh position as tunnel center reference
