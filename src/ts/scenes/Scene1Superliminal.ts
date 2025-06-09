@@ -161,12 +161,14 @@ export class Scene1Superliminal implements CreateSceneClass {
                                 //(m.material as StandardMaterial).specularColor = new Color3(1, 1, 1); // white specular
                                 console.log("StandardMaterial found, setting specular color to white for mesh:", m.name);
                             }
+                            /*
                             // For PBRMaterial (optional, if you use them)
                             else if (m.material instanceof PBRMaterial) {
                                 console.log("PBRMaterial found, deactivating physical light falloff");
                                  //m.material.metallic = 0.1
                                  m.material.usePhysicalLightFalloff = false;
                             }
+                            */
                         }
 
                         // --- Reduce emissive intensity if present ---
@@ -217,6 +219,9 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.scaling = new Vector3(1.5, 1, 1.5); // Scale to a large size
                         m.computeWorldMatrix(true);
                         // Exclude Plane.007 from all lights except HemisphericLight
+                        if( "disableLighting" in m.material){
+                            m.material.disableLighting = true; // Disable lighting for this mesh
+                        }
                     }
                     else if (
                         m.name !== "SOL" &&
@@ -234,7 +239,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         }
                         if(m.name === "Bed"){
                             m.scaling = new Vector3(1.75, 1.75, 1.75);
-                            //m.position = new Vector3(m.position.x, 0, m.position.z);
+                            m.position = new Vector3(m.position.x, 3, m.position.z);
                             m.computeWorldMatrix(true);
                         }
                         let shapeType = PhysicsShapeType.MESH;
@@ -746,7 +751,7 @@ function createLightBulbPickable(scene: Scene, eventMask : number, ground : Abst
             const pointLight = new PointLight("bulbLight", Vector3.Zero(), scene);
             pointLight.diffuse = new Color3(1, 0.8, 0.2);
             // Scale intensity with size (tune the multiplier as needed)
-            const initialIntensity = 0.05;
+            const initialIntensity = 1000;
             pointLight.intensity = initialIntensity;
             pointLight.parent = mesh;
             //pointLight.range = 1;
