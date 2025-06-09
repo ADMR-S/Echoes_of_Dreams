@@ -217,10 +217,6 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.scaling = new Vector3(1.5, 1, 1.5); // Scale to a large size
                         m.computeWorldMatrix(true);
                         // Exclude Plane.007 from all lights except HemisphericLight
-                        if (m.material && "disableLighting" in m.material) {
-                            // @ts-ignore
-                            m.material.disableLighting = true;
-                        }
                     }
                     else if (
                         m.name !== "SOL" &&
@@ -233,12 +229,12 @@ export class Scene1Superliminal implements CreateSceneClass {
                         m.parent = null; // Ensure no parent interferes with physics
                         m.computeWorldMatrix(true);
                         if(m.name === "MurEnigme.001"){
-                            m.position = new Vector3(m.position.x, 0, m.position.z); // Reset position to origin
+                            m.position = new Vector3(m.position.x, -2, m.position.z); // Reset position to origin
                              m.computeWorldMatrix(true);
                         }
                         if(m.name === "Bed"){
                             m.scaling = new Vector3(1.75, 1.75, 1.75);
-                            m.position = new Vector3(m.position.x, 0, m.position.z);
+                            //m.position = new Vector3(m.position.x, 0, m.position.z);
                             m.computeWorldMatrix(true);
                         }
                         let shapeType = PhysicsShapeType.MESH;
@@ -440,7 +436,6 @@ export class Scene1Superliminal implements CreateSceneClass {
                     skybox.material = skyboxMaterial;			
                     skyboxMaterial.disableLighting = true;
 
-                    
                     // Make the skybox ignore fog (StandardMaterial uses disableLighting for this effect)
                     //skybox.applyFog = false; // For compatibility with some BabylonJS versions
 
@@ -528,6 +523,9 @@ export class Scene1Superliminal implements CreateSceneClass {
                     spotLight.specular = new Color3(1, 1, 1);
                     spotLight.intensity = 5; // Adjust as needed
                     spotLight.setEnabled(false); // Start disabled
+                    // Exclude skybox from spotLight only
+                    const nuages = task.loadedMeshes.find(m => m.name === "Plane.007");
+                    spotLight.excludedMeshes = [skybox, groundMesh, nuages!];
 
                     // --- Create MurEnigme.001 SpotLight ---
                     const murSpotPos = new Vector3(murMesh.position.x, murMesh.position.y + 30, 0);
@@ -546,6 +544,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                     murSpotLight.specular = new Color3(1, 1, 1);
                     murSpotLight.intensity = 5;
                     murSpotLight.setEnabled(false);
+                    // Exclude skybox from murSpotLight only
+                    murSpotLight.excludedMeshes = [skybox];
                 }
 
                 // Get queen mesh position as tunnel center reference
