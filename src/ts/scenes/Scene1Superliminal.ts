@@ -37,9 +37,9 @@ import { Object3DPickable } from "../object/Object3DPickable";
 
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
-// Add these imports:
+
+// Add this import:
 import { SpotLight } from "@babylonjs/core/Lights/spotLight";
-import { AdvancedDynamicTexture, Rectangle, TextBlock, Control } from "@babylonjs/gui";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -85,111 +85,6 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         const scene: Scene = new Scene(engine);
         scene.metadata = { sceneName: "Scene1Superliminal" };
-
-        // --- BEGIN DIALOG SETUP ---
-        // XR-aware dialog UI
-        let dialogUI: AdvancedDynamicTexture;
-        let dialogRect: Rectangle;
-        let dialogText: TextBlock;
-        let dialogPlane: Mesh | null = null;
-
-        // Helper to create the dialog UI (for both XR and non-XR)
-        function createDialogUI(scene: Scene, parentMesh?: Mesh) {
-            if (parentMesh) {
-                dialogUI = AdvancedDynamicTexture.CreateForMesh(parentMesh, 1024, 256, false);
-            } else {
-                dialogUI = AdvancedDynamicTexture.CreateFullscreenUI("dialogUI", true, scene);
-            }
-            dialogRect = new Rectangle();
-            dialogRect.width = "600px";
-            dialogRect.height = "120px";
-            dialogRect.cornerRadius = 20;
-            dialogRect.color = "white";
-            dialogRect.thickness = 4;
-            dialogRect.background = "#222c";
-            dialogRect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-            dialogRect.verticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
-            dialogUI.addControl(dialogRect);
-            // Make dialog visually smaller to appear further away
-            dialogRect.scaleX = 0.6;
-            dialogRect.scaleY = 0.6;
-
-            dialogText = new TextBlock();
-            dialogText.text = "Où... où suis-je ?\n\n(Appuyez sur 'A' pour continuer.)";
-            dialogText.color = "white";
-            dialogText.fontSize = 32;
-            dialogText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-            dialogText.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
-            dialogRect.addControl(dialogText);
-
-            dialogUI.isForeground = true;
-        }
-
-        // Wait for XR to be ready before adding controller observable
-        scene.onAfterRenderObservable.addOnce(() => {
-            // Check if XR is active
-            const xrHelper = (scene as any).xrHelper;
-            if (xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === 2) {
-                // XR is active, create dialog on a plane in front of the camera (not parented)
-                const xrCamera = xrHelper.baseExperience.camera;
-                dialogPlane = MeshBuilder.CreatePlane("dialogPlane", { width: 1.2, height: 0.3 }, scene);
-                // Place the dialog in front of the camera in world space
-                dialogPlane.position = xrCamera.position.add(xrCamera.getDirection(new Vector3(0, 0, 1)).scale(2));
-                dialogPlane.scaling = new Vector3(1, 1, 1);
-                dialogPlane.billboardMode = Mesh.BILLBOARDMODE_ALL;
-                createDialogUI(scene, dialogPlane);
-
-                // Keep dialog in front of the camera as the user moves
-                scene.onBeforeRenderObservable.add(() => {
-                    if (dialogPlane && xrCamera) {
-                        dialogPlane.position.copyFrom(
-                            xrCamera.position.add(xrCamera.getDirection(new Vector3(0, 0, 1)).scale(2))
-                        );
-                    }
-                });
-            } else {
-                // Not in XR, use fullscreen UI
-                createDialogUI(scene);
-            }
-
-            if (xrHelper && xrHelper.input) {
-                const xrInput = xrHelper.input;
-                xrInput.onControllerAddedObservable.add((controller: any) => {
-                    controller.onMotionControllerInitObservable.add((motionController: any) => {
-                        if (motionController.handedness === "right") {
-                            const aButton = motionController.getComponent("a-button");
-                            if (aButton) {
-                                aButton.onButtonStateChangedObservable.add((button: any) => {
-                                    if (button.pressed) {
-                                        closeDialog();
-                                    }
-                                });
-                            }
-                        }
-                    });
-                });
-            }
-        });
-
-        // Fallback: also close dialog if not in XR and "e" is pressed
-        const dialogKeyHandler = (ev: KeyboardEvent) => {
-            if (ev.key === "e") {
-                closeDialog();
-                window.removeEventListener("keydown", dialogKeyHandler);
-            }
-        };
-        window.addEventListener("keydown", dialogKeyHandler);
-
-        // Hide dialog on "A" button press (right controller)
-        let dialogClosed = false;
-        function closeDialog() {
-            if (!dialogClosed) {
-                dialogClosed = true;
-                if (dialogUI) dialogUI.dispose();
-                if (dialogPlane) dialogPlane.dispose();
-            }
-        }
-        // --- END DIALOG SETUP ---
 
         //Good way of initializing Havok
         // initialize plugin
