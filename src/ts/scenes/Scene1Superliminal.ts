@@ -37,9 +37,9 @@ import { Object3DPickable } from "../object/Object3DPickable";
 
 //import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
-
-// Add this import:
+// Add these imports:
 import { SpotLight } from "@babylonjs/core/Lights/spotLight";
+import { AdvancedDynamicTexture, Rectangle, TextBlock, Control } from "@babylonjs/gui";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -85,6 +85,73 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         const scene: Scene = new Scene(engine);
         scene.metadata = { sceneName: "Scene1Superliminal" };
+
+        // --- BEGIN DIALOG SETUP ---
+        // Create fullscreen UI
+        const dialogUI = AdvancedDynamicTexture.CreateFullscreenUI("dialogUI", true, scene);
+        // Create dialog background
+        const dialogRect = new Rectangle();
+        dialogRect.width = "600px";
+        dialogRect.height = "120px";
+        dialogRect.cornerRadius = 20;
+        dialogRect.color = "white";
+        dialogRect.thickness = 4;
+        dialogRect.background = "#222c";
+        dialogRect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+        dialogRect.verticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
+        dialogUI.addControl(dialogRect);
+
+        // Create dialog text
+        const dialogText = new TextBlock();
+        dialogText.text = "Bienvenue dans Echoes of Dreams !\nAppuyez sur A (manette droite) pour continuer...";
+        dialogText.color = "white";
+        dialogText.fontSize = 32;
+        dialogText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+        dialogText.textVerticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
+        dialogRect.addControl(dialogText);
+
+        // Block pointer events while dialog is visible
+        dialogUI.isForeground = true;
+
+        // Hide dialog on "A" button press (right controller)
+        let dialogClosed = false;
+        function closeDialog() {
+            if (!dialogClosed) {
+                dialogClosed = true;
+                dialogUI.dispose();
+            }
+        }
+
+        // Wait for XR to be ready before adding controller observable
+        scene.onAfterRenderObservable.addOnce(() => {
+            if ((scene as any).xrHelper && (scene as any).xrHelper.input) {
+                const xrInput = (scene as any).xrHelper.input;
+                xrInput.onControllerAddedObservable.add((controller: any) => {
+                    controller.onMotionControllerInitObservable.add((motionController: any) => {
+                        if (motionController.handedness === "right") {
+                            const aButton = motionController.getComponent("a-button");
+                            if (aButton) {
+                                aButton.onButtonStateChangedObservable.add((button: any) => {
+                                    if (button.pressed) {
+                                        closeDialog();
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+        });
+
+        // Fallback: also close dialog if not in XR and "e" is pressed
+        const dialogKeyHandler = (ev: KeyboardEvent) => {
+            if (ev.key === "e") {
+                closeDialog();
+                window.removeEventListener("keydown", dialogKeyHandler);
+            }
+        };
+        window.addEventListener("keydown", dialogKeyHandler);
+        // --- END DIALOG SETUP ---
 
         //Good way of initializing Havok
         // initialize plugin
