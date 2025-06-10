@@ -716,6 +716,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                             // Just crossed to the left: show dialog if not already shown
                             if (!thirdDialog) {
                                 thirdDialog = addXRBillboard(scene, xr, "Appuyez sur B pour changer de niveau");
+                                // Enable scene switch only when third dialog is shown
+                                if ((scene as any).enableSceneSwitch) (scene as any).enableSceneSwitch();
                             }
                         } else if (!isLeftOfThreshold && wasLeftOfThreshold) {
                             // Just crossed to the right: hide dialog if shown
@@ -723,6 +725,8 @@ export class Scene1Superliminal implements CreateSceneClass {
                                 thirdDialog.billboard.dispose();
                                 thirdDialog.advancedTexture.dispose();
                                 thirdDialog = null;
+                                // Disable scene switch when third dialog is hidden
+                                if ((scene as any).disableSceneSwitch) (scene as any).disableSceneSwitch();
                             }
                         }
                         wasLeftOfThreshold = isLeftOfThreshold;
