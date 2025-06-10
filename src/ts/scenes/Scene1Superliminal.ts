@@ -130,14 +130,23 @@ export class Scene1Superliminal implements CreateSceneClass {
             // Check if XR is active
             const xrHelper = (scene as any).xrHelper;
             if (xrHelper && xrHelper.baseExperience && xrHelper.baseExperience.state === 2) {
-                // XR is active, create dialog on a plane in front of the camera
+                // XR is active, create dialog on a plane in front of the camera (not parented)
                 const xrCamera = xrHelper.baseExperience.camera;
                 dialogPlane = MeshBuilder.CreatePlane("dialogPlane", { width: 1.2, height: 0.3 }, scene);
-                dialogPlane.parent = xrCamera;
-                dialogPlane.position = new Vector3(0, 0, 2); // 2 meters in front of camera
+                // Place the dialog in front of the camera in world space
+                dialogPlane.position = xrCamera.position.add(xrCamera.getDirection(new Vector3(0, 0, 1)).scale(2));
                 dialogPlane.scaling = new Vector3(1, 1, 1);
-                dialogPlane.billboardMode = Mesh.BILLBOARDMODE_ALL; // <-- Add this line
+                dialogPlane.billboardMode = Mesh.BILLBOARDMODE_ALL;
                 createDialogUI(scene, dialogPlane);
+
+                // Keep dialog in front of the camera as the user moves
+                scene.onBeforeRenderObservable.add(() => {
+                    if (dialogPlane && xrCamera) {
+                        dialogPlane.position.copyFrom(
+                            xrCamera.position.add(xrCamera.getDirection(new Vector3(0, 0, 1)).scale(2))
+                        );
+                    }
+                });
             } else {
                 // Not in XR, use fullscreen UI
                 createDialogUI(scene);
