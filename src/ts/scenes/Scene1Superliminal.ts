@@ -35,11 +35,12 @@ import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Object3DPickable } from "../object/Object3DPickable";
 
-//import * as GUI from "@babylonjs/gui/2D";
+import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 // Add this import:
 import { SpotLight } from "@babylonjs/core/Lights/spotLight";
+import { WebXRDefaultExperience } from "@babylonjs/core";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -663,9 +664,86 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Example: Load the queen chess piece from asset/chess/queen
                 // Assumes a .glb file named queen.glb in that folder
                 
-                
+                // Show the first dialog
+                const { billboard, advancedTexture } = addXRBillboard(scene, xr);
 
-                //SceneOptimizer.OptimizeAsync(scene);
+                // Listen for A button on right controller to close the first dialog and show the second dialog immediately after
+                xr.input.onControllerAddedObservable.add((controller) => {
+                    controller.onMotionControllerInitObservable.add((motionController) => {
+                        if (motionController.handedness === "right") {
+                            const aButton = motionController.getComponent("a-button");
+                            if (aButton) {
+                                let dialog2: Mesh | null = null;
+                                let texture2: GUI.AdvancedDynamicTexture | null = null;
+                                let dialog2Shown = false;
+                                aButton.onButtonStateChangedObservable.add((buttonState) => {
+                                    if (buttonState.pressed && billboard && advancedTexture) {
+                                        billboard.dispose();
+                                        advancedTexture.dispose();
+
+                                        // Show the second dialog immediately after closing the first, only once
+                                        if (!dialog2Shown) {
+                                            dialog2Shown = true;
+                                            const res = addXRBillboard(scene, xr, "Appuyez sur Y pour switch entre téléportation / déplacement libre\n\nAppuyez sur X pour attraper un objet qui brille en violet");
+                                            dialog2 = res.billboard;
+                                            texture2 = res.advancedTexture;
+                                            console.log("Second dialog shown");
+                                            // Listen for A button to close the second dialog
+                                            aButton.onButtonStateChangedObservable.add((buttonState2) => {
+                                                if (buttonState2.pressed && dialog2 && texture2) {
+                                                    dialog2.dispose();
+                                                    texture2.dispose();
+                                                    dialog2 = null;
+                                                    texture2 = null;
+                                                }
+                                            });
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+
+
+                // --- Third dialog logic: appears each time player is left of threshold, disappears when right of threshold, unclosable ---
+                let thirdDialog: { billboard: Mesh, advancedTexture: GUI.AdvancedDynamicTexture } | null = null;
+                let thirdDialogXThreshold = -200; // fallback default
+                let wasLeftOfThreshold = false;
+
+                // Find bed mesh and get its x position for threshold
+                const bedMesh = task.loadedMeshes.find(m => m.name === "Bed");
+                if (bedMesh) {
+                    thirdDialogXThreshold = bedMesh.position.x + 20;
+                }
+
+                scene.onBeforeRenderObservable.add(() => {
+                    if (xr && xr.baseExperience) {
+                        const camera = xr.baseExperience.camera;
+                        const isLeftOfThreshold = camera.position.x < thirdDialogXThreshold;
+
+                        if (isLeftOfThreshold && !wasLeftOfThreshold) {
+                            // Just crossed to the left: show dialog if not already shown
+                            if (!thirdDialog) {
+                                thirdDialog = addXRBillboard(scene, xr, "Appuyez sur B pour changer de niveau");
+                                // Enable scene switch only when third dialog is shown
+                                if ((scene as any).enableSceneSwitch) (scene as any).enableSceneSwitch();
+                            }
+                        } else if (!isLeftOfThreshold && wasLeftOfThreshold) {
+                            // Just crossed to the right: hide dialog if shown
+                            if (thirdDialog) {
+                                thirdDialog.billboard.dispose();
+                                thirdDialog.advancedTexture.dispose();
+                                thirdDialog = null;
+                                // Disable scene switch when third dialog is hidden
+                                if ((scene as any).disableSceneSwitch) (scene as any).disableSceneSwitch();
+                            }
+                        }
+                        wasLeftOfThreshold = isLeftOfThreshold;
+                    }
+                });
+
+
                 resolve(scene); // Only resolve after setup is done
             }
             //@ts-ignore
@@ -692,6 +770,54 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
     });
 }
     */
+
+// Update addXRBillboard to accept custom text
+function addXRBillboard(scene: Scene, xr: WebXRDefaultExperience, text: string = "Où... où suis-je... ?\n\nAppuyez sur A pour continuer...") {
+    // Create a billboard mesh
+    const billboard = MeshBuilder.CreatePlane("billboard", { size: 1 }, scene);
+    billboard.position = new Vector3(0, 2, 3);
+    billboard.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    billboard.isPickable = false;
+
+    // Add text to the billboard using a rounded, semi-transparent rectangle
+    const advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(billboard);
+    const rect = new GUI.Rectangle();
+    rect.background = "black";
+    rect.alpha = 0.7;
+    rect.cornerRadius = 30;
+    rect.color = "white";
+    rect.thickness = 4;
+    rect.width = 0.9;
+    rect.height = 0.4;
+    rect.paddingLeft = "20px";
+    rect.paddingRight = "20px";
+    rect.paddingTop = "10px";
+    rect.paddingBottom = "10px";
+    rect.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    rect.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+
+    const textBlock = new GUI.TextBlock();
+    textBlock.text = text;
+    textBlock.color = "white";
+    textBlock.fontSize = 64;
+    textBlock.textWrapping = true;
+    textBlock.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    textBlock.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+
+    rect.addControl(textBlock);
+    advancedTexture.addControl(rect);
+
+    scene.onBeforeRenderObservable.add(() => {
+        if (xr && xr.baseExperience) {
+            const camera = xr.baseExperience.camera;
+            billboard.position.copyFrom(camera.position);
+            billboard.position = camera.position.add(camera.getForwardRay().direction.scale(2));
+        }
+    });
+
+    // Return billboard and texture for later disposal
+    return { billboard, advancedTexture };
+}  
 
 
 function addKeyboardControls(xr: any, moveSpeed: number) {

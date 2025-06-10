@@ -200,14 +200,24 @@ export class XRHandler{
     }
 
     setupSceneSwitchControls() {
+        // Add a flag to check if scene switch is allowed
+        let isSceneSwitchAllowed = false;
+
+        // Listen for a global event to enable scene switch (set from Scene1Superliminal)
+        (this.scene as any).enableSceneSwitch = () => {
+            isSceneSwitchAllowed = true;
+        };
+        (this.scene as any).disableSceneSwitch = () => {
+            isSceneSwitchAllowed = false;
+        };
+
         this.xr.input.onControllerAddedObservable.add((controller) => {
             controller.onMotionControllerInitObservable.add((motionController) => {
-                // y ou b
                 if (motionController.handedness === 'right') {
                     const bButton = motionController.getComponent("b-button");
                     if (bButton) {
                         bButton.onButtonStateChangedObservable.add((buttonState) => {
-                            if (buttonState.pressed) {
+                            if (buttonState.pressed && isSceneSwitchAllowed) {
                                 console.log("B button pressed - requesting scene switch.");
                                 this.requestSceneSwitch();
                             }
