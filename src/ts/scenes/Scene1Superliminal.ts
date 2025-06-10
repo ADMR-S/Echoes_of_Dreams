@@ -667,39 +667,47 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Show the first dialog
                 const { billboard, advancedTexture } = addXRBillboard(scene, xr);
 
-                // Listen for A button on right controller to close the first dialog and show the second dialog immediately after
+                // --- Fix: Use a global flag to ensure only one dialog2 is created, and listen for A only after first dialog is closed ---
+                let dialog2: Mesh | null = null;
+                let texture2: GUI.AdvancedDynamicTexture | null = null;
+                let dialog2Shown = false;
+
                 xr.input.onControllerAddedObservable.add((controller) => {
                     controller.onMotionControllerInitObservable.add((motionController) => {
                         if (motionController.handedness === "right") {
                             const aButton = motionController.getComponent("a-button");
                             if (aButton) {
-                                let dialog2: Mesh | null = null;
-                                let texture2: GUI.AdvancedDynamicTexture | null = null;
-                                let dialog2Shown = false;
-                                aButton.onButtonStateChangedObservable.add((buttonState) => {
-                                    if (buttonState.pressed && billboard && advancedTexture) {
+                                // Only listen for the first dialog close
+                                const firstDialogListener = (buttonState: any) => {
+                                    if (buttonState.pressed && billboard && advancedTexture && !dialog2Shown) {
                                         billboard.dispose();
                                         advancedTexture.dispose();
+                                        dialog2Shown = true;
 
-                                        // Show the second dialog immediately after closing the first, only once
-                                        if (!dialog2Shown) {
-                                            dialog2Shown = true;
-                                            const res = addXRBillboard(scene, xr, "Appuyez sur Y pour switch entre téléportation / déplacement libre\n\nAppuyez sur X pour attraper un objet qui brille en violet");
-                                            dialog2 = res.billboard;
-                                            texture2 = res.advancedTexture;
-                                            console.log("Second dialog shown");
-                                            // Listen for A button to close the second dialog
-                                            aButton.onButtonStateChangedObservable.add((buttonState2) => {
-                                                if (buttonState2.pressed && dialog2 && texture2) {
-                                                    dialog2.dispose();
-                                                    texture2.dispose();
-                                                    dialog2 = null;
-                                                    texture2 = null;
-                                                }
-                                            });
-                                        }
+                                        // Show the second dialog immediately after closing the first
+                                        const res = addXRBillboard(scene, xr, "Appuyez sur Y pour switch entre téléportation / déplacement libre\n\nAppuyez sur X pour attraper un objet qui brille en violet");
+                                        dialog2 = res.billboard;
+                                        texture2 = res.advancedTexture;
+                                        console.log("Second dialog shown");
+
+                                        // Now listen for A to close the second dialog
+                                        const secondDialogListener = (buttonState2: any) => {
+                                            if (buttonState2.pressed && dialog2 && texture2) {
+                                                dialog2.dispose();
+                                                texture2.dispose();
+                                                dialog2 = null;
+                                                texture2 = null;
+                                                // Remove this listener after use
+                                                aButton.onButtonStateChangedObservable.removeCallback(secondDialogListener);
+                                            }
+                                        };
+                                        aButton.onButtonStateChangedObservable.add(secondDialogListener);
+
+                                        // Remove the first dialog listener after use
+                                        aButton.onButtonStateChangedObservable.removeCallback(firstDialogListener);
                                     }
-                                });
+                                };
+                                aButton.onButtonStateChangedObservable.add(firstDialogListener);
                             }
                         }
                     });
