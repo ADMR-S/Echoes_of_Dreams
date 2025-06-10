@@ -701,20 +701,28 @@ function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
     billboard.billboardMode = Mesh.BILLBOARDMODE_ALL; // Make it always face the camera
     billboard.isPickable = false; // Prevent interaction issues
 
-    // Add text to the billboard using a transparent rectangle
+    // Add text to the billboard using a rounded, semi-transparent rectangle
     const advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(billboard);
     const rect = new GUI.Rectangle();
-    rect.background = "transparent";
-    rect.thickness = 0;
-    rect.width = 1;
-    rect.height = 1;
+    rect.background = "black";
+    rect.alpha = 0.7;
+    rect.cornerRadius = 30;
+    rect.color = "white"; // White border
+    rect.thickness = 4;   // Border thickness
+    rect.width = 0.9;
+    rect.height = 0.4;
+    rect.paddingLeft = "20px";
+    rect.paddingRight = "20px";
+    rect.paddingTop = "10px";
+    rect.paddingBottom = "10px";
     rect.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
     rect.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
 
     const textBlock = new GUI.TextBlock();
     textBlock.text = "Scene 1: Superliminal";
     textBlock.color = "white";
-    textBlock.fontSize = 24;
+    textBlock.fontSize = 32;
+    textBlock.textWrapping = true;
     textBlock.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
     textBlock.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
 
@@ -731,7 +739,7 @@ function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
         if (xr && xr.baseExperience) {
             const camera = xr.baseExperience.camera;
             billboard.position.copyFrom(camera.position);
-            billboard.position = camera.position.add(camera.getForwardRay().direction.scale(3)); // Keep it in front of the camera
+            billboard.position = camera.position.add(camera.getForwardRay().direction.scale(2)); // Keep it in front of the camera
         }
     });  
 }  
