@@ -664,9 +664,29 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Example: Load the queen chess piece from asset/chess/queen
                 // Assumes a .glb file named queen.glb in that folder
                 
-                addXRBillboard(scene, xr);
+                const { billboard, advancedTexture } = addXRBillboard(scene, xr);
 
-                //SceneOptimizer.OptimizeAsync(scene);
+                // Listen for A button on right controller to close the dialog
+                xr.input.onControllerAddedObservable.add((controller) => {
+                    controller.onMotionControllerInitObservable.add((motionController) => {
+                        if (motionController.handedness === "right") {
+                            console.log("Right controller initialized, setting up A button listener...");
+                            const aButton = motionController.getComponent("a-button");
+                            if (aButton) {
+                                aButton.onButtonStateChangedObservable.add((buttonState) => {
+                                    if (buttonState.pressed) {
+                                        console.log("DISPOSE DIALOG");
+                                        // Dispose the dialog billboard and texture
+                                        billboard.dispose();
+                                        advancedTexture.dispose();
+                                    }
+                                });
+                            }
+                        }
+                    });
+                });
+
+
                 resolve(scene); // Only resolve after setup is done
             }
             //@ts-ignore
@@ -694,12 +714,12 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
 }
     */
 
-function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
+function addXRBillboard(scene: Scene, xr: WebXRDefaultExperience) {
     // Create a billboard mesh
     const billboard = MeshBuilder.CreatePlane("billboard", { size: 1 }, scene);
-    billboard.position = new Vector3(0, 2, 3); // Position it above the ground
-    billboard.billboardMode = Mesh.BILLBOARDMODE_ALL; // Make it always face the camera
-    billboard.isPickable = false; // Prevent interaction issues
+    billboard.position = new Vector3(0, 2, 3);
+    billboard.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    billboard.isPickable = false;
 
     // Add text to the billboard using a rounded, semi-transparent rectangle
     const advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(billboard);
@@ -707,8 +727,8 @@ function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
     rect.background = "black";
     rect.alpha = 0.7;
     rect.cornerRadius = 30;
-    rect.color = "white"; // White border
-    rect.thickness = 4;   // Border thickness
+    rect.color = "white";
+    rect.thickness = 4;
     rect.width = 0.9;
     rect.height = 0.4;
     rect.paddingLeft = "20px";
@@ -719,9 +739,9 @@ function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
     rect.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
 
     const textBlock = new GUI.TextBlock();
-    textBlock.text = "Scene 1: Superliminal";
+    textBlock.text = "Où... où suis-je... ?\n\nAppuyez sur A pour continuer...";
     textBlock.color = "white";
-    textBlock.fontSize = 32;
+    textBlock.fontSize = 64;
     textBlock.textWrapping = true;
     textBlock.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
     textBlock.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
@@ -729,19 +749,16 @@ function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
     rect.addControl(textBlock);
     advancedTexture.addControl(rect);
 
-    // Optionally, remove or make the material transparent
-    // const mat = new StandardMaterial("billboardMat", scene);
-    // mat.alpha = 0; // Fully transparent
-    // billboard.material = mat;
-
-    // Make sure billboard stays in the center of the screen 
     scene.onBeforeRenderObservable.add(() => {
         if (xr && xr.baseExperience) {
             const camera = xr.baseExperience.camera;
             billboard.position.copyFrom(camera.position);
-            billboard.position = camera.position.add(camera.getForwardRay().direction.scale(2)); // Keep it in front of the camera
+            billboard.position = camera.position.add(camera.getForwardRay().direction.scale(2));
         }
-    });  
+    });
+
+    // Return billboard and texture for later disposal
+    return { billboard, advancedTexture };
 }  
 
 
