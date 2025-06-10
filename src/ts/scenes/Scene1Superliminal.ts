@@ -35,11 +35,12 @@ import { PointLight } from "@babylonjs/core/Lights/pointLight";
 import { GlowLayer } from "@babylonjs/core/Layers/glowLayer";
 import { Object3DPickable } from "../object/Object3DPickable";
 
-//import * as GUI from "@babylonjs/gui/2D";
+import * as GUI from "@babylonjs/gui/2D";
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 // Add this import:
 import { SpotLight } from "@babylonjs/core/Lights/spotLight";
+import { WebXRDefaultExperience } from "@babylonjs/core";
 
 
 export class Scene1Superliminal implements CreateSceneClass {
@@ -663,7 +664,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Example: Load the queen chess piece from asset/chess/queen
                 // Assumes a .glb file named queen.glb in that folder
                 
-                
+                addXRBillboard(scene, xr);
 
                 //SceneOptimizer.OptimizeAsync(scene);
                 resolve(scene); // Only resolve after setup is done
@@ -692,6 +693,35 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
     });
 }
     */
+
+function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
+    // Create a billboard mesh
+    const billboard = MeshBuilder.CreatePlane("billboard", { size: 1 }, scene);
+    billboard.position = new Vector3(0, 2, 3); // Position it above the ground
+    billboard.billboardMode = Mesh.BILLBOARDMODE_ALL; // Make it always face the camera
+    //Add text to the billboard
+    const advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(billboard);
+    const textBlock = new GUI.TextBlock();
+    textBlock.text = "Scene 1: Superliminal";
+    textBlock.color = "white";
+    textBlock.fontSize = 24;
+    textBlock.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    textBlock.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+    advancedTexture.addControl(textBlock);
+    // Add a material to the billboard
+    const mat = new StandardMaterial("billboardMat", scene);
+    mat.diffuseColor = new Color3(0.1, 0.1, 0.1); // Dark color for visibility
+    mat.emissiveColor = new Color3(0.2, 0.2, 0.2); // Slightly emissive for better visibility
+    billboard.material = mat;
+    // Make sure billboard stays in the center of the screen 
+    scene.onBeforeRenderObservable.add(() => {
+        if (xr && xr.baseExperience) {
+            const camera = xr.baseExperience.camera;
+            billboard.position.copyFrom(camera.position);
+            billboard.position = camera.position.add(camera.getForwardRay().direction.scale(3)); // Keep it in front of the camera
+        }
+    });  
+}  
 
 
 function addKeyboardControls(xr: any, moveSpeed: number) {
