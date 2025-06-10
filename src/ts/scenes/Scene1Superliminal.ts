@@ -664,6 +664,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                 // Example: Load the queen chess piece from asset/chess/queen
                 // Assumes a .glb file named queen.glb in that folder
                 
+                // Show the first dialog
                 const { billboard, advancedTexture } = addXRBillboard(scene, xr);
 
                 // Listen for A button on right controller to close the first dialog and show the second dialog immediately after
@@ -672,20 +673,28 @@ export class Scene1Superliminal implements CreateSceneClass {
                         if (motionController.handedness === "right") {
                             const aButton = motionController.getComponent("a-button");
                             if (aButton) {
+                                let dialog2: Mesh | null = null;
+                                let texture2: GUI.AdvancedDynamicTexture | null = null;
+                                let dialog2Shown = false;
                                 aButton.onButtonStateChangedObservable.add((buttonState) => {
                                     if (buttonState.pressed && billboard && advancedTexture) {
                                         billboard.dispose();
                                         advancedTexture.dispose();
 
-                                        // Show the second dialog immediately after closing the first
-                                        if (!(scene as any)._firstDialogClosed) { // Prevent multiple triggers
-                                            (scene as any)._firstDialogClosed = true;
-                                            const { billboard: dialog2, advancedTexture: texture2 } = addXRBillboard(scene, xr, "Appuyez sur Y pour switch entre téléportation / déplacement libre\n\nAppuyez sur X pour attraper un objet qui brille en violet");
+                                        // Show the second dialog immediately after closing the first, only once
+                                        if (!dialog2Shown) {
+                                            dialog2Shown = true;
+                                            const res = addXRBillboard(scene, xr, "Appuyez sur Y pour switch entre téléportation / déplacement libre\n\nAppuyez sur X pour attraper un objet qui brille en violet");
+                                            dialog2 = res.billboard;
+                                            texture2 = res.advancedTexture;
+
                                             // Listen for A button to close the second dialog
                                             aButton.onButtonStateChangedObservable.add((buttonState2) => {
                                                 if (buttonState2.pressed && dialog2 && texture2) {
                                                     dialog2.dispose();
                                                     texture2.dispose();
+                                                    dialog2 = null;
+                                                    texture2 = null;
                                                 }
                                             });
                                         }
@@ -695,6 +704,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                         }
                     });
                 });
+
 
                 // --- Third dialog logic: appears each time player is left of threshold, disappears when right of threshold, unclosable ---
                 let thirdDialog: { billboard: Mesh, advancedTexture: GUI.AdvancedDynamicTexture } | null = null;
