@@ -91,8 +91,8 @@ export class Scene1Superliminal implements CreateSceneClass {
         const dialogUI = AdvancedDynamicTexture.CreateFullscreenUI("dialogUI", true, scene);
         // Create dialog background
         const dialogRect = new Rectangle();
-        dialogRect.width = "200px";
-        dialogRect.height = "60px";
+        dialogRect.width = "600px";
+        dialogRect.height = "120px";
         dialogRect.cornerRadius = 20;
         dialogRect.color = "white";
         dialogRect.thickness = 4;
@@ -100,6 +100,9 @@ export class Scene1Superliminal implements CreateSceneClass {
         dialogRect.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
         dialogRect.verticalAlignment = Control.VERTICAL_ALIGNMENT_CENTER;
         dialogUI.addControl(dialogRect);
+         // Make dialog visually smaller to appear further away
+        dialogRect.scaleX = 0.6;
+        dialogRect.scaleY = 0.6;
 
         // Create dialog text
         const dialogText = new TextBlock();
