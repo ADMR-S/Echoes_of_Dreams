@@ -91,8 +91,8 @@ export class Scene1Superliminal implements CreateSceneClass {
         const dialogUI = AdvancedDynamicTexture.CreateFullscreenUI("dialogUI", true, scene);
         // Create dialog background
         const dialogRect = new Rectangle();
-        dialogRect.width = "600px";
-        dialogRect.height = "120px";
+        dialogRect.width = "200px";
+        dialogRect.height = "60px";
         dialogRect.cornerRadius = 20;
         dialogRect.color = "white";
         dialogRect.thickness = 4;
@@ -103,7 +103,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
         // Create dialog text
         const dialogText = new TextBlock();
-        dialogText.text = "Bienvenue dans Echoes of Dreams !\nAppuyez sur A (manette droite) pour continuer...";
+        dialogText.text = "Où... où suis-je ?\n\n(Appuyez sur 'A' pour continuer.)";
         dialogText.color = "white";
         dialogText.fontSize = 32;
         dialogText.textHorizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
