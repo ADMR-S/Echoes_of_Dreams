@@ -687,7 +687,7 @@ export class Scene1Superliminal implements CreateSceneClass {
                                             const res = addXRBillboard(scene, xr, "Appuyez sur Y pour switch entre téléportation / déplacement libre\n\nAppuyez sur X pour attraper un objet qui brille en violet");
                                             dialog2 = res.billboard;
                                             texture2 = res.advancedTexture;
-
+                                            console.log("Second dialog shown");
                                             // Listen for A button to close the second dialog
                                             aButton.onButtonStateChangedObservable.add((buttonState2) => {
                                                 if (buttonState2.pressed && dialog2 && texture2) {
