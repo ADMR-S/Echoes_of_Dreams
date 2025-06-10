@@ -687,6 +687,33 @@ export class Scene1Superliminal implements CreateSceneClass {
                 });
 
 
+                // --- Second dialog logic: appears each time player is left of threshold, disappears when right of threshold, unclosable ---
+                let secondDialog: { billboard: Mesh, advancedTexture: GUI.AdvancedDynamicTexture } | null = null;
+                const secondDialogXThreshold = -5; // Set your desired x threshold
+                let wasLeftOfThreshold = false;
+
+                scene.onBeforeRenderObservable.add(() => {
+                    if (xr && xr.baseExperience) {
+                        const camera = xr.baseExperience.camera;
+                        const isLeftOfThreshold = camera.position.x < secondDialogXThreshold;
+
+                        if (isLeftOfThreshold && !wasLeftOfThreshold) {
+                            // Just crossed to the left: show dialog if not already shown
+                            if (!secondDialog) {
+                                secondDialog = addXRBillboard(scene, xr, "Appuyez sur B pour changer de niveau");
+                            }
+                        } else if (!isLeftOfThreshold && wasLeftOfThreshold) {
+                            // Just crossed to the right: hide dialog if shown
+                            if (secondDialog) {
+                                secondDialog.billboard.dispose();
+                                secondDialog.advancedTexture.dispose();
+                                secondDialog = null;
+                            }
+                        }
+                        wasLeftOfThreshold = isLeftOfThreshold;
+                    }
+                });
+
                 resolve(scene); // Only resolve after setup is done
             }
             //@ts-ignore
@@ -714,7 +741,8 @@ function switchScene(engine: AbstractEngine, scene : Scene) {
 }
     */
 
-function addXRBillboard(scene: Scene, xr: WebXRDefaultExperience) {
+// Update addXRBillboard to accept custom text
+function addXRBillboard(scene: Scene, xr: WebXRDefaultExperience, text: string = "Où... où suis-je... ?\n\nAppuyez sur A pour continuer...") {
     // Create a billboard mesh
     const billboard = MeshBuilder.CreatePlane("billboard", { size: 1 }, scene);
     billboard.position = new Vector3(0, 2, 3);
@@ -739,7 +767,7 @@ function addXRBillboard(scene: Scene, xr: WebXRDefaultExperience) {
     rect.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
 
     const textBlock = new GUI.TextBlock();
-    textBlock.text = "Où... où suis-je... ?\n\nAppuyez sur A pour continuer...";
+    textBlock.text = text;
     textBlock.color = "white";
     textBlock.fontSize = 64;
     textBlock.textWrapping = true;
