@@ -689,7 +689,7 @@ export class Scene1Superliminal implements CreateSceneClass {
 
                 // --- Second dialog logic: appears each time player is left of threshold, disappears when right of threshold, unclosable ---
                 let secondDialog: { billboard: Mesh, advancedTexture: GUI.AdvancedDynamicTexture } | null = null;
-                const secondDialogXThreshold = -5; // Set your desired x threshold
+                const secondDialogXThreshold = -250; // Set your desired x threshold
                 let wasLeftOfThreshold = false;
 
                 scene.onBeforeRenderObservable.add(() => {
