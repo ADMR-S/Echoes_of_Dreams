@@ -666,19 +666,29 @@ export class Scene1Superliminal implements CreateSceneClass {
                 
                 const { billboard, advancedTexture } = addXRBillboard(scene, xr);
 
-                // Listen for A button on right controller to close the dialog
+                // Listen for A button on right controller to close the first dialog and show the second dialog immediately after
                 xr.input.onControllerAddedObservable.add((controller) => {
                     controller.onMotionControllerInitObservable.add((motionController) => {
                         if (motionController.handedness === "right") {
-                            console.log("Right controller initialized, setting up A button listener...");
                             const aButton = motionController.getComponent("a-button");
                             if (aButton) {
                                 aButton.onButtonStateChangedObservable.add((buttonState) => {
-                                    if (buttonState.pressed) {
-                                        console.log("DISPOSE DIALOG");
-                                        // Dispose the dialog billboard and texture
+                                    if (buttonState.pressed && billboard && advancedTexture) {
                                         billboard.dispose();
                                         advancedTexture.dispose();
+
+                                        // Show the second dialog immediately after closing the first
+                                        if (!(scene as any)._firstDialogClosed) { // Prevent multiple triggers
+                                            (scene as any)._firstDialogClosed = true;
+                                            const { billboard: dialog2, advancedTexture: texture2 } = addXRBillboard(scene, xr, "Appuyez sur Y pour switch entre téléportation / déplacement libre\n\nAppuyez sur X pour attraper un objet qui brille en violet");
+                                            // Listen for A button to close the second dialog
+                                            aButton.onButtonStateChangedObservable.add((buttonState2) => {
+                                                if (buttonState2.pressed && dialog2 && texture2) {
+                                                    dialog2.dispose();
+                                                    texture2.dispose();
+                                                }
+                                            });
+                                        }
                                     }
                                 });
                             }
@@ -686,33 +696,39 @@ export class Scene1Superliminal implements CreateSceneClass {
                     });
                 });
 
-
-                // --- Second dialog logic: appears each time player is left of threshold, disappears when right of threshold, unclosable ---
-                let secondDialog: { billboard: Mesh, advancedTexture: GUI.AdvancedDynamicTexture } | null = null;
-                const secondDialogXThreshold = -250; // Set your desired x threshold
+                // --- Third dialog logic: appears each time player is left of threshold, disappears when right of threshold, unclosable ---
+                let thirdDialog: { billboard: Mesh, advancedTexture: GUI.AdvancedDynamicTexture } | null = null;
+                let thirdDialogXThreshold = -200; // fallback default
                 let wasLeftOfThreshold = false;
+
+                // Find bed mesh and get its x position for threshold
+                const bedMesh = task.loadedMeshes.find(m => m.name === "Bed");
+                if (bedMesh) {
+                    thirdDialogXThreshold = bedMesh.position.x + 20;
+                }
 
                 scene.onBeforeRenderObservable.add(() => {
                     if (xr && xr.baseExperience) {
                         const camera = xr.baseExperience.camera;
-                        const isLeftOfThreshold = camera.position.x < secondDialogXThreshold;
+                        const isLeftOfThreshold = camera.position.x < thirdDialogXThreshold;
 
                         if (isLeftOfThreshold && !wasLeftOfThreshold) {
                             // Just crossed to the left: show dialog if not already shown
-                            if (!secondDialog) {
-                                secondDialog = addXRBillboard(scene, xr, "Appuyez sur B pour changer de niveau");
+                            if (!thirdDialog) {
+                                thirdDialog = addXRBillboard(scene, xr, "Appuyez sur B pour changer de niveau");
                             }
                         } else if (!isLeftOfThreshold && wasLeftOfThreshold) {
                             // Just crossed to the right: hide dialog if shown
-                            if (secondDialog) {
-                                secondDialog.billboard.dispose();
-                                secondDialog.advancedTexture.dispose();
-                                secondDialog = null;
+                            if (thirdDialog) {
+                                thirdDialog.billboard.dispose();
+                                thirdDialog.advancedTexture.dispose();
+                                thirdDialog = null;
                             }
                         }
                         wasLeftOfThreshold = isLeftOfThreshold;
                     }
                 });
+
 
                 resolve(scene); // Only resolve after setup is done
             }
