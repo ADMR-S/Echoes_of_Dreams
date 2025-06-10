@@ -8,7 +8,7 @@ Il est préférable voire nécessaire d'utiliser un casque de réalité virtuell
 
 - [Lien du jeu](https://echoes-of-dreams-stable.onrender.com/)
 - [Documentation](./Documentation.md)
-- [Présentation vidéo](https://www.youtube.com/watch?v=Uwqi30tmJPo)
+- [Présentation vidéo](https://www.youtube.com/watch?v=2c6y-t1ypgk)
 
 Jeu conçu et implémenté par :
 - Adam MIR-SADJADI
