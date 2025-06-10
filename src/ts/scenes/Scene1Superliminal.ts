@@ -699,20 +699,33 @@ function addXRBillboard(scene : Scene, xr : WebXRDefaultExperience) {
     const billboard = MeshBuilder.CreatePlane("billboard", { size: 1 }, scene);
     billboard.position = new Vector3(0, 2, 3); // Position it above the ground
     billboard.billboardMode = Mesh.BILLBOARDMODE_ALL; // Make it always face the camera
-    //Add text to the billboard
+    billboard.isPickable = false; // Prevent interaction issues
+
+    // Add text to the billboard using a transparent rectangle
     const advancedTexture = GUI.AdvancedDynamicTexture.CreateForMesh(billboard);
+    const rect = new GUI.Rectangle();
+    rect.background = "transparent";
+    rect.thickness = 0;
+    rect.width = 1;
+    rect.height = 1;
+    rect.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+    rect.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+
     const textBlock = new GUI.TextBlock();
     textBlock.text = "Scene 1: Superliminal";
     textBlock.color = "white";
     textBlock.fontSize = 24;
     textBlock.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
     textBlock.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_CENTER;
-    advancedTexture.addControl(textBlock);
-    // Add a material to the billboard
-    const mat = new StandardMaterial("billboardMat", scene);
-    mat.diffuseColor = new Color3(0.1, 0.1, 0.1); // Dark color for visibility
-    mat.emissiveColor = new Color3(0.2, 0.2, 0.2); // Slightly emissive for better visibility
-    billboard.material = mat;
+
+    rect.addControl(textBlock);
+    advancedTexture.addControl(rect);
+
+    // Optionally, remove or make the material transparent
+    // const mat = new StandardMaterial("billboardMat", scene);
+    // mat.alpha = 0; // Fully transparent
+    // billboard.material = mat;
+
     // Make sure billboard stays in the center of the screen 
     scene.onBeforeRenderObservable.add(() => {
         if (xr && xr.baseExperience) {
